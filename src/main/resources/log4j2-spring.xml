@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <Property name="LOG_DIRECTORY">logs</Property>
+        <Property name="PROCESSOR_LOG">${LOG_DIRECTORY}/aprswc-processors.log</Property>
+        <Property name="PROCESSOR_ARCHIVE">${LOG_DIRECTORY}/archive/aprswc-processors-%d{yyyy-MM-dd}-%i.log.gz</Property>
+        <Property name="PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] %msg%n</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${PATTERN}"/>
+        </Console>
+        <RollingFile name="ProcessorFile"
+                     fileName="${PROCESSOR_LOG}"
+                     filePattern="${PROCESSOR_ARCHIVE}">
+            <PatternLayout pattern="${PATTERN}"/>
+            <Policies>
+                <OnStartupTriggeringPolicy minSize="1"/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10" fileIndex="min"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="ProcessorObjectLog" level="info" additivity="false">
+            <AppenderRef ref="ProcessorFile"/>
+        </Logger>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>

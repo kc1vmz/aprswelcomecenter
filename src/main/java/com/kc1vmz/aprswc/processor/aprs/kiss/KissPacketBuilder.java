@@ -1,0 +1,42 @@
+/*
+ *
+ * APRSWelcomeCenter
+ * Copyright (c) 2026 John Rokicki KC1VMZ
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program. If not, see
+ * https://www.gnu.org/licenses/.
+ *
+ * http://www.kc1vmz.com
+ */
+package com.kc1vmz.aprswc.processor.aprs.kiss;
+
+import com.kc1vmz.aprswc.enumeration.KISSControlCode;
+
+public class KissPacketBuilder {
+
+    public static byte[] build(byte[] ax25Bytes, byte port) {
+        if (ax25Bytes == null) {
+            return null;
+        }
+
+        int len = ax25Bytes.length + 3;
+        byte[] ret = new byte[len];
+
+        ret[0] = KISSControlCode.FEND.getValue();
+        ret[1] = port; // port 0 - serial , single port
+
+        for (int i = 0; i < ax25Bytes.length; i++) {
+            ret[i + 2] = ax25Bytes[i];
+        }
+        ret[len - 1] = KISSControlCode.FEND.getValue();
+        ;
+        return ret;
+    }
+}
