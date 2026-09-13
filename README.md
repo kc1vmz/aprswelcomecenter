@@ -192,7 +192,7 @@ Sending the message "WARNINGS" to the welcome center's callsign will trigger the
 ## Run
 
 ```shell
-java -jar aprs-welcome-center-0.1.jar
+java -jar aprs-welcome-center-1.0.jar
 ```
 
 Open `http://localhost:8080`. The durable database is created below `./data`.

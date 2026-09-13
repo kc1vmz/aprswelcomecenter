@@ -17,7 +17,6 @@
  */
 package com.kc1vmz.aprswc.accessor;
 
-import com.kc1vmz.aprswc.database.StationMessageRepository;
 import com.kc1vmz.aprswc.database.StationPositionRepository;
 import com.kc1vmz.aprswc.database.WelcomeCenterRepository;
 import com.kc1vmz.aprswc.database.WelcomeRegionRepository;
@@ -51,7 +50,7 @@ public class WelcomeCenterAccessor {
     private StationPositionRepository stationPositions;
 
     @Autowired
-    private StationMessageRepository stationMessages;
+    private ContainmentDeletionService deletions;
 
     @Autowired
     private GeoFenceUtils geoFenceUtils;
@@ -161,14 +160,9 @@ public class WelcomeCenterAccessor {
     }
 
     public Mono<Void> delete(UUID id) {
-        return findById(id)
-                .flatMap(welcomeCenter -> Mono.fromRunnable(() -> {
-                            beforeWelcomeCenterDelete(welcomeCenter);
-                            stationMessages.deleteAllByWelcomeCenterId(id);
-                            centers.deleteById(id);
-                        })
-                        .subscribeOn(Schedulers.boundedElastic())
-                        .then())
+        return Mono.fromCallable(() -> deletions.deleteWelcomeCenter(id))
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnNext(this::beforeWelcomeCenterDelete)
                 .then();
     }
 

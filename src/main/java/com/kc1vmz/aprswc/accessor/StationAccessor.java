@@ -114,14 +114,14 @@ public class StationAccessor {
     }
 
     public Mono<Void> delete(UUID id) {
-        return findById(id)
-                .flatMap(station -> Mono.fromRunnable(() -> {
-                            positions.deleteAllByStationId(id);
-                            packets.deleteAllByCallsignIgnoreCase(station.getCallsign());
-                            messages.deleteAllByCallsignToIgnoreCase(station.getCallsign());
-                            stations.delete(station);
-                        })
-                        .subscribeOn(Schedulers.boundedElastic()))
+        return Mono.fromRunnable(() -> transactionTemplate.executeWithoutResult(status -> {
+                    Station station =
+                            stations.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                    packets.deleteAllByCallsignIgnoreCase(station.getCallsign());
+                    messages.deleteAllByCallsignToIgnoreCase(station.getCallsign());
+                    stations.delete(station);
+                }))
+                .subscribeOn(Schedulers.boundedElastic())
                 .then();
     }
 
@@ -211,13 +211,12 @@ public class StationAccessor {
     }
 
     public Mono<Void> deletePosition(UUID stationId, UUID positionId) {
-        return findById(stationId).flatMap(station -> Mono.fromRunnable(() -> {
+        return Mono.fromRunnable(() -> transactionTemplate.executeWithoutResult(status -> {
                     StationPosition position = requirePosition(stationId, positionId);
-                    station.removePosition(position);
-                    stations.save(station);
-                })
+                    positions.delete(position);
+                }))
                 .subscribeOn(Schedulers.boundedElastic())
-                .then());
+                .then();
     }
 
     public Mono<Void> deleteAllPositions(UUID stationId) {

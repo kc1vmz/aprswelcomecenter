@@ -21,4 +21,6 @@ import com.kc1vmz.aprswc.object.StationCommand;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface StationCommandRepository extends JpaRepository<StationCommand, UUID> {}
+public interface StationCommandRepository extends JpaRepository<StationCommand, UUID> {
+    void deleteAllByWelcomeCenterId(UUID id);
+}

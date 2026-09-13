@@ -27,4 +27,6 @@ import org.springframework.data.repository.query.Param;
 public interface CommunicationPolicyRepository extends JpaRepository<CommunicationPolicy, UUID> {
     @Query("select policy from CommunicationPolicy policy where policy.welcomeCenter.id = :welcomeCenterId")
     List<CommunicationPolicy> findByWelcomeCenterId(@Param("welcomeCenterId") UUID welcomeCenterId);
+
+    List<CommunicationPolicy> findByCategoryId(UUID id);
 }

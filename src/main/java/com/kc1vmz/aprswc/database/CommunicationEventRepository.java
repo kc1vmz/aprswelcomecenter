@@ -21,4 +21,9 @@ import com.kc1vmz.aprswc.object.CommunicationEvent;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CommunicationEventRepository extends JpaRepository<CommunicationEvent, UUID> {}
+public interface CommunicationEventRepository extends JpaRepository<CommunicationEvent, UUID> {
+    void deleteAllByWelcomeCenterId(UUID id);
+
+    void deleteAllByContextAndTypeIn(
+            UUID context, java.util.Collection<com.kc1vmz.aprswc.enumeration.CommunicationEventType> types);
+}

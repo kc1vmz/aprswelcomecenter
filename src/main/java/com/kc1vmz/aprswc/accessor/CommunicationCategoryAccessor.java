@@ -68,9 +68,12 @@ public class CommunicationCategoryAccessor {
                         .subscribeOn(Schedulers.boundedElastic()));
     }
 
+    @Autowired
+    private ContainmentDeletionService deletions;
+
     public Mono<Void> delete(UUID id) {
-        return findById(id)
-                .then(Mono.fromRunnable(() -> repository.deleteById(id)).subscribeOn(Schedulers.boundedElastic()))
+        return Mono.fromRunnable(() -> deletions.deleteCategory(id))
+                .subscribeOn(Schedulers.boundedElastic())
                 .then();
     }
 }
