@@ -188,11 +188,16 @@ Sending the message "EVENTS" to the welcome center's callsign will trigger the w
 
 Sending the message "WARNINGS" to the welcome center's callsign will trigger the welcome center to respond with information about local warnings, as defined in the Communication Plan.
 
+## Installation
+
+APRS Welcome Center does not need an installation, but installation scripts are provided in GitHub to easily download and configure it to run on Linux and Windows.
+
+See aprswc_installer.bat for Microsoft Windows and aprswc_installer.sh for Linux.  Both are located included in each release, and are located in source in .\installers\windows and ./installers/linux.
 
 ## Run
 
 ```shell
-java -jar aprs-welcome-center-1.0.jar
+java -jar aprs-welcome-center-1.0.1.jar
 ```
 
 Open `http://localhost:8080`. The durable database is created below `./data`.
