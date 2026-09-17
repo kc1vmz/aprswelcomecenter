@@ -40,7 +40,7 @@ class ApplicationVersionControllerTest {
                 .jsonPath("$.applicationName")
                 .isEqualTo("APRSWelcomeCenter")
                 .jsonPath("$.version")
-                .isEqualTo("1.0.1")
+                .isEqualTo("1.0.2")
                 .jsonPath("$.author")
                 .isEqualTo("John Rokicki KC1VMZ")
                 .jsonPath("$.copyrightYear")

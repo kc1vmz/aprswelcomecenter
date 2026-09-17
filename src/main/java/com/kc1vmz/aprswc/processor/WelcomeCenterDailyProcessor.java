@@ -50,7 +50,7 @@ public class WelcomeCenterDailyProcessor {
 
     @PostConstruct
     void start() {
-        worker.scheduleWithFixedDelay(this::processWelcomeCenters, 0, PROCESSING_INTERVAL_HOURS, TimeUnit.HOURS);
+        worker.scheduleWithFixedDelay(this::processWelcomeCenters, 1, PROCESSING_INTERVAL_HOURS * 60, TimeUnit.MINUTES);
     }
 
     void processWelcomeCenters() {

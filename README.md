@@ -197,7 +197,7 @@ See aprswc_installer.bat for Microsoft Windows and aprswc_installer.sh for Linux
 ## Run
 
 ```shell
-java -jar aprs-welcome-center-1.0.1.jar
+java -jar aprs-welcome-center-1.0.2.jar
 ```
 
 Open `http://localhost:8080`. The durable database is created below `./data`.

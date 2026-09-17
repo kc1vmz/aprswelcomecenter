@@ -17,6 +17,7 @@
  */
 package com.kc1vmz.aprswc.accessor;
 
+import com.kc1vmz.aprswc.constants.ObjectSymbolTableConstants;
 import com.kc1vmz.aprswc.database.StationPositionRepository;
 import com.kc1vmz.aprswc.database.WelcomeCenterRepository;
 import com.kc1vmz.aprswc.database.WelcomeRegionRepository;
@@ -82,6 +83,8 @@ public class WelcomeCenterAccessor {
     }
 
     public Mono<WelcomeCenter> create(WelcomeCenter value) {
+        value.setSymbolCode(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE);
+        value.setSymbolId(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID);
         value.setId(null);
         return Mono.fromCallable(() -> centers.save(value))
                 .subscribeOn(Schedulers.boundedElastic())
@@ -121,8 +124,8 @@ public class WelcomeCenterAccessor {
                     existing.setContactCallsign(value.getContactCallsign());
                     existing.setLongitude(value.getLongitude());
                     existing.setLatitude(value.getLatitude());
-                    existing.setSymbolCode(value.getSymbolCode());
-                    existing.setSymbolId(value.getSymbolId());
+                    existing.setSymbolCode(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE);
+                    existing.setSymbolId(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID);
                     return centers.save(existing);
                 })
                 .subscribeOn(Schedulers.boundedElastic()));

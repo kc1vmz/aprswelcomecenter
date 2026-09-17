@@ -18,6 +18,7 @@
 package com.kc1vmz.aprswc.processor;
 
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
+import com.kc1vmz.aprswc.constants.ObjectSymbolTableConstants;
 import com.kc1vmz.aprswc.object.ObjectBeacon;
 import com.kc1vmz.aprswc.object.WelcomeCenter;
 import jakarta.annotation.PostConstruct;
@@ -49,7 +50,8 @@ public class WelcomeCenterObjectBeaconProcessor {
 
     @PostConstruct
     void start() {
-        worker.scheduleWithFixedDelay(this::beaconWelcomeCenters, 0, BEACON_INTERVAL_MINUTES, TimeUnit.MINUTES);
+        // waiti a minute before starting to let communication threads start
+        worker.scheduleWithFixedDelay(this::beaconWelcomeCenters, 1, BEACON_INTERVAL_MINUTES, TimeUnit.MINUTES);
     }
 
     void beaconWelcomeCenters() {
@@ -70,13 +72,23 @@ public class WelcomeCenterObjectBeaconProcessor {
     void beaconWelcomeCenterObject(WelcomeCenter welcomeCenter) {
         if ((welcomeCenter.getLatitude() != null) && (welcomeCenter.getLongitude() != null)) {
             String statusMessage = STATUS_MESSAGE;
+            String symbolCode = welcomeCenter.getSymbolCode();
+            String symbolId = welcomeCenter.getSymbolId();
+
+            if (symbolCode == null) {
+                symbolCode = ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE;
+            }
+            if (symbolId == null) {
+                symbolId = ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID;
+            }
+
             ObjectBeacon objectBeacon = new ObjectBeacon(
                     welcomeCenter.getCallsign(),
                     welcomeCenter.getOwnerCallsign(),
                     welcomeCenter.getLongitude(),
                     welcomeCenter.getLatitude(),
-                    welcomeCenter.getSymbolCode(),
-                    welcomeCenter.getSymbolId(),
+                    symbolCode,
+                    symbolId,
                     statusMessage,
                     true);
             objectBeaconQueue.offer(objectBeacon);
