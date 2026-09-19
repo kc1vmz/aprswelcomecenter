@@ -51,6 +51,7 @@ if [ "$WC_OS" = "Linux" ]; then
       read -e -i $WC_PORT -p "What port should the HTTP service listen on?: " WC_PORT
       read -e -i $WC_INSTALL_SERVICES -p "Do you want APRS Welcome Center to be configured as services and started at boot time (Y/n)?: " WC_INSTALL_SERVICES
     else
+      APRSWC_INSTALL_DIR=$(grep "^APRSWC_INSTALL_DIR=" /etc/environment | sed 's/^APRSWC_INSTALL_DIR=//' | tr -d '"')
       WC_INSTALL_DIR=$APRSWC_INSTALL_DIR
     fi
   fi
