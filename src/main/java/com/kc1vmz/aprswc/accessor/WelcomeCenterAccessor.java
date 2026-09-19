@@ -59,6 +59,12 @@ public class WelcomeCenterAccessor {
     @Autowired
     private ObjectBeaconQueue objectBeaconQueue;
 
+    @Autowired
+    private org.springframework.transaction.support.TransactionTemplate transactions;
+
+    @Autowired
+    private org.springframework.context.ApplicationEventPublisher events;
+
     private static final String STATUS_MESSAGE = "APRS Welcome Center";
 
     public Flux<WelcomeCenter> findAll() {
@@ -82,10 +88,27 @@ public class WelcomeCenterAccessor {
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 
+    public Mono<WelcomeCenter> findOpenById(UUID id) {
+        return findById(id)
+                .filter(WelcomeCenter::isOpen)
+                .onErrorResume(
+                        ResponseStatusException.class,
+                        error -> error.getStatusCode() == HttpStatus.NOT_FOUND ? Mono.empty() : Mono.error(error));
+    }
+
+    public Mono<WelcomeCenter> findOpenByCallsign(String callsign) {
+        return findByCallsign(callsign)
+                .filter(WelcomeCenter::isOpen)
+                .onErrorResume(
+                        ResponseStatusException.class,
+                        error -> error.getStatusCode() == HttpStatus.NOT_FOUND ? Mono.empty() : Mono.error(error));
+    }
+
     public Mono<WelcomeCenter> create(WelcomeCenter value) {
         value.setSymbolCode(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE);
         value.setSymbolId(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID);
         value.setId(null);
+        if (value.getStatus() == null) value.setStatus(com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus.OPEN);
         return Mono.fromCallable(() -> centers.save(value))
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(createdWelcomeCenter -> {
@@ -95,7 +118,7 @@ public class WelcomeCenterAccessor {
     }
 
     private void afterWelcomeCenterCreated(WelcomeCenter welcomeCenter) {
-        if ((welcomeCenter.getLatitude() != null) && (welcomeCenter.getLongitude() != null)) {
+        if (welcomeCenter.isOpen() && (welcomeCenter.getLatitude() != null) && (welcomeCenter.getLongitude() != null)) {
             String statusMessage = String.format(STATUS_MESSAGE);
             ObjectBeacon objectBeacon = new ObjectBeacon(
                     welcomeCenter.getCallsign(),
@@ -111,8 +134,13 @@ public class WelcomeCenterAccessor {
     }
 
     public Mono<WelcomeCenter> replace(UUID id, WelcomeCenter value) {
-        return findById(id).flatMap(existing -> Mono.fromCallable(() -> {
-                    beforeWelcomeCenterReplace(existing, value);
+        if (value.getStatus() == null)
+            return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is required"));
+        return Mono.fromCallable(() -> transactions.execute(transaction -> {
+                    WelcomeCenter existing = centers.findForUpdate(id)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                    var previous = com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(existing);
+                    existing.setStatus(value.getStatus());
                     existing.setName(value.getName());
                     existing.setDescription(value.getDescription());
                     existing.setCallsign(value.getCallsign());
@@ -126,40 +154,31 @@ public class WelcomeCenterAccessor {
                     existing.setLatitude(value.getLatitude());
                     existing.setSymbolCode(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE);
                     existing.setSymbolId(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID);
-                    return centers.save(existing);
-                })
-                .subscribeOn(Schedulers.boundedElastic()));
+                    WelcomeCenter saved = centers.saveAndFlush(existing);
+                    events.publishEvent(new com.kc1vmz.aprswc.object.WelcomeCenterChanged(
+                            previous, com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(saved)));
+                    return saved;
+                }))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
-    private void beforeWelcomeCenterReplace(WelcomeCenter existing, WelcomeCenter proposed) {
-        if ((existing == null) || (proposed == null)) {
-            return;
-        }
-        if (!existing.getCallsign().equalsIgnoreCase(proposed.getCallsign())) {
-            // need to down and up the objects
-            String statusMessageDown = String.format(STATUS_MESSAGE);
-            ObjectBeacon objectBeaconDown = new ObjectBeacon(
-                    existing.getCallsign(),
-                    existing.getOwnerCallsign(),
-                    existing.getLongitude(),
-                    existing.getLatitude(),
-                    existing.getSymbolCode(),
-                    existing.getSymbolId(),
-                    statusMessageDown,
-                    false);
-            objectBeaconQueue.offer(objectBeaconDown);
-            String statusMessageUp = String.format(STATUS_MESSAGE);
-            ObjectBeacon objectBeaconUp = new ObjectBeacon(
-                    proposed.getCallsign(),
-                    proposed.getOwnerCallsign(),
-                    proposed.getLongitude(),
-                    proposed.getLatitude(),
-                    proposed.getSymbolCode(),
-                    proposed.getSymbolId(),
-                    statusMessageUp,
-                    true);
-            objectBeaconQueue.offer(objectBeaconUp);
-        }
+    public Mono<WelcomeCenter> changeStatus(UUID id, com.kc1vmz.aprswc.object.WelcomeCenterStatusChange change) {
+        return Mono.fromCallable(() -> transactions.execute(transaction -> {
+                    WelcomeCenter existing = centers.findForUpdate(id)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                    if (existing.getStatus() != change.expectedStatus()) {
+                        throw new ResponseStatusException(
+                                HttpStatus.CONFLICT, "Welcome Center status has changed. Refresh and try again.");
+                    }
+                    if (existing.getStatus() == change.status()) return existing;
+                    var previous = com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(existing);
+                    existing.setStatus(change.status());
+                    WelcomeCenter saved = centers.saveAndFlush(existing);
+                    events.publishEvent(new com.kc1vmz.aprswc.object.WelcomeCenterChanged(
+                            previous, com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(saved)));
+                    return saved;
+                }))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     public Mono<Void> delete(UUID id) {

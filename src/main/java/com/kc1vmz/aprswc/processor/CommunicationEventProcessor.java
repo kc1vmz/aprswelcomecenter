@@ -46,6 +46,9 @@ public class CommunicationEventProcessor {
     @Autowired
     private StationMessageQueue stationMessageQueue;
 
+    @Autowired
+    private com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor welcomeCenterAccessor;
+
     private final ExecutorService worker =
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "CommunicationEventProcessor"));
 
@@ -78,19 +81,24 @@ public class CommunicationEventProcessor {
 
     void processCommunicationPolicy(CommunicationEvent event, CommunicationPolicy policy) {
         // need to send a StationMessage based on the
-        if (policy == null) {
+        if (policy == null || policy.getWelcomeCenter() == null) {
             return;
         }
+        var center = welcomeCenterAccessor
+                .findOpenById(policy.getWelcomeCenter().getId())
+                .block();
+        if (center == null) return;
         if (policy.getMessageType().equals(MessageType.MESSAGE)) {
             StationMessage stationMessage = new StationMessage(
                     UUID.randomUUID(),
                     event.getCallsign(),
-                    policy.getWelcomeCenter().getCallsign(),
-                    policy.getWelcomeCenter(),
+                    center.getCallsign(),
+                    center,
                     null,
                     policy.getMessageText(),
                     null,
                     MessageType.MESSAGE);
+            stationMessage.setRequiresOpenCenter(true);
             stationMessageQueue.offer(stationMessage);
         }
     }

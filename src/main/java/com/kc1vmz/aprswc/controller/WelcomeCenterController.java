@@ -57,6 +57,12 @@ public class WelcomeCenterController {
         return accessor.replace(id, value);
     }
 
+    @PatchMapping("/{id}/status")
+    public Mono<WelcomeCenter> changeStatus(
+            @PathVariable UUID id, @Valid @RequestBody com.kc1vmz.aprswc.object.WelcomeCenterStatusChange change) {
+        return accessor.changeStatus(id, change);
+    }
+
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Void>> delete(@PathVariable UUID id) {
         return accessor.delete(id).thenReturn(ResponseEntity.noContent().build());

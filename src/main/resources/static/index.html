@@ -4,8 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>APRS Welcome Center</title>
+    <link rel="icon" href="/favicon.ico?v=20260918-1" type="image/x-icon">
+    <link rel="icon" href="/favicon.svg?v=20260918-1" type="image/svg+xml">
+    <script src="/theme.js?v=20260918-2"></script>
     <link rel="stylesheet" href="/webjars/leaflet/1.9.4/leaflet.css">
-    <link rel="stylesheet" href="/app.css?v=20260826-3">
+    <link rel="stylesheet" href="/app.css?v=20260918-6">
 </head>
 <body>
     <header>
@@ -33,6 +36,15 @@
                             a8 8 0 0 0 1.7-1l2.5 1 2-3.5-2.2-1.5ZM13 15.5A3.5 3.5 0 1 1 13 8a3.5 3.5 0 0 1 0 7.5Z"/>
                 </svg>
             </button>
+            <button type="button" id="toggle-theme" class="secondary gear-button" aria-label="Switch to light mode" title="Switch to light mode">
+                <svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>
+                </svg>
+                <svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M20.5 13A8.5 8.5 0 0 1 11 3.5 8.5 8.5 0 1 0 20.5 13Z"/>
+                </svg>
+            </button>
             <button id="open-about" class="secondary gear-button" aria-label="About APRS Welcome Center" title="About">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -44,14 +56,60 @@
     </header>
     <main>
         <section>
-            <h2>Welcome Centers<span id="welcome-centers-heading-count"></span></h2>
-            <div id="centers" class="cards"><p>Loading…</p></div>
+            <h2 id="welcome-centers-heading">Welcome Centers<span id="welcome-centers-heading-count"></span></h2>
+            <div id="centers" class="cards" tabindex="0" role="region" aria-labelledby="welcome-centers-heading"><p>Loading…</p></div>
         </section>
         <section>
-            <h2>Stations<span id="stations-heading-count"></span></h2>
-            <div id="stations" class="cards"><p>Loading…</p></div>
+            <div class="station-list-heading">
+                <h2 id="stations-heading">Stations<span id="stations-heading-count"></span> <span id="station-options-summary" role="status" aria-live="polite"></span></h2>
+                <button type="button" id="open-station-options" class="secondary">Sort &amp; filter</button>
+            </div>
+            <div id="stations" class="cards" tabindex="0" role="region" aria-labelledby="stations-heading"><p>Loading…</p></div>
         </section>
     </main>
+    <dialog id="center-status-dialog" aria-labelledby="center-status-title">
+        <form id="center-status-form">
+            <div class="dialog-heading">
+                <h2 id="center-status-title">Change Welcome Center state?</h2>
+                <button type="button" id="close-center-status" class="icon-button" aria-label="Close">&times;</button>
+            </div>
+            <p id="center-status-question"></p>
+            <p id="center-status-message" class="form-message" role="status" aria-live="polite"></p>
+            <div class="form-actions">
+                <button type="button" id="cancel-center-status" class="secondary">Cancel</button>
+                <button type="submit" id="confirm-center-status">Confirm</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="station-options-dialog" aria-labelledby="station-options-title">
+        <form id="station-options-form">
+            <div class="dialog-heading">
+                <h2 id="station-options-title">Sort &amp; filter stations</h2>
+                <button type="button" id="close-station-options" class="icon-button" aria-label="Close">&times;</button>
+            </div>
+            <div class="form-grid">
+                <label>Sort by<select id="station-sort" name="sort">
+                    <option value="callsign">Callsign (A-Z)</option>
+                    <option value="callsignDesc">Callsign (Z-A)</option>
+                    <option value="lastHeard">Last heard (newest first)</option>
+                    <option value="lastHeardAsc">Last heard (oldest first)</option>
+                </select></label>
+                <label>Heard within<select id="station-hours" name="hours">
+                    <option value="0">All</option>
+                    <option value="1">Last hour</option>
+                    <option value="3">Last 3 hours</option>
+                    <option value="6">Last 6 hours</option>
+                    <option value="24">Last 24 hours</option>
+                    <option value="48">Last 48 hours</option>
+                </select></label>
+            </div>
+            <p>Last heard is based on stored packets. Stations without packet history appear under All.</p>
+            <div class="form-actions">
+                <button type="button" id="cancel-station-options" class="secondary">Cancel</button>
+                <button type="submit">Apply</button>
+            </div>
+        </form>
+    </dialog>
     <dialog id="welcome-dialog">
         <div class="dialog-content welcome-introduction">
             <div class="dialog-heading">
@@ -126,6 +184,7 @@
             <div class="form-grid">
                 <label>Name<input name="name" autocomplete="organization"></label>
                 <label>Callsign *<input name="callsign" maxlength="10" required autocomplete="off"></label>
+                <label>Status *<select name="status" required><option value="OPEN" selected>Open</option><option value="CLOSED">Closed</option></select></label>
                 <label class="full-width">Description<textarea name="description" rows="3"></textarea></label>
                 <label>Owner name<input name="ownerName" autocomplete="name"></label>
                 <label>Owner callsign<input name="ownerCallsign" maxlength="10"></label>
@@ -911,6 +970,7 @@
     </dialog>
     <script src="/webjars/leaflet/1.9.4/leaflet.js"></script>
     <script src="/region-map-editor.js?v=20260824-17"></script>
-    <script src="/app.js?v=20260826-8"></script>
+    <script src="/station-list.js?v=20260918-2"></script>
+    <script src="/app.js?v=20260918-6"></script>
 </body>
 </html>

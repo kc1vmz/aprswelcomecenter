@@ -1,3 +1,28 @@
+let stationListRows = [];
+let stationListOptions = { sort: "callsign", hours: 0 };
+try {
+    const saved = JSON.parse(localStorage.getItem("aprswc.stationList") || "null");
+    if (saved && ["callsign", "callsignDesc", "lastHeard", "lastHeardAsc"].includes(saved.sort)
+            && [0, 1, 3, 6, 24, 48].includes(saved.hours)) stationListOptions = saved;
+} catch (_) { /* Use defaults when browser storage is unavailable. */ }
+
+function renderStationList() {
+    const rows = window.aprswcStationList.select(stationListRows, stationListOptions);
+    const sortLabels = { callsign: "Callsign A-Z", callsignDesc: "Callsign Z-A",
+        lastHeard: "Newest heard first", lastHeardAsc: "Oldest heard first" };
+    document.querySelector("#stations-heading-count").textContent = ` (${rows.length} of ${stationListRows.length})`;
+    document.querySelector("#station-options-summary").textContent =
+        `${sortLabels[stationListOptions.sort]} - ${stationListOptions.hours ? `Last ${stationListOptions.hours} hour${stationListOptions.hours === 1 ? "" : "s"}` : "All stations"}`;
+    render("#stations", rows, station => `
+        <article class="card">
+            <div class="station-card-header">
+                <strong>${escapeHtml(station.callsign)}</strong>
+                <button type="button" class="secondary view-station" data-id="${station.id}">Details</button>
+            </div>
+            <small>Last heard: ${escapeHtml(station.lastHeard ? new Date(station.lastHeard).toLocaleString() : "Unknown")}</small>
+        </article>`, stationListRows.length ? "No stations heard within this time period." : "No stations yet.");
+}
+
 const welcomeCenters = new Map();
 let editingCenterId = null;
 let pendingDeleteId = null;
@@ -161,22 +186,38 @@ async function load() {
 
         document.querySelector("#welcome-centers-heading-count").textContent =
             centers.length ? ` (${centers.length})` : "";
-        document.querySelector("#stations-heading-count").textContent =
-            stations.length ? ` (${stations.length})` : "";
 
         centers.sort((left, right) =>
             String(left.callsign || "").localeCompare(String(right.callsign || ""), undefined, { sensitivity: "base" }));
-        stations.sort((left, right) =>
-            String(left.callsign || "").localeCompare(String(right.callsign || ""), undefined, { sensitivity: "base" }));
 
+
+        renderWelcomeCenters(centers);
+
+        stationListRows = stations;
+        renderStationList();
+    } catch (error) {
+        document.querySelector("#welcome-centers-heading-count").textContent = "";
+        document.querySelector("#stations-heading-count").textContent = "";
+        document.querySelectorAll(".cards").forEach(element => {
+            element.innerHTML = "<p>Service data is unavailable.</p>";
+        });
+    }
+}
+
+function renderWelcomeCenters(centers) {
+    centers.sort((left, right) => String(left.callsign || "").localeCompare(String(right.callsign || ""), undefined, { sensitivity: "base" }));
+    document.querySelector("#welcome-centers-heading-count").textContent = centers.length ? ` (${centers.length})` : "";
         welcomeCenters.clear();
         centers.forEach(center => welcomeCenters.set(center.id, center));
 
         render("#centers", centers, center => `
             <article class="card">
-                <span class="tag">${escapeHtml(center.callsign)}</span>
+                <span class="tag">${escapeHtml(center.callsign)} (${center.status === "CLOSED" ? "Closed" : "Open"})</span>
                 <strong>${escapeHtml(center.name || center.callsign)}</strong>
                 <div class="card-actions">
+                    <button type="button" class="secondary toggle-center-status" data-id="${center.id}">
+                        ${center.status === "OPEN" ? "Close" : "Open"}
+                    </button>
                     <button type="button" class="secondary edit-center" data-id="${center.id}">
                         Details
                     </button>
@@ -198,21 +239,68 @@ async function load() {
                 </div>
             </article>`, "No welcome centers yet.");
 
-        render("#stations", stations, station => `
-            <article class="card">
-                <div class="station-card-header">
-                    <strong>${escapeHtml(station.callsign)}</strong>
-                    <button type="button" class="secondary view-station" data-id="${station.id}">
-                        Details
-                    </button>
-                </div>
-            </article>`, "No stations yet.");
-    } catch (error) {
-        document.querySelector("#welcome-centers-heading-count").textContent = "";
-        document.querySelector("#stations-heading-count").textContent = "";
-        document.querySelectorAll(".cards").forEach(element => {
-            element.innerHTML = "<p>Service data is unavailable.</p>";
+}
+
+async function refreshWelcomeCenters() {
+    renderWelcomeCenters(await requestJson("/api/v1/welcome-centers"));
+}
+
+let pendingCenterStatus = null;
+let centerStatusSaving = false;
+function openCenterStatusDialog(id) {
+    const center = welcomeCenters.get(id);
+    if (!center) return;
+    pendingCenterStatus = { id, expectedStatus: center.status, status: center.status === "OPEN" ? "CLOSED" : "OPEN" };
+    const action = center.status === "OPEN" ? "Close" : "Open";
+    document.querySelector("#center-status-title").textContent = `${action} Welcome Center?`;
+    document.querySelector("#center-status-question").textContent = `${action} ${center.callsign}?`;
+    document.querySelector("#center-status-message").textContent = "";
+    const submit = document.querySelector("#confirm-center-status");
+    submit.textContent = action;
+    submit.disabled = false;
+    document.querySelector("#center-status-dialog").showModal();
+}
+function closeCenterStatusDialog() {
+    if (centerStatusSaving) return;
+    pendingCenterStatus = null;
+    document.querySelector("#center-status-dialog").close();
+}
+async function confirmCenterStatus(event) {
+    event.preventDefault();
+    if (!pendingCenterStatus || centerStatusSaving) return;
+    const pending = pendingCenterStatus;
+    const submit = document.querySelector("#confirm-center-status");
+    const message = document.querySelector("#center-status-message");
+    centerStatusSaving = true;
+    submit.disabled = true;
+    message.textContent = "Saving...";
+    try {
+        const response = await fetch(`/api/v1/welcome-centers/${pending.id}/status`, {
+            method: "PATCH", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ expectedStatus: pending.expectedStatus, status: pending.status })
         });
+        if (response.status === 409 || response.status === 404) {
+            pendingCenterStatus = null;
+            message.textContent = response.status === 409
+                ? "This Welcome Center's state changed since the list was loaded. Your change was not applied. Review the refreshed list and try again."
+                : "This Welcome Center no longer exists. The list will be refreshed.";
+        } else if (!response.ok) {
+            throw new Error("save");
+        } else {
+            pendingCenterStatus = null;
+            message.textContent = "State changed successfully.";
+        }
+        try {
+            await refreshWelcomeCenters();
+            if (response.ok) document.querySelector("#center-status-dialog").close();
+        } catch (_) {
+            message.textContent += " The list could not be refreshed. Reload the page before trying again.";
+        }
+    } catch (_) {
+        message.textContent = "The change could not be confirmed. Refresh the page to check the current state before trying again.";
+        pendingCenterStatus = null;
+    } finally {
+        centerStatusSaving = false;
     }
 }
 
@@ -2282,7 +2370,9 @@ function handleCenterAction(event) {
         return;
     }
 
-    if (button.classList.contains("edit-center")) {
+    if (button.classList.contains("toggle-center-status")) {
+        openCenterStatusDialog(button.dataset.id);
+    } else if (button.classList.contains("edit-center")) {
         openEditDialog(button.dataset.id);
     } else if (button.classList.contains("manage-regions")) {
         openRegionsDialog(button.dataset.id);
@@ -2456,3 +2546,30 @@ document.querySelector("#close-delete-ignored").addEventListener("click", closeD
 document.querySelector("#cancel-delete-ignored").addEventListener("click", closeDeleteIgnoredStation);
 document.querySelector("#delete-ignored-station-form").addEventListener("submit", confirmDeleteIgnoredStation);
 load();
+
+document.querySelector("#open-station-options").addEventListener("click", () => {
+    document.querySelector("#station-sort").value = stationListOptions.sort;
+    document.querySelector("#station-hours").value = String(stationListOptions.hours);
+    document.querySelector("#station-options-dialog").showModal();
+});
+for (const id of ["close-station-options", "cancel-station-options"]) {
+    document.getElementById(id).addEventListener("click", () => document.querySelector("#station-options-dialog").close());
+}
+document.querySelector("#station-options-form").addEventListener("submit", event => {
+    event.preventDefault();
+    stationListOptions = { sort: document.querySelector("#station-sort").value,
+        hours: Number(document.querySelector("#station-hours").value) };
+    try { localStorage.setItem("aprswc.stationList", JSON.stringify(stationListOptions)); } catch (_) {}
+    document.querySelector("#station-options-dialog").close();
+    renderStationList();
+    load();
+});
+
+document.querySelector("#center-status-form").addEventListener("submit", confirmCenterStatus);
+for (const id of ["close-center-status", "cancel-center-status"]) {
+    document.getElementById(id).addEventListener("click", closeCenterStatusDialog);
+}
+document.querySelector("#center-status-dialog").addEventListener("cancel", event => {
+    if (centerStatusSaving) event.preventDefault();
+    else pendingCenterStatus = null;
+});

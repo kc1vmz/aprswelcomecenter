@@ -109,7 +109,7 @@ class StationPacketProcessorTest {
                 "c",
                 "/",
                 List.of());
-        when(welcomeCenterAccessor.findByCallsign("KC1VMZ"))
+        when(welcomeCenterAccessor.findOpenByCallsign("KC1VMZ"))
                 .thenReturn(reactor.core.publisher.Mono.just(welcomeCenter));
 
         processor.processWelcomeCenterCommand(packet);

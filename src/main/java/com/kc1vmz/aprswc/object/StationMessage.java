@@ -25,6 +25,19 @@ import java.util.UUID;
 @Entity
 @Table(name = "station_messages")
 public class StationMessage {
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private boolean requiresOpenCenter;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public boolean isRequiresOpenCenter() {
+        return requiresOpenCenter;
+    }
+
+    public void setRequiresOpenCenter(boolean value) {
+        requiresOpenCenter = value;
+    }
+
     @Id
     private UUID id;
 

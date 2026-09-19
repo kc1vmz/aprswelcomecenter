@@ -21,7 +21,6 @@ import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.constants.ObjectSymbolTableConstants;
 import com.kc1vmz.aprswc.object.ObjectBeacon;
 import com.kc1vmz.aprswc.object.WelcomeCenter;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -48,7 +47,7 @@ public class WelcomeCenterObjectBeaconProcessor {
     private final ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor(
             runnable -> new Thread(runnable, "WelcomeCenterObjectBeaconProcessor"));
 
-    @PostConstruct
+    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     void start() {
         // waiti a minute before starting to let communication threads start
         worker.scheduleWithFixedDelay(this::beaconWelcomeCenters, 1, BEACON_INTERVAL_MINUTES, TimeUnit.MINUTES);
@@ -70,7 +69,7 @@ public class WelcomeCenterObjectBeaconProcessor {
     }
 
     void beaconWelcomeCenterObject(WelcomeCenter welcomeCenter) {
-        if ((welcomeCenter.getLatitude() != null) && (welcomeCenter.getLongitude() != null)) {
+        if (welcomeCenter.isOpen() && (welcomeCenter.getLatitude() != null) && (welcomeCenter.getLongitude() != null)) {
             String statusMessage = STATUS_MESSAGE;
             String symbolCode = welcomeCenter.getSymbolCode();
             String symbolId = welcomeCenter.getSymbolId();

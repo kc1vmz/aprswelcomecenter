@@ -15,17 +15,6 @@
  *
  * http://www.kc1vmz.com
  */
-package com.kc1vmz.aprswc.database;
+package com.kc1vmz.aprswc.object;
 
-import com.kc1vmz.aprswc.object.WelcomeCenter;
-import java.util.Optional;
-import java.util.UUID;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-public interface WelcomeCenterRepository extends JpaRepository<WelcomeCenter, UUID> {
-    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
-    @org.springframework.data.jpa.repository.Query("select center from WelcomeCenter center where center.id = :id")
-    Optional<WelcomeCenter> findForUpdate(@org.springframework.data.repository.query.Param("id") UUID id);
-
-    Optional<WelcomeCenter> findByCallsignIgnoreCase(String callsign);
-}
+public record WelcomeCenterChanged(WelcomeCenterSnapshot previous, WelcomeCenterSnapshot updated) {}

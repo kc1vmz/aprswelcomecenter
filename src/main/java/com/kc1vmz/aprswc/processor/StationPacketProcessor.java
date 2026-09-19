@@ -276,6 +276,9 @@ public class StationPacketProcessor {
 
     void triggerEvents(
             WelcomeCenter welcomeCenter, Station station, CommunicationEventType eventType, String packetProcessorId) {
+        if (!welcomeCenter.isOpen()) {
+            return;
+        }
         // determine the communication policies and execute them
         try {
             List<CommunicationPolicy> policies = communicationPolicyAccessor
@@ -418,7 +421,7 @@ public class StationPacketProcessor {
 
     private void processMessagePacket(StationPacket packet, Station station) {
         determineCallsignTo(packet);
-        if (!isWelcomeCenterCallsign(packet.getCallsignTo())) {
+        if (welcomeCenterAccessor.findOpenByCallsign(packet.getCallsignTo()).block() == null) {
             // not ours
             return;
         }
@@ -493,7 +496,8 @@ public class StationPacketProcessor {
     void processWelcomeCenterCommand(StationPacket packet) {
         StationCommandType type = StationCommandType.UNKNOWN; // will get filled in later
         WelcomeCenter welcomeCenter =
-                welcomeCenterAccessor.findByCallsign(packet.getCallsignTo()).block();
+                welcomeCenterAccessor.findOpenByCallsign(packet.getCallsignTo()).block();
+        if (welcomeCenter == null) return;
         StationCommand command = new StationCommand(
                 UUID.randomUUID(),
                 packet.getCallsign(),
@@ -548,10 +552,6 @@ public class StationPacketProcessor {
             return true;
         }
         return false;
-    }
-
-    private boolean isWelcomeCenterCallsign(String callsign) {
-        return stationPacketAccessor.isWelcomeCenterCallsign(callsign);
     }
 
     private PacketType parsePacket(StationPacket packet) {

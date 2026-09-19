@@ -5,13 +5,25 @@
     --panel: #111f36;
     --line: #284469;
     --accent: #5aa7ff;
+    --page: #08111f;
+    --surface: #0b1728;
+    --header-start: #102b4d;
+    --header-end: #0b1829;
+    --button-ink: #06111f;
+    --strong: #fff;
+    --danger-line: #9b4545;
+    --danger-ink: #ffb2b2;
+    --danger-fill: #c44747;
+    --error: #ff9e9e;
+    --backdrop: rgb(2 7 15 / 75%);
+    --summary: #526273;
 }
 
 * { box-sizing: border-box; }
 
 body {
     margin: 0;
-    background: #08111f;
+    background: var(--page);
     color: var(--ink);
     font: 15px system-ui, sans-serif;
 }
@@ -22,7 +34,7 @@ header {
     justify-content: space-between;
     padding: 0.6rem max(5vw, 2rem);
     border-bottom: 1px solid var(--line);
-    background: linear-gradient(120deg, #102b4d, #0b1829);
+    background: linear-gradient(120deg, var(--header-start), var(--header-end));
 }
 
 h1 {
@@ -63,7 +75,7 @@ button {
     border: 0;
     border-radius: 0.4rem;
     background: var(--accent);
-    color: #06111f;
+    color: var(--button-ink);
     font-weight: 700;
     cursor: pointer;
 }
@@ -121,7 +133,7 @@ button:disabled {
     padding-left: 1.5rem;
 }
 
-.welcome-introduction > p strong { color: white; }
+.welcome-introduction > p strong { color: var(--strong); }
 
 .license-text {
     max-height: min(55vh, 36rem);
@@ -130,7 +142,7 @@ button:disabled {
     overflow: auto;
     border: 1px solid var(--line);
     border-radius: 0.4rem;
-    background: #0b1728;
+    background: var(--surface);
     color: var(--ink);
     font: 0.85rem/1.5 ui-monospace, monospace;
     white-space: pre-wrap;
@@ -180,13 +192,13 @@ main {
 }
 
 button.danger {
-    border: 1px solid #9b4545;
+    border: 1px solid var(--danger-line);
     background: transparent;
-    color: #ffb2b2;
+    color: var(--danger-ink);
 }
 
 button.danger-solid {
-    background: #c44747;
+    background: var(--danger-fill);
     color: #fff;
 }
 
@@ -232,7 +244,7 @@ button.danger-solid {
     overflow: hidden;
     border: 1px solid var(--line);
     border-radius: 0.5rem;
-    background: #0b1728;
+    background: var(--surface);
 }
 
 .map-message {
@@ -242,7 +254,7 @@ button.danger-solid {
     font-size: 0.85rem;
 }
 
-.map-message.error { color: #ff9e9e; }
+.map-message.error { color: var(--error); }
 
 .station-view-mode {
     display: flex;
@@ -266,7 +278,7 @@ button.danger-solid {
     overflow: hidden;
     border: 1px solid var(--line);
     border-radius: 0.5rem;
-    background: #0b1728;
+    background: var(--surface);
 }
 
 #welcome-center-stations-map[hidden],
@@ -286,7 +298,7 @@ button.danger-solid {
     padding: 0.75rem;
     border: 1px solid var(--line);
     border-radius: 0.4rem;
-    background: #0b1728;
+    background: var(--surface);
 }
 
 .welcome-center-station-position div {
@@ -325,7 +337,7 @@ button.danger-solid {
     overflow: hidden;
     border: 1px solid var(--line);
     border-radius: 0.5rem;
-    background: #0b1728;
+    background: var(--surface);
 }
 
 .location-fields .form-grid { margin-bottom: 0.75rem; }
@@ -335,7 +347,7 @@ button.danger-solid {
     overflow: hidden;
     border: 1px solid var(--line);
     border-radius: 0.5rem;
-    background: #0b1728;
+    background: var(--surface);
 }
 
 .region-map-handle {
@@ -354,7 +366,7 @@ button.danger-solid {
     overflow: hidden;
     border: 1px solid var(--line);
     border-radius: 0.5rem;
-    background: #0b1728;
+    background: var(--surface);
 }
 
 .station-properties {
@@ -368,7 +380,7 @@ button.danger-solid {
     padding: 0.75rem;
     border: 1px solid var(--line);
     border-radius: 0.4rem;
-    background: #0b1728;
+    background: var(--surface);
 }
 
 .station-properties > div,
@@ -437,7 +449,7 @@ dialog {
     color: var(--ink);
 }
 
-dialog::backdrop { background: rgb(2 7 15 / 75%); }
+dialog::backdrop { background: var(--backdrop); }
 
 dialog form { padding: 1.5rem; }
 .dialog-content { padding: 1.5rem; }
@@ -526,7 +538,7 @@ label {
     padding: 0.6rem 0.75rem;
     border: 1px solid var(--line);
     border-radius: 0.4rem;
-    background: #0b1728;
+    background: var(--surface);
 }
 
 .compact-item button { padding: 0.35rem 0.6rem; }
@@ -544,7 +556,7 @@ label {
     padding: 0.75rem;
     border: 1px solid var(--line);
     border-radius: 0.4rem;
-    background: #0b1728;
+    background: var(--surface);
 }
 
 .packet-item time {
@@ -573,7 +585,7 @@ label {
     padding: 0.75rem;
     border: 1px solid var(--line);
     border-radius: 0.4rem;
-    background: #0b1728;
+    background: var(--surface);
 }
 
 .weather-reading {
@@ -642,7 +654,7 @@ select {
     border: 1px solid var(--line);
     border-radius: 0.4rem;
     outline: none;
-    background: #0b1728;
+    background: var(--surface);
     color: var(--ink);
     font: inherit;
 }
@@ -696,7 +708,7 @@ legend {
 }
 
 .form-message.success { color: var(--accent); }
-.form-message.error { color: #ff9e9e; }
+.form-message.error { color: var(--error); }
 .form-actions { justify-content: flex-end; }
 .form-actions .details-delete { margin-right: auto; }
 
@@ -704,7 +716,7 @@ legend {
     padding: 1rem;
     border: 1px solid var(--line);
     border-radius: 0.5rem;
-    background: #0b1728;
+    background: var(--surface);
 }
 
 .confirmation-panel p { margin-top: 0; }
@@ -735,3 +747,98 @@ legend {
     .about-details dt { padding-bottom: 0.2rem; border-bottom: 0; }
     .about-details dd { padding-top: 0.2rem; }
 }
+
+.station-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.station-list-heading h2 { margin: 0; white-space: nowrap; }
+#station-options-summary { font-size: 0.9rem; font-weight: 400; color: var(--summary); }
+
+/* Keep the two desktop lists independently scrollable beneath their controls. */
+@media (min-width: 1001px) and (min-height: 501px) {
+    body {
+        height: 100vh;
+        height: 100dvh;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        overflow: hidden;
+    }
+    body > main {
+        min-height: 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: minmax(0, 1fr);
+    }
+    body > main > section {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+    }
+    body > main > section > h2,
+    .station-list-heading { flex-shrink: 0; }
+    #centers,
+    #stations {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        scrollbar-gutter: stable;
+        overscroll-behavior-y: contain;
+        align-content: start;
+        padding-right: 0.5rem;
+    }
+}
+
+/* Narrow windows use one normally scrolling page instead of nested scroll areas. */
+@media (max-width: 1000px) {
+    body > main { grid-template-columns: minmax(0, 1fr); }
+}
+
+#centers:focus-visible,
+#stations:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+:root[data-theme="light"] {
+    color-scheme: light;
+    --ink: #182d49;
+    --muted: #4c6380;
+    --panel: #ffffff;
+    --line: #8093ac;
+    --accent: #1768b3;
+    --page: #f2f6fc;
+    --surface: #e9f0f9;
+    --header-start: #e2edfc;
+    --header-end: #f5f8fd;
+    --button-ink: #ffffff;
+    --strong: #182d49;
+    --danger-line: #a52a36;
+    --danger-ink: #a52a36;
+    --danger-fill: #aa2936;
+    --error: #a52a36;
+    --backdrop: rgb(24 45 73 / 35%);
+    --summary: #4c6380;
+}
+
+/* Preserve the existing map appearance, including controls, popups, and drawing handles. */
+#regions-map,
+#welcome-center-stations-map,
+#region-editor-map,
+#center-location-map,
+#station-location-map {
+    color-scheme: dark;
+    --ink: #eaf2ff;
+    --muted: #91a6c4;
+    --panel: #111f36;
+    --line: #284469;
+    --accent: #5aa7ff;
+    --surface: #0b1728;
+    --button-ink: #06111f;
+    color: var(--ink);
+}
+
+#toggle-theme { white-space: nowrap; }
+@media (min-width: 701px) {
+    body > header { gap: 1rem; flex-wrap: wrap; }
+    .header-actions { flex-wrap: wrap; }
+}
+
+#toggle-theme svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#toggle-theme .theme-moon { display: none; }
+:root[data-theme="light"] #toggle-theme .theme-sun { display: none; }
+:root[data-theme="light"] #toggle-theme .theme-moon { display: block; }

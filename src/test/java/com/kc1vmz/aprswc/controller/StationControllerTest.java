@@ -272,4 +272,32 @@ class StationControllerTest {
                 .containsExactly("N3ORPHAN");
         assertEquals(1, ignoredStations.count());
     }
+
+    @Test
+    void listsLastHeardFromLatestPacketRegardlessOfCallsignCase() {
+        stations.saveAndFlush(new Station(null, "N1HEARD", StationState.UNKNOWN, List.of()));
+        stations.saveAndFlush(new Station(null, "N1QUIET", StationState.UNKNOWN, List.of()));
+        LocalDateTime latest = LocalDateTime.of(2026, 9, 18, 12, 0);
+        packets.saveAndFlush(new StationPacket(null, "test", "n1heard", latest, "latest", null));
+        packets.saveAndFlush(new StationPacket(null, "test", "N1HEARD", latest.minusHours(4), "older", null));
+        client.get()
+                .uri("/api/v1/stations")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBodyList(Station.class)
+                .value(rows -> {
+                    Station heard = rows.stream()
+                            .filter(row -> row.getCallsign().equals("N1HEARD"))
+                            .findFirst()
+                            .orElseThrow();
+                    Station quiet = rows.stream()
+                            .filter(row -> row.getCallsign().equals("N1QUIET"))
+                            .findFirst()
+                            .orElseThrow();
+                    assertEquals(latest.atZone(java.time.ZoneId.systemDefault()).toInstant(), heard.getLastHeard());
+                    org.assertj.core.api.Assertions.assertThat(quiet.getLastHeard())
+                            .isNull();
+                });
+    }
 }

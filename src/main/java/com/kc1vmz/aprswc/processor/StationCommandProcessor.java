@@ -113,6 +113,12 @@ public class StationCommandProcessor {
         if ((command == null) || (command.getCommand() == null)) {
             return;
         }
+        if (command.getWelcomeCenter() == null) return;
+        WelcomeCenter current = welcomeCenterAccessor
+                .findOpenById(command.getWelcomeCenter().getId())
+                .block();
+        if (current == null) return;
+        command.setWelcomeCenter(current);
         String actualCommand = recognizedCommand(command.getCommand());
         if (actualCommand == null) {
             return;
@@ -140,6 +146,11 @@ public class StationCommandProcessor {
         } else if (actualCommand.equalsIgnoreCase(WARNINGS_COMMAND)) {
             processWarningsRequest(command);
         }
+    }
+
+    private void queueReply(StationMessage message) {
+        message.setRequiresOpenCenter(true);
+        stationMessageQueue.offer(message);
     }
 
     private void processVoiceRequest(StationCommand command) {
@@ -187,7 +198,7 @@ public class StationCommandProcessor {
                     messageText,
                     null,
                     com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
-            stationMessageQueue.offer(stationMessage);
+            queueReply(stationMessage);
         }
     }
 
@@ -219,7 +230,7 @@ public class StationCommandProcessor {
                     messageText,
                     null,
                     com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
-            stationMessageQueue.offer(stationMessage);
+            queueReply(stationMessage);
         } else {
             for (String messageText : messages) {
                 StationMessage stationMessage = new StationMessage(
@@ -231,7 +242,7 @@ public class StationCommandProcessor {
                         messageText,
                         null,
                         com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
-                stationMessageQueue.offer(stationMessage);
+                queueReply(stationMessage);
             }
         }
     }
@@ -284,7 +295,7 @@ public class StationCommandProcessor {
                 messageText,
                 null,
                 com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
-        stationMessageQueue.offer(stationMessage);
+        queueReply(stationMessage);
 
         String messageText2 = "Send STOP to stop receiving messages";
         StationMessage stationMessage2 = new StationMessage(
@@ -296,7 +307,7 @@ public class StationCommandProcessor {
                 messageText2,
                 null,
                 com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
-        stationMessageQueue.offer(stationMessage2);
+        queueReply(stationMessage2);
     }
 
     private void processStopRequest(StationCommand command) {
@@ -313,7 +324,7 @@ public class StationCommandProcessor {
                 messageText,
                 null,
                 com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
-        stationMessageQueue.offer(stationMessage);
+        queueReply(stationMessage);
 
         String messageText2 = "Send START to resume receiving messages";
         StationMessage stationMessage2 = new StationMessage(
@@ -325,7 +336,7 @@ public class StationCommandProcessor {
                 messageText2,
                 null,
                 com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
-        stationMessageQueue.offer(stationMessage2);
+        queueReply(stationMessage2);
     }
 
     private String getAllWelcomeCenterCallsigns() {
@@ -364,7 +375,7 @@ public class StationCommandProcessor {
                 messageText,
                 null,
                 com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
-        stationMessageQueue.offer(stationMessage);
+        queueReply(stationMessage);
     }
 
     private void processInfoRequest(StationCommand command) {
@@ -389,7 +400,7 @@ public class StationCommandProcessor {
                 messageText,
                 null,
                 com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
-        stationMessageQueue.offer(stationMessage);
+        queueReply(stationMessage);
         StationMessage stationMessage2 = new StationMessage(
                 UUID.randomUUID(),
                 command.getCallsign(),
@@ -399,7 +410,7 @@ public class StationCommandProcessor {
                 messageText2,
                 null,
                 com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
-        stationMessageQueue.offer(stationMessage2);
+        queueReply(stationMessage2);
         processHelpRequest(command);
     }
 
@@ -416,7 +427,7 @@ public class StationCommandProcessor {
                 null,
                 com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
 
-        stationMessageQueue.offer(stationMessage);
+        queueReply(stationMessage);
     }
 
     public boolean isRecognizedCommand(String content) {

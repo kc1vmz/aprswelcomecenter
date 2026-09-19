@@ -30,6 +30,24 @@ public class WelcomeCenter {
     @Id
     private UUID id;
 
+    @Enumerated(EnumType.STRING)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 6)
+    private com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus status;
+
+    public com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus status) {
+        this.status = status;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public boolean isOpen() {
+        return status == com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus.OPEN;
+    }
+
     private String name;
 
     @Column(length = 4000)
@@ -85,6 +103,7 @@ public class WelcomeCenter {
             String symbolCode,
             String symbolId,
             List<WelcomeRegion> regions) {
+        this.status = com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus.OPEN;
         this.id = id;
         this.name = name;
         this.description = description;

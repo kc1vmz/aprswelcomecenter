@@ -219,7 +219,7 @@ class StationCommandProcessorTest {
     }
 
     private WelcomeCenter welcomeCenter() {
-        return new WelcomeCenter(
+        WelcomeCenter center = new WelcomeCenter(
                 UUID.randomUUID(),
                 "Center",
                 null,
@@ -235,6 +235,10 @@ class StationCommandProcessorTest {
                 "c",
                 "/",
                 List.of());
+        org.mockito.Mockito.lenient()
+                .when(welcomeCenterAccessor.findOpenById(center.getId()))
+                .thenReturn(Mono.just(center));
+        return center;
     }
 
     private StationCommand weatherCommand(WelcomeCenter center) {

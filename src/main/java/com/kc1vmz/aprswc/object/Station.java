@@ -50,6 +50,17 @@ public class Station {
         if (positions != null) positions.forEach(this::addPosition);
     }
 
+    @Transient
+    private java.time.Instant lastHeard;
+
+    public java.time.Instant getLastHeard() {
+        return lastHeard;
+    }
+
+    public void setLastHeard(java.time.Instant value) {
+        lastHeard = value;
+    }
+
     @PrePersist
     void assignId() {
         if (id == null) id = UUID.randomUUID();

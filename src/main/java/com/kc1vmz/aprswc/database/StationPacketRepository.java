@@ -29,6 +29,16 @@ import org.springframework.transaction.annotation.Transactional;
 public interface StationPacketRepository extends JpaRepository<StationPacket, UUID> {
     List<StationPacket> findAllByCallsignIgnoreCaseOrderByReceivedTimeDesc(String callsign);
 
+    interface LastHeard {
+        String getCallsign();
+
+        java.time.LocalDateTime getReceivedTime();
+    }
+
+    @Query("select upper(packet.callsign) as callsign, max(packet.receivedTime) as receivedTime "
+            + "from StationPacket packet group by upper(packet.callsign)")
+    List<LastHeard> findLastHeardByCallsign();
+
     @Modifying
     @Transactional
     @Query("delete from StationPacket packet where lower(packet.callsign) = lower(:callsign)")

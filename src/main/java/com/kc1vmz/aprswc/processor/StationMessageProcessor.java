@@ -98,6 +98,14 @@ public class StationMessageProcessor {
             return;
         }
 
+        if (message.isRequiresOpenCenter()
+                && (message.getWelcomeCenter() == null
+                        || welcomeCenterAccessor
+                                        .findOpenById(message.getWelcomeCenter().getId())
+                                        .block()
+                                == null)) {
+            return;
+        }
         if (message.getMessageType().equals(MessageType.MESSAGE)) {
             if (message.getCallsignTo() != null) {
                 // send directed single message

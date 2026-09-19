@@ -76,7 +76,19 @@ public class StationAccessor {
     public Flux<Station> findAll(boolean excludeIgnored) {
         return Mono.fromCallable(() -> {
                     Set<String> ignoredCallsigns = excludeIgnored ? ignoreStations.findAllCallsigns() : Set.of();
+                    java.util.Map<String, java.time.Instant> lastHeard = new java.util.HashMap<>();
+                    packets.findLastHeardByCallsign().forEach(packet -> {
+                        if (packet.getCallsign() != null && packet.getReceivedTime() != null) {
+                            lastHeard.put(
+                                    packet.getCallsign(),
+                                    packet.getReceivedTime()
+                                            .atZone(java.time.ZoneId.systemDefault())
+                                            .toInstant());
+                        }
+                    });
                     return stations.findAll().stream()
+                            .peek(station -> station.setLastHeard(
+                                    lastHeard.get(station.getCallsign().toUpperCase(Locale.ROOT))))
                             .filter(station -> !ignoredCallsigns.contains(
                                     station.getCallsign().toUpperCase(Locale.ROOT)))
                             .toList();
