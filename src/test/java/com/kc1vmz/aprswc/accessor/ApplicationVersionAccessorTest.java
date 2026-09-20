@@ -29,7 +29,7 @@ class ApplicationVersionAccessorTest {
     void findReturnsConfiguredApplicationVersion() {
         ApplicationVersionAccessor accessor = new ApplicationVersionAccessor();
         ReflectionTestUtils.setField(accessor, "applicationName", "APRSWelcomeCenter");
-        ReflectionTestUtils.setField(accessor, "version", "1.0.3");
+        ReflectionTestUtils.setField(accessor, "version", "1.0.4");
         ReflectionTestUtils.setField(accessor, "author", "Author");
         ReflectionTestUtils.setField(accessor, "copyrightYear", "2026");
         ReflectionTestUtils.setField(accessor, "website", "https://example.com");
@@ -38,7 +38,7 @@ class ApplicationVersionAccessorTest {
 
         assertAll(
                 () -> assertEquals("APRSWelcomeCenter", version.getApplicationName()),
-                () -> assertEquals("1.0.3", version.getVersion()),
+                () -> assertEquals("1.0.4", version.getVersion()),
                 () -> assertEquals("Author", version.getAuthor()),
                 () -> assertEquals("2026", version.getCopyrightYear()),
                 () -> assertEquals("https://example.com", version.getWebsite()));

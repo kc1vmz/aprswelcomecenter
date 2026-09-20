@@ -11,7 +11,7 @@
 
     <groupId>com.kc1vmz</groupId>
     <artifactId>aprs-welcome-center</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <name>APRS Welcome Center</name>
     <description>APRSWC REST service and reactive web UI</description>
 
