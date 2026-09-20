@@ -42,7 +42,7 @@ public class WelcomeCenterObjectBeaconProcessor {
     @Autowired
     private ObjectBeaconQueue objectBeaconQueue;
 
-    private static final String STATUS_MESSAGE = "APRS Welcome Center";
+    private static final String STATUS_MESSAGE = "Welcome Center - %s - %s";
 
     private final ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor(
             runnable -> new Thread(runnable, "WelcomeCenterObjectBeaconProcessor"));
@@ -70,7 +70,9 @@ public class WelcomeCenterObjectBeaconProcessor {
 
     void beaconWelcomeCenterObject(WelcomeCenter welcomeCenter) {
         if (welcomeCenter.isOpen() && (welcomeCenter.getLatitude() != null) && (welcomeCenter.getLongitude() != null)) {
-            String statusMessage = STATUS_MESSAGE;
+            String statusMessage = String.format(STATUS_MESSAGE, 
+                                                    welcomeCenter.getName(), 
+                                                    (welcomeCenter.getDescription() != null) ? welcomeCenter.getDescription() : "");
             String symbolCode = welcomeCenter.getSymbolCode();
             String symbolId = welcomeCenter.getSymbolId();
 

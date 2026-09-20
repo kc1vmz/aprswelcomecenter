@@ -65,7 +65,7 @@ public class WelcomeCenterAccessor {
     @Autowired
     private org.springframework.context.ApplicationEventPublisher events;
 
-    private static final String STATUS_MESSAGE = "APRS Welcome Center";
+    private static final String STATUS_MESSAGE = "Welcome Center - %s - %s";
 
     public Flux<WelcomeCenter> findAll() {
         return Mono.fromCallable(centers::findAll)
@@ -119,7 +119,9 @@ public class WelcomeCenterAccessor {
 
     private void afterWelcomeCenterCreated(WelcomeCenter welcomeCenter) {
         if (welcomeCenter.isOpen() && (welcomeCenter.getLatitude() != null) && (welcomeCenter.getLongitude() != null)) {
-            String statusMessage = String.format(STATUS_MESSAGE);
+            String statusMessage = String.format(STATUS_MESSAGE, 
+                                                    welcomeCenter.getName(), 
+                                                    (welcomeCenter.getDescription() != null) ? welcomeCenter.getDescription() : "");
             ObjectBeacon objectBeacon = new ObjectBeacon(
                     welcomeCenter.getCallsign(),
                     welcomeCenter.getOwnerCallsign(),

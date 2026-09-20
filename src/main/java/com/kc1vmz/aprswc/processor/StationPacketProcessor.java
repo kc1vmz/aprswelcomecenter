@@ -447,7 +447,7 @@ public class StationPacketProcessor {
                     packet.getCallsignTo(),
                     null,
                     null,
-                    "reg" + ackId,
+                    "rej" + ackId,
                     packet.getPacketProcessorId(),
                     com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
             stationMessageQueue.offer(stationMessage);

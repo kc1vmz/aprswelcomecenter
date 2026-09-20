@@ -46,17 +46,17 @@ import org.springframework.stereotype.Component;
 public class StationCommandProcessor {
     private static final Logger log = LoggerFactory.getLogger(StationCommandProcessor.class);
     private static final Logger objectLog = LoggerFactory.getLogger("ProcessorObjectLog");
-    private static final String INFO_COMMAND = "INFO";
-    private static final String WEATHER_COMMAND = "WEATHER";
-    private static final String VOICE_COMMAND = "VOICE";
-    private static final String COMM_COMMAND = "COMM";
     private static final String CLUBS_COMMAND = "CLUBS";
-    private static final String HELP_COMMAND = "HELP";
+    private static final String COMM_COMMAND = "COMM";
     private static final String EVENTS_COMMAND = "EVENTS";
-    private static final String WARNINGS_COMMAND = "WARNINGS";
-    private static final String STOP_COMMAND = "STOP";
-    private static final String START_COMMAND = "START";
+    private static final String HELP_COMMAND = "HELP";
+    private static final String INFO_COMMAND = "INFO";
     private static final String OTHERS_COMMAND = "OTHERS";
+    private static final String START_COMMAND = "START";
+    private static final String STOP_COMMAND = "STOP";
+    private static final String VOICE_COMMAND = "VOICE";
+    private static final String WARNINGS_COMMAND = "WARNINGS";
+    private static final String WEATHER_COMMAND = "WEATHER";
     private static final Set<String> WELCOME_CENTER_COMMANDS = Set.of(
             INFO_COMMAND,
             STOP_COMMAND,
@@ -415,19 +415,30 @@ public class StationCommandProcessor {
     }
 
     private void processHelpRequest(StationCommand command) {
-        String messageText = "Commands: HELP,INFO,WEATHER,START,STOP,OTHERS,COMM,VOICE,CLUBS,EVENTS,WARNINGS";
+        String messageText1 = "Commands: H[ELP],I[NFO],WE[ATHER],STA[RT],STO[P]";
+        String messageText2 = "Commands: O[THERS],CO[MM],V[OICE],CL[UBS],E[VENTS],WA[RNINGS]";
 
-        StationMessage stationMessage = new StationMessage(
+        StationMessage stationMessage1 = new StationMessage(
                 UUID.randomUUID(),
                 command.getCallsign(),
                 command.getWelcomeCenter().getCallsign(),
                 command.getWelcomeCenter(),
                 null,
-                messageText,
+                messageText1,
+                null,
+                com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
+        StationMessage stationMessage2 = new StationMessage(
+                UUID.randomUUID(),
+                command.getCallsign(),
+                command.getWelcomeCenter().getCallsign(),
+                command.getWelcomeCenter(),
+                null,
+                messageText2,
                 null,
                 com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
 
-        queueReply(stationMessage);
+        queueReply(stationMessage1);
+        queueReply(stationMessage2);
     }
 
     public boolean isRecognizedCommand(String content) {
@@ -436,6 +447,7 @@ public class StationCommandProcessor {
 
     private String recognizedCommand(String content) {
         String command = null;
+        boolean found = false;
 
         if (content == null) {
             return null;
@@ -454,9 +466,27 @@ public class StationCommandProcessor {
             objectLog.error("Exception caught parsing message for command", e);
         }
 
-        if ((command != null)
-                && (WELCOME_CENTER_COMMANDS.contains(command.trim().toUpperCase(Locale.ROOT)))) {
-            return command;
+        if (command != null) {
+            //  do a substring search for smaller commands
+            String toMatch = command.trim().toUpperCase(Locale.ROOT);
+            if (toMatch.length() > 0) {
+                for (String wcCmd : WELCOME_CENTER_COMMANDS) {
+                    if (wcCmd.startsWith(toMatch)) {
+                        // found a substring
+                        if (found) {
+                            // it is not unique - return null
+                            command = null;
+                            break;
+                        } else {
+                            found = true;
+                            command = wcCmd;
+                        }
+                    }
+                }
+            }
+            if (found) {
+                return command;
+            }
         }
         return null;
     }
