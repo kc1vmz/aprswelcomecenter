@@ -57,11 +57,13 @@ public class StationCommandProcessor {
     private static final String VOICE_COMMAND = "VOICE";
     private static final String WARNINGS_COMMAND = "WARNINGS";
     private static final String WEATHER_COMMAND = "WEATHER";
+    private static final String WEATHER_SHORT_COMMAND = "WX";
     private static final Set<String> WELCOME_CENTER_COMMANDS = Set.of(
             INFO_COMMAND,
             STOP_COMMAND,
             START_COMMAND,
             WEATHER_COMMAND,
+            WEATHER_SHORT_COMMAND,
             VOICE_COMMAND,
             COMM_COMMAND,
             OTHERS_COMMAND,
@@ -127,7 +129,7 @@ public class StationCommandProcessor {
             processHelpRequest(command);
         } else if (actualCommand.equalsIgnoreCase(INFO_COMMAND)) {
             processInfoRequest(command);
-        } else if (actualCommand.equalsIgnoreCase(WEATHER_COMMAND)) {
+        } else if ((actualCommand.equalsIgnoreCase(WEATHER_COMMAND)) || (actualCommand.equalsIgnoreCase(WEATHER_SHORT_COMMAND))) {
             processWeatherRequest(command);
         } else if (actualCommand.equalsIgnoreCase(STOP_COMMAND)) {
             processStopRequest(command);
@@ -354,7 +356,7 @@ public class StationCommandProcessor {
                 .findSummary(command.getWelcomeCenter().getId())
                 .block();
         String messageText = "";
-        if (summary == null) {
+        if ((summary == null) || (summary.getTemperature() == null)) {
             messageText = "No current weather summary available";
         } else {
             messageText = String.format(
@@ -415,7 +417,7 @@ public class StationCommandProcessor {
     }
 
     private void processHelpRequest(StationCommand command) {
-        String messageText1 = "Commands: H[ELP],I[NFO],WE[ATHER],STA[RT],STO[P]";
+        String messageText1 = "Commands: H[ELP],I[NFO],WE[ATHER],WX,STA[RT],STO[P]";
         String messageText2 = "Commands: O[THERS],CO[MM],V[OICE],CL[UBS],E[VENTS],WA[RNINGS]";
 
         StationMessage stationMessage1 = new StationMessage(
