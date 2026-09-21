@@ -86,7 +86,7 @@ public class WelcomeCenterObjectBeaconProcessor {
 
             ObjectBeacon objectBeacon = new ObjectBeacon(
                     welcomeCenter.getCallsign(),
-                    welcomeCenter.getOwnerCallsign(),
+                    welcomeCenter.getCallsign(),
                     welcomeCenter.getLongitude(),
                     welcomeCenter.getLatitude(),
                     symbolCode,

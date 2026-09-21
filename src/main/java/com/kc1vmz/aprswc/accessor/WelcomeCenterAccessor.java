@@ -51,6 +51,9 @@ public class WelcomeCenterAccessor {
     private StationPositionRepository stationPositions;
 
     @Autowired
+    private PointOfInterestService pois;
+
+    @Autowired
     private ContainmentDeletionService deletions;
 
     @Autowired
@@ -109,7 +112,11 @@ public class WelcomeCenterAccessor {
         value.setSymbolId(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID);
         value.setId(null);
         if (value.getStatus() == null) value.setStatus(com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus.OPEN);
-        return Mono.fromCallable(() -> centers.save(value))
+        return Mono.fromCallable(() -> transactions.execute(tx -> {
+                    pois.lockNames();
+                    pois.validateCenterName(value.getCallsign());
+                    return centers.saveAndFlush(value);
+                }))
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(createdWelcomeCenter -> {
                     afterWelcomeCenterCreated(createdWelcomeCenter);
@@ -125,7 +132,7 @@ public class WelcomeCenterAccessor {
                     (welcomeCenter.getDescription() != null) ? welcomeCenter.getDescription() : "");
             ObjectBeacon objectBeacon = new ObjectBeacon(
                     welcomeCenter.getCallsign(),
-                    welcomeCenter.getOwnerCallsign(),
+                    welcomeCenter.getCallsign(),
                     welcomeCenter.getLongitude(),
                     welcomeCenter.getLatitude(),
                     welcomeCenter.getSymbolCode(),
@@ -140,12 +147,15 @@ public class WelcomeCenterAccessor {
         if (value.getStatus() == null)
             return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is required"));
         return Mono.fromCallable(() -> transactions.execute(transaction -> {
+                    pois.lockNames();
                     WelcomeCenter existing = centers.findForUpdate(id)
                             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
                     var previous = com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(existing);
+                    var previousPois = pois.beforeCenterChange(existing);
                     existing.setStatus(value.getStatus());
                     existing.setName(value.getName());
                     existing.setDescription(value.getDescription());
+                    pois.validateCenterName(value.getCallsign());
                     existing.setCallsign(value.getCallsign());
                     existing.setOwnerName(value.getOwnerName());
                     existing.setOwnerCallsign(value.getOwnerCallsign());
@@ -158,6 +168,9 @@ public class WelcomeCenterAccessor {
                     existing.setSymbolCode(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE);
                     existing.setSymbolId(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID);
                     WelcomeCenter saved = centers.saveAndFlush(existing);
+                    if (previous.status() != saved.getStatus()
+                            || !previous.callsign().equalsIgnoreCase(saved.getCallsign()))
+                        pois.afterCenterChange(saved, previousPois);
                     events.publishEvent(new com.kc1vmz.aprswc.object.WelcomeCenterChanged(
                             previous, com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(saved)));
                     return saved;
@@ -167,6 +180,7 @@ public class WelcomeCenterAccessor {
 
     public Mono<WelcomeCenter> changeStatus(UUID id, com.kc1vmz.aprswc.object.WelcomeCenterStatusChange change) {
         return Mono.fromCallable(() -> transactions.execute(transaction -> {
+                    pois.lockNames();
                     WelcomeCenter existing = centers.findForUpdate(id)
                             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
                     if (existing.getStatus() != change.expectedStatus()) {
@@ -175,8 +189,12 @@ public class WelcomeCenterAccessor {
                     }
                     if (existing.getStatus() == change.status()) return existing;
                     var previous = com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(existing);
+                    var previousPois = pois.beforeCenterChange(existing);
                     existing.setStatus(change.status());
                     WelcomeCenter saved = centers.saveAndFlush(existing);
+                    if (previous.status() != saved.getStatus()
+                            || !previous.callsign().equalsIgnoreCase(saved.getCallsign()))
+                        pois.afterCenterChange(saved, previousPois);
                     events.publishEvent(new com.kc1vmz.aprswc.object.WelcomeCenterChanged(
                             previous, com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(saved)));
                     return saved;
@@ -193,10 +211,13 @@ public class WelcomeCenterAccessor {
 
     private void beforeWelcomeCenterDelete(WelcomeCenter welcomeCenter) {
         if ((welcomeCenter.getLatitude() != null) && (welcomeCenter.getLongitude() != null)) {
-            String statusMessage = String.format(STATUS_MESSAGE);
+            String statusMessage = String.format(
+                    STATUS_MESSAGE,
+                    welcomeCenter.getName(),
+                    java.util.Objects.toString(welcomeCenter.getDescription(), ""));
             ObjectBeacon objectBeacon = new ObjectBeacon(
                     welcomeCenter.getCallsign(),
-                    welcomeCenter.getOwnerCallsign(),
+                    welcomeCenter.getCallsign(),
                     welcomeCenter.getLongitude(),
                     welcomeCenter.getLatitude(),
                     welcomeCenter.getSymbolCode(),

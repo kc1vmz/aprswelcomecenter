@@ -18,6 +18,16 @@
 package com.kc1vmz.aprswc.object;
 
 public class ObjectBeacon {
+    private java.util.function.BooleanSupplier transmissionPermitted = () -> true;
+
+    public void setTransmissionPermitted(java.util.function.BooleanSupplier value) {
+        transmissionPermitted = value;
+    }
+
+    public boolean isTransmissionPermitted() {
+        return transmissionPermitted.getAsBoolean();
+    }
+
     private String objectName;
     private String callsignFrom;
     private String longitude;

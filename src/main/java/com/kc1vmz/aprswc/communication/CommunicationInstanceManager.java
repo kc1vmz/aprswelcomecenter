@@ -124,7 +124,7 @@ public class CommunicationInstanceManager {
     }
 
     public void sendObject(ObjectBeacon beacon) {
-        workers.values().forEach(w -> w.send(t -> t.sendObject(beacon), () -> {}));
+        workers.values().forEach(w -> w.send(t -> t.sendObject(beacon), beacon::isTransmissionPermitted, () -> {}));
     }
 
     @PreDestroy

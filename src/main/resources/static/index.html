@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg?v=20260918-1" type="image/svg+xml">
     <script src="/theme.js?v=20260918-2"></script>
     <link rel="stylesheet" href="/webjars/leaflet/1.9.4/leaflet.css">
-    <link rel="stylesheet" href="/app.css?v=20260920-1">
+    <link rel="stylesheet" href="/app.css?v=20260921-3">
 </head>
 <body>
     <header>
@@ -541,6 +541,7 @@
             </div>
             <p id="welcome-center-stations-message" class="form-message" role="status" aria-live="polite"></p>
             <div id="welcome-center-stations-map" aria-label="Map of stations currently within the Welcome Center"></div>
+            <p id="station-map-legend" class="map-message">Blue markers: stations. Purple markers: Points of Interest.</p>
             <div id="welcome-center-stations-list" class="welcome-center-station-list" hidden></div>
         </div>
     </dialog>
@@ -989,10 +990,60 @@
             </div>
         </form>
     </dialog>
+    <dialog id="poi-list-dialog" class="poi-dialog wide-dialog" aria-labelledby="poi-list-title">
+        <div class="dialog-content">
+            <div class="dialog-heading">
+                <div><h2 id="poi-list-title">Points of Interest</h2><p id="poi-center-label"></p></div>
+                <button type="button" class="icon-button" data-poi-close="#poi-list-dialog" aria-label="Close">&times;</button>
+            </div>
+            <div class="card-actions poi-toolbar"><button type="button" id="poi-add">Create Point of Interest</button><button type="button" id="poi-refresh" class="secondary">Refresh</button></div>
+            <div id="poi-overview-map" aria-label="Map of all Points of Interest in this Welcome Center"></div>
+            <p id="poi-list-message" class="map-message" role="status" aria-live="polite"></p>
+            <div id="poi-list" class="compact-list"></div>
+        </div>
+    </dialog>
+    <dialog id="poi-edit-dialog" class="poi-dialog" aria-labelledby="poi-edit-title">
+        <form id="poi-form">
+            <div class="dialog-heading"><h2 id="poi-edit-title">Point of Interest</h2>
+                <button type="button" class="icon-button" data-poi-close="#poi-edit-dialog" aria-label="Close">&times;</button></div>
+            <div class="form-grid">
+                <label>Name<input name="name" required minlength="1" maxlength="9" pattern="[A-Za-z0-9]{1,9}" title="1-9 letters or digits"></label>
+                <label>Description<input name="description" maxlength="40" pattern="[ -~]*" title="Up to 40 printable ASCII characters"></label>
+                <label>Latitude<input name="latitude" required placeholder="4336.50N or 43.60833"></label>
+                <label>Longitude<input name="longitude" required placeholder="07258.30W or -72.97167"></label>
+                <label>Symbol code<input name="symbolCode" required minlength="1" maxlength="1" value="c"></label>
+                <label>Symbol table ID<input name="symbolTableId" required minlength="1" maxlength="1" value="/"></label>
+            </div>
+            <button type="button" id="poi-pick-location" class="secondary">Choose location on map</button>
+            <label class="poi-availability"><input type="checkbox" name="temporarilyUnavailable"> Make temporarily unavailable</label>
+            <p id="poi-edit-message" class="form-message" role="status" aria-live="polite"></p>
+            <div class="form-actions"><button type="button" class="secondary" data-poi-close="#poi-edit-dialog">Cancel</button><button type="submit" id="poi-save">Save</button></div>
+        </form>
+    </dialog>
+    <dialog id="poi-delete-dialog" class="poi-dialog" aria-labelledby="poi-delete-title">
+        <form id="poi-delete-form">
+            <div class="dialog-heading"><h2 id="poi-delete-title">Delete Point of Interest?</h2>
+                <button type="button" class="icon-button" data-poi-close="#poi-delete-dialog" aria-label="Close">&times;</button></div>
+            <div class="confirmation-panel"><p>Permanently delete this Point of Interest?</p><strong id="poi-delete-name"></strong><p>An inactive APRS object report will be queued to withdraw it.</p></div>
+            <p id="poi-delete-message" class="form-message" role="status" aria-live="polite"></p>
+            <div class="form-actions"><button type="button" id="poi-delete-cancel" class="secondary" data-poi-close="#poi-delete-dialog">Cancel</button><button type="submit" id="poi-delete-confirm" class="danger-solid">Delete</button></div>
+        </form>
+    </dialog>
+    <dialog id="poi-map-dialog" class="poi-dialog" aria-labelledby="poi-map-title">
+        <div class="dialog-content">
+            <div class="dialog-heading"><h2 id="poi-map-title">Point of Interest Location</h2>
+                <button type="button" class="icon-button" data-poi-close="#poi-map-dialog" aria-label="Close">&times;</button></div>
+            <div id="poi-location-map"></div>
+            <p id="poi-map-message" class="form-message" role="status" aria-live="polite"></p>
+            <div class="form-actions"><button type="button" class="secondary" data-poi-close="#poi-map-dialog">Cancel</button><button type="button" id="poi-use-location" disabled>Use location</button></div>
+        </div>
+    </dialog>
     <script src="/webjars/leaflet/1.9.4/leaflet.js"></script>
     <script src="/region-map-editor.js?v=20260824-17"></script>
     <script src="/station-list.js?v=20260918-2"></script>
-    <script src="/app.js?v=20260920-3"></script>
+    <script src="/poi-map.js?v=20260921-2"></script>
+    <script src="/app.js?v=20260921-2"></script>
+    <script src="/points-of-interest.js?v=20260921-3"></script>
 <script src="/communications.js?v=20260920-3"></script>
 </body>
 </html>

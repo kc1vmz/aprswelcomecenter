@@ -77,7 +77,7 @@ public class WelcomeCenterLifecycle {
                 "Welcome Center - %s - %s", welcomeCenterSnapshot.name(), (active) ? "now open" : "now closed");
         objectBeaconQueue.offer(new ObjectBeacon(
                 welcomeCenterSnapshot.callsign(),
-                welcomeCenterSnapshot.ownerCallsign(),
+                welcomeCenterSnapshot.callsign(),
                 welcomeCenterSnapshot.longitude(),
                 welcomeCenterSnapshot.latitude(),
                 welcomeCenterSnapshot.symbolCode(),

@@ -121,6 +121,6 @@ public abstract class APRSKISSListenerAccessor implements CommunicationTransport
 
     public void sendObject(ObjectBeacon b) throws IOException {
         write(AX25PacketBuilder.buildObjectPacket(
-                packet(b.getObjectName(), null, ";" + APRSInternetServerListenerAccessor.objectData(b))));
+                packet(b.getCallsignFrom(), null, ";" + APRSInternetServerListenerAccessor.objectData(b))));
     }
 }

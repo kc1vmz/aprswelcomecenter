@@ -66,7 +66,7 @@ public class APRSInternetServerListenerAccessor implements CommunicationTranspor
 
     public void sendObject(ObjectBeacon b) throws IOException {
         write(String.format(
-                "%s>%s,TCPIP*:;%s\r\n", b.getObjectName(), ApplicationToCallConstant.TOCALL_NC2, objectData(b)));
+                "%s>%s,TCPIP*:;%s\r\n", b.getCallsignFrom(), ApplicationToCallConstant.TOCALL_NC2, objectData(b)));
     }
 
     public static String objectData(ObjectBeacon b) {

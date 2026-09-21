@@ -53,6 +53,29 @@ class LiquibaseMigrationTest {
     }
 
     @Test
+    void poiMigrationIsRepeatablePreservesChildrenAndEnforcesContainment() throws Exception {
+        var ds = database();
+        try (var c = ds.getConnection()) {
+            legacy(c);
+        }
+        migrate(ds);
+        try (var c = ds.getConnection();
+                var s = c.createStatement()) {
+            s.execute("insert into welcome_centers(id,callsign) values(random_uuid(),'N1POI')");
+            s.execute(
+                    "insert into points_of_interest(id,welcome_center_id,name,latitude,longitude,symbol_code,symbol_table_id) select random_uuid(),id,'PARK','4336.50N','07258.30W','c','/' from welcome_centers");
+            assertThat(scalar(c, "select temporarily_unavailable from points_of_interest"))
+                    .isEqualTo("FALSE");
+            assertThatThrownBy(() -> s.execute("delete from welcome_centers")).isInstanceOf(SQLException.class);
+        }
+        migrate(ds);
+        try (var c = ds.getConnection()) {
+            assertThat(scalar(c, "select name from points_of_interest")).isEqualTo("PARK");
+            assertThat(scalar(c, "select count(*) from aprs_object_name_lock")).isEqualTo("1");
+        }
+    }
+
+    @Test
     void freshInstallDefaultsToOpenAndEnforcesStatus() throws Exception {
         var ds = database();
         migrate(ds);
@@ -89,7 +112,7 @@ class LiquibaseMigrationTest {
         migrate(ds);
         try (Connection c = ds.getConnection()) {
             assertThat(scalar(c, "select status from welcome_centers")).isEqualTo("CLOSED");
-            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("8");
+            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("9");
         }
     }
 

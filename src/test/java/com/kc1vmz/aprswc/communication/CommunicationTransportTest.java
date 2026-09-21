@@ -80,6 +80,16 @@ class CommunicationTransportTest {
                     });
                     t1.sendMessage("N1TEST", "N2TEST", "Hello");
                     assertTrue(in1.readLine().endsWith("::N2TEST   :Hello"));
+                    var object = new com.kc1vmz.aprswc.object.ObjectBeacon(
+                            "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "c", "/", "Local landmark", true);
+                    t1.sendObject(object);
+                    String live = in1.readLine();
+                    assertTrue(live.startsWith("N1TEST-7>"));
+                    assertTrue(live.contains(":;LANDMARK9*"));
+                    assertTrue(live.endsWith("4336.50N/07258.30WcLocal landmark"));
+                    object.setActive(false);
+                    t1.sendObject(object);
+                    assertTrue(in1.readLine().contains(":;LANDMARK9_"));
                     peer1.getOutputStream().write("N2TEST>APRS:one\r\n".getBytes());
                     peer2.getOutputStream().write("N3TEST>APRS:two\r\n".getBytes());
                     assertEquals(
@@ -125,6 +135,39 @@ class CommunicationTransportTest {
                 transport.close();
             }
         }
+    }
+
+    @Test
+    void kissObjectUsesWelcomeCenterSourceAndPreservesNineCharacterObjectName() throws Exception {
+        class MemoryKiss extends APRSKISSListenerAccessor {
+            final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+
+            MemoryKiss() {
+                super(config("KISS_TCP", 8001));
+                output = bytes;
+            }
+
+            public void connect() {}
+
+            public void close() {}
+
+            void loopback() {
+                input = new ByteArrayInputStream(bytes.toByteArray());
+            }
+        }
+        var transport = new MemoryKiss();
+        var beacon = new com.kc1vmz.aprswc.object.ObjectBeacon(
+                "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "c", "/", "Local landmark", true);
+        transport.sendObject(beacon);
+        beacon.setActive(false);
+        transport.sendObject(beacon);
+        transport.loopback();
+        var live = transport.read();
+        var down = transport.read();
+        assertEquals("N1TEST-7", live.getCallsign());
+        assertTrue(live.getCommand().contains(":;LANDMARK9*"));
+        assertTrue(live.getCommand().endsWith("4336.50N/07258.30WcLocal landmark"));
+        assertTrue(down.getCommand().contains(":;LANDMARK9_"));
     }
 
     @Test

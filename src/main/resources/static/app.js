@@ -213,7 +213,7 @@ function renderWelcomeCenters(centers) {
             <article class="card">
                 <span class="tag">${escapeHtml(center.callsign)} (${center.status === "CLOSED" ? "Closed" : "Open"})</span>
                 <strong>${escapeHtml(center.name || center.callsign)}</strong>
-                <div class="card-actions">
+                <div class="card-actions center-card-actions">
                     <button type="button" class="secondary toggle-center-status" data-id="${center.id}">
                         ${center.status === "OPEN" ? "Close" : "Open"}
                     </button>
@@ -223,6 +223,7 @@ function renderWelcomeCenters(centers) {
                     <button type="button" class="secondary manage-regions" data-id="${center.id}">
                         Regions
                     </button>
+                    <button type="button" class="secondary manage-pois" data-id="${center.id}">Points of Interest</button>
                     <button type="button" class="secondary manage-plan" data-id="${center.id}">
                         Communication Plan
                     </button>
@@ -926,7 +927,9 @@ async function confirmDeleteStation(event) {
     }
 }
 
+let stationsMapRequest = 0;
 async function openWelcomeCenterStationsDialog(centerId) {
+    const request = ++stationsMapRequest;
     const center = welcomeCenters.get(centerId);
     if (!center) {
         return;
@@ -941,23 +944,29 @@ async function openWelcomeCenterStationsDialog(centerId) {
     setWelcomeCenterStationsMode("MAP");
     dialog.showModal();
     initializeWelcomeCenterStationsMap();
+    welcomeCenterStationsMapLayers?.clearLayers();
 
     try {
-        const [positions, regions] = await Promise.all([
+        const [positions, regions, points] = await Promise.all([
             requestJson(`/api/v1/welcome-centers/${centerId}/station-positions`),
-            requestJson(`/api/v1/welcome-centers/${centerId}/regions`)
+            requestJson(`/api/v1/welcome-centers/${centerId}/regions`),
+            requestJson(`/api/v1/welcome-centers/${centerId}/points-of-interest`)
         ]);
+        if (request !== stationsMapRequest) return;
         document.querySelector("#welcome-center-station-count").textContent = positions.length;
         renderWelcomeCenterStationList(positions);
-        await renderWelcomeCenterStationsMap(positions, regions);
+        await renderWelcomeCenterStationsMap(positions, regions, points, request);
+        if (request !== stationsMapRequest) return;
         message.textContent = positions.length ? "" : "No stations are currently within this Welcome Center.";
     } catch (error) {
+        if (request !== stationsMapRequest) return;
         message.className = "form-message error";
-        message.textContent = "Station positions could not be loaded.";
+        message.textContent = "Station positions and Points of Interest could not be loaded.";
     }
 }
 
 function closeWelcomeCenterStationsDialog() {
+    ++stationsMapRequest;
     document.querySelector("#welcome-center-stations-dialog").close();
     welcomeCenterStationsMapLayers?.clearLayers();
 }
@@ -965,6 +974,7 @@ function closeWelcomeCenterStationsDialog() {
 function setWelcomeCenterStationsMode(mode) {
     const showMap = mode === "MAP";
     document.querySelector("#welcome-center-stations-map").hidden = !showMap;
+    document.querySelector("#station-map-legend").hidden = !showMap;
     document.querySelector("#welcome-center-stations-list").hidden = showMap;
     document.querySelector("#show-welcome-center-stations-map").setAttribute("aria-pressed", String(showMap));
     document.querySelector("#show-welcome-center-stations-list").setAttribute("aria-pressed", String(!showMap));
@@ -997,14 +1007,14 @@ function renderWelcomeCenterStationList(positions) {
         </article>`, "No stations are currently within this Welcome Center.");
 }
 
-async function renderWelcomeCenterStationsMap(positions, regions) {
+async function renderWelcomeCenterStationsMap(positions, regions, points = [], request = stationsMapRequest) {
     initializeWelcomeCenterStationsMap();
     if (!welcomeCenterStationsMap || !welcomeCenterStationsMapLayers) {
         return;
     }
 
     welcomeCenterStationsMapLayers.clearLayers();
-    if (!positions.length && !regions.length) {
+    if (!positions.length && !regions.length && !points.length) {
         welcomeCenterStationsMap.setView([20, 0], 2);
         return;
     }
@@ -1031,12 +1041,14 @@ async function renderWelcomeCenterStationsMap(positions, regions) {
         }) - 1;
         return { region, topLeftIndex, bottomRightIndex };
     });
-    const converted = await requestJson("/api/v1/coordinates", {
+    const converted = coordinateRequests.length ? await requestJson("/api/v1/coordinates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(coordinateRequests)
-    });
+    }) : [];
+    if (request !== stationsMapRequest) return;
     const bounds = L.latLngBounds([]);
+    poiMap.add(points, welcomeCenterStationsMapLayers, bounds);
     positions.forEach((position, index) => {
         const coordinate = converted[index];
         if (!coordinate.valid) {

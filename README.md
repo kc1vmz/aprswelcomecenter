@@ -394,6 +394,14 @@ Sending the message "WARNINGS" to the welcome center's callsign will trigger the
 
 
 
+## Points of Interest
+
+Use **Points of Interest** on a Welcome Center card to create, edit, or delete its points of interest. Enter coordinates in APRS notation or decimal degrees, or choose a location on the map. Points of Interest may be outside the center's regions.
+
+Names contain 1-9 letters or digits and are stored uppercase. Each name must be unique across all local Points of Interest and Welcome Center object names. Descriptions allow up to 40 printable ASCII characters. Supply a one-character APRS symbol code and a symbol table ID (`/`, `\`, or a letter/digit overlay).
+
+Points of Interest transmit using their Welcome Center's callsign **Make temporarily unavailable** marks the APRS object DOWN. A closed Welcome Center also makes its Points of Interest DOWN; reopening preserves each Points of Interest's temporary-unavailability setting.
+
 ## Installation
 
 

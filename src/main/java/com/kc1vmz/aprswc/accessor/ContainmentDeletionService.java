@@ -34,6 +34,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Transactional
 public class ContainmentDeletionService {
     @Autowired
+    private PointOfInterestService pois;
+
+    @Autowired
     private WelcomeCenterRepository centers;
 
     @Autowired
@@ -55,8 +58,10 @@ public class ContainmentDeletionService {
     private StationMessageRepository messages;
 
     public WelcomeCenter deleteWelcomeCenter(UUID id) {
+        pois.lockNames();
         WelcomeCenter center =
-                centers.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                centers.findForUpdate(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        pois.deleteForCenter(center);
         announcements.deleteAllByWelcomeCenterId(id);
         policies.findByWelcomeCenterId(id).forEach(this::deletePolicyChildren);
         events.deleteAllByWelcomeCenterId(id);

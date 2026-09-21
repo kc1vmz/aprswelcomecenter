@@ -238,6 +238,7 @@ button.danger-solid {
 .station-center-name { font-size: 0.9rem; text-align: left; }
 .empty-associations { margin: 0; font-size: 0.85rem; }
 
+#poi-overview-map,
 #regions-map {
     height: 22rem;
     margin-top: 1rem;
@@ -342,6 +343,7 @@ button.danger-solid {
 
 .location-fields .form-grid { margin-bottom: 0.75rem; }
 
+#poi-location-map,
 #center-location-map {
     height: 24rem;
     overflow: hidden;
@@ -847,3 +849,19 @@ legend {
 .communication-row p { margin: 0.35rem 0; }
 #communication-list { max-height: 45vh; overflow-y: auto; margin-bottom: 1rem; }
 [data-connection-types][hidden] { display: none; }
+
+.poi-availability { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; }
+.poi-availability input { width: auto; }
+.center-card-actions { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); }
+.center-card-actions button { min-width: 0; }
+#poi-pick-location { margin-top: 1rem; }
+#poi-location-map { color-scheme: light; }
+.poi-toolbar { justify-content: flex-end; flex-wrap: wrap; }
+#poi-list { margin-top: 0.75rem; }
+.poi-summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem 1rem; }
+.poi-summary-details { min-width: 0; overflow-wrap: anywhere; }
+.poi-summary-details p { margin: 0.2rem 0 0; }
+.poi-summary .card-actions { margin-top: 0; flex-shrink: 0; }
+@media (max-width: 480px) {
+    .poi-summary .card-actions { flex-direction: column; }
+}
