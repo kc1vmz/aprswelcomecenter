@@ -54,7 +54,6 @@ let welcomeCenterStationsMapTileLayer = null;
 let activeWeatherCenterId = null;
 let activeStationId = null;
 let activeStationCallsign = null;
-let kissConnectionMode = "TCP_IP";
 const defaultMapTileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 let mapTileUrl = defaultMapTileUrl;
 let centerLocationMap = null;
@@ -2115,7 +2114,6 @@ async function openSettingsDialog() {
     const form = document.querySelector("#settings-form");
     const message = document.querySelector("#settings-message");
     form.reset();
-    setKissConnectionMode("TCP_IP");
     message.textContent = "Loading settings…";
     document.querySelector("#settings-dialog").showModal();
     try {
@@ -2133,11 +2131,7 @@ async function openSettingsDialog() {
                 }
             });
         }
-        const hasKissHost = Boolean(String(settings?.kissHost || "").trim());
-        const hasKissBaudRate = Boolean(String(settings?.kissBaudRate || "").trim());
-        setKissConnectionMode(hasKissHost || !hasKissBaudRate ? "TCP_IP" : "SERIAL");
-        updateSettingsFieldStates();
-        await Promise.all([loadStationCount(), loadIgnoredStations()]);
+        await Promise.all([loadStationCount(), loadIgnoredStations(), loadCommunicationInstances()]);
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
@@ -2154,6 +2148,18 @@ function requestSettingsConfirmation(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const valueOf = name => form.elements[name].value.trim();
+    const retention = {};
+    for (const name of ["packetRetentionDays", "stationRetentionDays", "messageRetentionDays"]) {
+        const days = Number(valueOf(name));
+        if (!Number.isInteger(days) || days <= 0 || days > 2147483647) {
+            const message = document.querySelector("#settings-message");
+            message.className = "form-message error";
+            message.textContent = "Retention must be a whole number of days greater than zero.";
+            form.elements[name].focus();
+            return;
+        }
+        retention[name] = days;
+    }
     const configuredMapTileUrl = valueOf("mapTileUrl");
     if (configuredMapTileUrl && (!/^https?:\/\//i.test(configuredMapTileUrl)
             || !["{z}", "{x}", "{y}"].every(token => configuredMapTileUrl.includes(token)))) {
@@ -2164,51 +2170,12 @@ function requestSettingsConfirmation(event) {
         return;
     }
     pendingSettings = {
-        usingInternetServer: form.elements.usingInternetServer.checked,
-        usingKISS: form.elements.usingKISS.checked,
-        internetServerAddress: valueOf("internetServerAddress") || null,
-        internetServerUsername: valueOf("internetServerUsername") || null,
-        internetServerPasscode: valueOf("internetServerPasscode") || null,
-        internetServerPort: valueOf("internetServerPort") || null,
-        kissHost: valueOf("kissHost") || null,
-        kissPort: valueOf("kissPort") || null,
-        kissBaudRate: valueOf("kissBaudRate") || null,
-        kissInitCommand1: valueOf("kissInitCommand1") || null,
-        kissInitCommand2: valueOf("kissInitCommand2") || null,
-        digiPath: valueOf("digiPath") || null,
-        filter: valueOf("filter") || null,
+        ...retention,
         mapTileUrl: configuredMapTileUrl || null
     };
     document.querySelector("#confirm-settings-message").textContent = "";
     document.querySelector("#confirm-settings-dialog").showModal();
     document.querySelector("#cancel-confirm-settings").focus();
-}
-
-function updateSettingsFieldStates() {
-    const internetEnabled = document.querySelector("#using-internet-server").checked;
-    const kissEnabled = document.querySelector("#using-kiss").checked;
-    document.querySelectorAll("#internet-server-fields input").forEach(input => {
-        input.disabled = !internetEnabled;
-    });
-    document.querySelectorAll("#kiss-fields input").forEach(input => {
-        input.disabled = !kissEnabled;
-    });
-    document.querySelectorAll(".kiss-mode-selector button").forEach(button => {
-        button.disabled = !kissEnabled;
-    });
-}
-
-function setKissConnectionMode(mode) {
-    kissConnectionMode = mode === "TCP_IP" ? "TCP_IP" : "SERIAL";
-    const serialSelected = kissConnectionMode === "SERIAL";
-    document.querySelector("#use-kiss-serial").setAttribute("aria-pressed", String(serialSelected));
-    document.querySelector("#use-kiss-tcp-ip").setAttribute("aria-pressed", String(!serialSelected));
-    document.querySelectorAll(".kiss-serial-field").forEach(field => {
-        field.hidden = !serialSelected;
-    });
-    document.querySelectorAll(".kiss-tcp-ip-field").forEach(field => {
-        field.hidden = serialSelected;
-    });
 }
 
 async function loadIgnoredStations() {
@@ -2530,10 +2497,6 @@ document.querySelector("#settings-form").addEventListener("submit", requestSetti
 document.querySelector("#close-confirm-settings").addEventListener("click", closeSettingsConfirmation);
 document.querySelector("#cancel-confirm-settings").addEventListener("click", closeSettingsConfirmation);
 document.querySelector("#confirm-settings-form").addEventListener("submit", saveSettings);
-document.querySelector("#using-internet-server").addEventListener("change", updateSettingsFieldStates);
-document.querySelector("#using-kiss").addEventListener("change", updateSettingsFieldStates);
-document.querySelector("#use-kiss-serial").addEventListener("click", () => setKissConnectionMode("SERIAL"));
-document.querySelector("#use-kiss-tcp-ip").addEventListener("click", () => setKissConnectionMode("TCP_IP"));
 document.querySelector("#add-ignored-station").addEventListener("click", addIgnoredStation);
 document.querySelector("#manage-ignored-stations").addEventListener("click", openIgnoredStationsDialog);
 document.querySelector("#delete-all-stations").addEventListener("click", openDeleteAllStationsDialog);

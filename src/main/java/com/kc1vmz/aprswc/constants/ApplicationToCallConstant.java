@@ -18,5 +18,5 @@
 package com.kc1vmz.aprswc.constants;
 
 public class ApplicationToCallConstant {
-    public static final String TOCALL_NC1 = "APANC2";
+    public static final String TOCALL_NC2 = "APANC2";
 }

@@ -842,3 +842,8 @@ legend {
 #toggle-theme .theme-moon { display: none; }
 :root[data-theme="light"] #toggle-theme .theme-sun { display: none; }
 :root[data-theme="light"] #toggle-theme .theme-moon { display: block; }
+
+.communication-row { padding: 0.8rem 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.communication-row p { margin: 0.35rem 0; }
+#communication-list { max-height: 45vh; overflow-y: auto; margin-bottom: 1rem; }
+[data-connection-types][hidden] { display: none; }

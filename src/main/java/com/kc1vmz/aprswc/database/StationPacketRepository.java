@@ -27,6 +27,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface StationPacketRepository extends JpaRepository<StationPacket, UUID> {
+    @Modifying
+    @Transactional
+    @Query("delete from StationPacket packet where packet.receivedTime < :cutoff")
+    int deleteReceivedBefore(@Param("cutoff") java.time.LocalDateTime cutoff);
+
     List<StationPacket> findAllByCallsignIgnoreCaseOrderByReceivedTimeDesc(String callsign);
 
     interface LastHeard {

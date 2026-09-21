@@ -17,11 +17,8 @@
  */
 package com.kc1vmz.aprswc.processor;
 
-import com.kc1vmz.aprswc.accessor.ApplicationSettingsAccessor;
-import com.kc1vmz.aprswc.object.ApplicationSettings;
+import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
 import com.kc1vmz.aprswc.object.ObjectBeacon;
-import com.kc1vmz.aprswc.processor.aprs.is.APRSInternetServerListenerAccessor;
-import com.kc1vmz.aprswc.processor.aprs.kiss.APRSKISSListenerAccessor;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.util.concurrent.ExecutorService;
@@ -39,13 +36,7 @@ public class ObjectBeaconProcessor {
     private ObjectBeaconQueue queue;
 
     @Autowired
-    private APRSInternetServerListenerAccessor aprsInternetServerListenerAccessor;
-
-    @Autowired
-    private APRSKISSListenerAccessor aprsKISSListenerAccessor;
-
-    @Autowired
-    private ApplicationSettingsAccessor applicationSettingsAccessor;
+    private CommunicationInstanceManager communications;
 
     private final ExecutorService worker =
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "ObjectBeaconProcessor"));
@@ -69,33 +60,7 @@ public class ObjectBeaconProcessor {
     }
 
     void processObjectBeacon(ObjectBeacon objectBeacon) {
-        ApplicationSettings applicationSettings =
-                applicationSettingsAccessor.findAll().next().block();
-        if (applicationSettings == null) {
-            log.warn("ObjectBeacon cannot be sent because application settings are not configured");
-            return;
-        }
-
-        if (applicationSettings.isUsingInternetServer()) {
-            aprsInternetServerListenerAccessor.sendObject(
-                    objectBeacon.getObjectName(),
-                    objectBeacon.getStatusMessage(),
-                    objectBeacon.isActive(),
-                    objectBeacon.getLatitude(),
-                    objectBeacon.getLongitude(),
-                    objectBeacon.getSymbolId(),
-                    objectBeacon.getSymbolCode());
-        }
-        if (applicationSettings.isUsingKISS()) {
-            aprsKISSListenerAccessor.sendObject(
-                    objectBeacon.getObjectName(),
-                    objectBeacon.getStatusMessage(),
-                    objectBeacon.isActive(),
-                    objectBeacon.getLatitude(),
-                    objectBeacon.getLongitude(),
-                    objectBeacon.getSymbolId(),
-                    objectBeacon.getSymbolCode());
-        }
+        communications.sendObject(objectBeacon);
     }
 
     @PreDestroy

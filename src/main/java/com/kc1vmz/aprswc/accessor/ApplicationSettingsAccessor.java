@@ -19,8 +19,6 @@ package com.kc1vmz.aprswc.accessor;
 
 import com.kc1vmz.aprswc.database.ApplicationSettingsRepository;
 import com.kc1vmz.aprswc.object.ApplicationSettings;
-import com.kc1vmz.aprswc.processor.aprs.is.APRSInternetServerListenerState;
-import com.kc1vmz.aprswc.processor.aprs.kiss.APRSKISSListenerState;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,12 +32,6 @@ import reactor.core.scheduler.Schedulers;
 public class ApplicationSettingsAccessor {
     @Autowired
     private ApplicationSettingsRepository repository;
-
-    @Autowired
-    private APRSInternetServerListenerState aprsInternetServerListenerState;
-
-    @Autowired
-    private APRSKISSListenerState aprsKISSServerListenerState;
 
     public Flux<ApplicationSettings> findAll() {
         return Mono.fromCallable(repository::findAll)
@@ -58,8 +50,6 @@ public class ApplicationSettingsAccessor {
         value.setId(null);
         Mono<ApplicationSettings> ret =
                 Mono.fromCallable(() -> repository.save(value)).subscribeOn(Schedulers.boundedElastic());
-        aprsInternetServerListenerState.setRestart(true);
-        aprsKISSServerListenerState.setRestart(true);
         return ret;
     }
 
@@ -70,8 +60,6 @@ public class ApplicationSettingsAccessor {
                             return repository.save(value);
                         })
                         .subscribeOn(Schedulers.boundedElastic()));
-        aprsInternetServerListenerState.setRestart(true);
-        aprsKISSServerListenerState.setRestart(true);
         return ret;
     }
 
@@ -79,8 +67,6 @@ public class ApplicationSettingsAccessor {
         Mono<Void> ret = findById(id)
                 .then(Mono.fromRunnable(() -> repository.deleteById(id)).subscribeOn(Schedulers.boundedElastic()))
                 .then();
-        aprsInternetServerListenerState.setRestart(true);
-        aprsKISSServerListenerState.setRestart(true);
         return ret;
     }
 }

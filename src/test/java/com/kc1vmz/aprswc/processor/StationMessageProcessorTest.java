@@ -19,8 +19,11 @@ package com.kc1vmz.aprswc.processor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,13 +32,12 @@ import com.kc1vmz.aprswc.accessor.StationAccessor;
 import com.kc1vmz.aprswc.accessor.StationMessageAccessor;
 import com.kc1vmz.aprswc.accessor.StationPacketAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
+import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
 import com.kc1vmz.aprswc.object.Station;
 import com.kc1vmz.aprswc.object.StationMessage;
 import com.kc1vmz.aprswc.object.StationPacket;
 import com.kc1vmz.aprswc.object.StationPosition;
 import com.kc1vmz.aprswc.object.WelcomeCenter;
-import com.kc1vmz.aprswc.processor.aprs.is.APRSInternetServerListenerAccessor;
-import com.kc1vmz.aprswc.processor.aprs.kiss.APRSKISSListenerAccessor;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -62,10 +64,7 @@ class StationMessageProcessorTest {
     private StationPacketAccessor stationPacketAccessor;
 
     @Mock
-    private APRSInternetServerListenerAccessor aprsInternetServerListenerAccessor;
-
-    @Mock
-    private APRSKISSListenerAccessor aprsKISSListenerAccessor;
+    private CommunicationInstanceManager communications;
 
     @InjectMocks
     private StationMessageProcessor processor;
@@ -127,15 +126,37 @@ class StationMessageProcessorTest {
                 com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
         StationPacket packet = new StationPacket(UUID.randomUUID(), "APRS_IS", "N1ONE", null, "packet", null);
         when(stationPacketAccessor.findAllByCallsign("N1ONE")).thenReturn(Flux.just(packet));
-        when(aprsInternetServerListenerAccessor.getPacketProcessorIds()).thenReturn(List.of("APRS_IS"));
+        when(communications.sendMessage(eq("APRS_IS"), eq("KC1VMZ"), eq("N1ONE"), eq("Hello"), any(), any()))
+                .thenAnswer(invocation -> {
+                    invocation.<Runnable>getArgument(5).run();
+                    return true;
+                });
         when(stationMessageAccessor.saveProcessedMessage(message)).thenReturn(Mono.just(message));
 
         processor.processMessage(message);
 
-        verify(aprsInternetServerListenerAccessor).sendMessage("KC1VMZ", "N1ONE", "Hello");
+        verify(communications).sendMessage(eq("APRS_IS"), eq("KC1VMZ"), eq("N1ONE"), eq("Hello"), any(), any());
         verify(stationMessageAccessor).saveProcessedMessage(message);
         assertEquals("APRS_IS", message.getPacketProcessorId());
         assertNotNull(message.getSentTime());
+    }
+
+    @Test
+    void explicitUnavailableRouteIsDroppedWithoutFallbackOrSentTime() {
+        var route = UUID.randomUUID().toString();
+        var message = new StationMessage(
+                UUID.randomUUID(),
+                "N1ONE",
+                "KC1VMZ",
+                null,
+                null,
+                "Hello",
+                route,
+                com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
+        processor.processMessage(message);
+        verify(communications).sendMessage(eq(route), eq("KC1VMZ"), eq("N1ONE"), eq("Hello"), any(), any());
+        verifyNoInteractions(stationPacketAccessor, stationMessageAccessor);
+        assertNull(message.getSentTime());
     }
 
     private StationPosition positionFor(Station station) {

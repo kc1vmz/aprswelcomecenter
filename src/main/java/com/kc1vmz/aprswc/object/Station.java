@@ -50,6 +50,18 @@ public class Station {
         if (positions != null) positions.forEach(this::addPosition);
     }
 
+    @JsonIgnore
+    @Column(nullable = false, updatable = false)
+    private java.time.LocalDateTime lastActivityTime;
+
+    public java.time.LocalDateTime getLastActivityTime() {
+        return lastActivityTime;
+    }
+
+    public void setLastActivityTime(java.time.LocalDateTime value) {
+        lastActivityTime = value;
+    }
+
     @Transient
     private java.time.Instant lastHeard;
 
@@ -64,6 +76,7 @@ public class Station {
     @PrePersist
     void assignId() {
         if (id == null) id = UUID.randomUUID();
+        if (lastActivityTime == null) lastActivityTime = java.time.LocalDateTime.now();
     }
 
     public void addPosition(StationPosition p) {

@@ -96,33 +96,27 @@ Press the Configuration button in the top right corner (gear icon) to configure 
 
 
 
-Changes made to these settings may take up to 30 seconds to be recogniced by the application. For immediate response, stop and start the application.
+#### Communication instances
 
+Use **Add connection** to configure an APRS-IS, KISS TCP, or KISS Serial connection. You can run multiple connections of each type. Each connection has its own settings and UUID; its displayed label is derived from the endpoint or serial device.
 
+New connections default to **Active**. **Pause** disconnects a connection; **Resume** starts it again. Saving an edit stops the previous worker before starting its replacement. Deleting a connection stops it and preserves received packet history. Changes take effect after saving, without restarting the application. Stale edits and deletes are rejected; refresh and review the current configuration before trying again.
 
-#### Internet Access
+The list shows the desired state and current connection health separately. Active connections retry connection failures with a delay. Use **Refresh status** to update the health display. Two active serial connections cannot share a device; duplicate TCP endpoints produce a warning. An empty passcode while editing retains the existing passcode. Passcodes are not returned by the API or displayed in the list.
 
+Each KISS connection has its own digipeater path and each serial connection has its own baud rate and optional initialization commands. Map preferences remain application-wide.
 
+Directed messages use their explicit communication instance, or the destination station's most recently received packet when no instance is specified. Unavailable routes and full outgoing queues drop messages. Object beacons and bulletins go to all active, connected instances. A sent timestamp means the transport write completed; it does not imply an APRS acknowledgement.
 
-You may check the "Use Internet Server" checkbox to connect to an APRS-IS server. Provide the necessary server information and credentials.
+#### Packet and position retention
 
+Set **Retain packets and positions for (days)** to a whole number greater than zero (default: 1). A dedicated background worker deletes packets received and positions created before the current date/time minus this number of days, once after startup and then every 24 hours. It reads the current setting each run, so changes require no restart. Stations and messages have separate retention periods. Packet-based last-heard times and automatic message routing are no longer available for stations whose packets have all expired.
 
+#### Station and message retention
 
-#### KISS Access
+**Retain inactive stations for (days)** defaults to 10. Stations expire when their saved last-activity timestamp is older than the current time minus this period. Packet reception updates this timestamp, which survives packet cleanup. Station deletion removes its remaining position reports; packets and messages follow their own retention settings.
 
-
-
-You may check the "User KISS" checkbox to use KISS to send and receive packets.  You can choose to use serial or TCP/IP communications. Provide the requested information to access the KISS interface of choice.
-
-
-
-#### Digi path
-
-
-
-All packets need a path to instruct local digipeaters how to repeat packets properly.  Set this to a reasonable value (HOP2-1 for example).
-
-
+**Retain messages for (days)** defaults to 10. Messages expire based on sent time, or creation time when unsent. Both settings require positive whole numbers. A dedicated worker runs after startup and every 24 hours, reading the current configuration each run. Existing stations use available packet/position history for their initial activity timestamp; those without history, and unsent messages without an age, start aging from the upgrade.
 
 #### Map tile URL
 

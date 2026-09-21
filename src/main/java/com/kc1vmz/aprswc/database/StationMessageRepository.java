@@ -27,6 +27,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface StationMessageRepository extends JpaRepository<StationMessage, UUID> {
+    @Modifying
+    @Transactional
+    @Query("delete from StationMessage m where coalesce(m.sentTime, m.createdTime) < :cutoff")
+    int deleteExpiredBefore(@Param("cutoff") java.time.LocalDateTime cutoff);
+
     List<StationMessage> findAllByCallsignToIgnoreCaseOrderBySentTimeDesc(String callsignTo);
 
     List<StationMessage> findAllByWelcomeCenterIdOrderBySentTimeDesc(UUID welcomeCenterId);

@@ -42,22 +42,8 @@ class ApplicationSettingsControllerTest {
 
     @Test
     void createsAndReadsSettings() {
-        ApplicationSettings settings = new ApplicationSettings(
-                null,
-                true,
-                true,
-                "server",
-                "user",
-                "passcode",
-                "14580",
-                "host",
-                "8001",
-                "9600",
-                "KISS ON",
-                null,
-                "WIDE1-1",
-                "m/25",
-                "https://tiles.example.test/{z}/{x}/{y}.png");
+        ApplicationSettings settings = new ApplicationSettings(null, "https://tiles.example.test/{z}/{x}/{y}.png");
+        settings.setPacketRetentionDays(14);
 
         client.post()
                 .uri("/api/v1/application-settings")
@@ -68,14 +54,8 @@ class ApplicationSettingsControllerTest {
                 .expectBody()
                 .jsonPath("$.id")
                 .isNotEmpty()
-                .jsonPath("$.usingInternetServer")
-                .isEqualTo(true)
-                .jsonPath("$.kissInitCommand1")
-                .isEqualTo("KISS ON")
-                .jsonPath("$.kissInitCommand2")
-                .doesNotExist()
-                .jsonPath("$.filter")
-                .isEqualTo("m/25")
+                .jsonPath("$.packetRetentionDays")
+                .isEqualTo(14)
                 .jsonPath("$.mapTileUrl")
                 .isEqualTo("https://tiles.example.test/{z}/{x}/{y}.png");
 
@@ -86,6 +66,44 @@ class ApplicationSettingsControllerTest {
                 .isOk()
                 .expectBodyList(ApplicationSettings.class)
                 .hasSize(1);
+    }
+
+    @Test
+    void validatesAllRetentionSettingsOnCreateAndUpdate() {
+        var saved = repository.saveAndFlush(new ApplicationSettings(null, null));
+        for (String field : new String[] {"packetRetentionDays", "stationRetentionDays", "messageRetentionDays"}) {
+            for (String value : new String[] {"0", "-1", "null"}) {
+                String body = "{\"" + field + "\":" + value + "}";
+                client.post()
+                        .uri("/api/v1/application-settings")
+                        .header("Content-Type", "application/json")
+                        .bodyValue(body)
+                        .exchange()
+                        .expectStatus()
+                        .isBadRequest();
+                client.put()
+                        .uri("/api/v1/application-settings/" + saved.getId())
+                        .header("Content-Type", "application/json")
+                        .bodyValue(body)
+                        .exchange()
+                        .expectStatus()
+                        .isBadRequest();
+            }
+        }
+        client.put()
+                .uri("/api/v1/application-settings/" + saved.getId())
+                .header("Content-Type", "application/json")
+                .bodyValue("{\"packetRetentionDays\":7,\"stationRetentionDays\":14,\"messageRetentionDays\":21}")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.packetRetentionDays")
+                .isEqualTo(7)
+                .jsonPath("$.stationRetentionDays")
+                .isEqualTo(14)
+                .jsonPath("$.messageRetentionDays")
+                .isEqualTo(21);
     }
 
     @Test

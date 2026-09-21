@@ -17,48 +17,16 @@
  */
 package com.kc1vmz.aprswc.processor.aprs.kiss;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.locks.LockSupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import com.kc1vmz.aprswc.communication.*;
+import com.kc1vmz.aprswc.processor.StationPacketQueue;
 
-@Component
-public class PacketListenerKISS {
-    private static final Logger log = LoggerFactory.getLogger(PacketListenerKISS.class);
-    private static final long IDLE_WAIT_NANOS = 1_000_000_000L;
-
-    @Autowired
-    private APRSKISSListenerAccessor aprsKISSListenerAccessor;
-
-    private final ExecutorService worker =
-            Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "PacketListenerKISS"));
-
-    @PostConstruct
-    void start() {
-        worker.submit(this::runListener);
-    }
-
-    private void runListener() {
-        try {
-            aprsKISSListenerAccessor.connectAndListen();
-        } catch (InterruptedException e) {
-            log.warn("Exception caught", e);
-        } catch (Exception e) {
-            log.error("Exception caught", e);
-        }
-
-        while (!Thread.currentThread().isInterrupted()) {
-            LockSupport.parkNanos(IDLE_WAIT_NANOS);
-        }
-    }
-
-    @PreDestroy
-    void stop() {
-        worker.shutdownNow();
+public class PacketListenerKISS extends ManagedPacketListener {
+    public PacketListenerKISS(CommunicationConfig config, StationPacketQueue packets) {
+        super(
+                config,
+                packets,
+                () -> "KISS_TCP".equals(config.type())
+                        ? new APRSTCPIPListenerAccessor(config)
+                        : new APRSSerialListenerAccessor(config));
     }
 }

@@ -119,9 +119,10 @@ public class WelcomeCenterAccessor {
 
     private void afterWelcomeCenterCreated(WelcomeCenter welcomeCenter) {
         if (welcomeCenter.isOpen() && (welcomeCenter.getLatitude() != null) && (welcomeCenter.getLongitude() != null)) {
-            String statusMessage = String.format(STATUS_MESSAGE, 
-                                                    welcomeCenter.getName(), 
-                                                    (welcomeCenter.getDescription() != null) ? welcomeCenter.getDescription() : "");
+            String statusMessage = String.format(
+                    STATUS_MESSAGE,
+                    welcomeCenter.getName(),
+                    (welcomeCenter.getDescription() != null) ? welcomeCenter.getDescription() : "");
             ObjectBeacon objectBeacon = new ObjectBeacon(
                     welcomeCenter.getCallsign(),
                     welcomeCenter.getOwnerCallsign(),

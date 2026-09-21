@@ -70,9 +70,10 @@ public class WelcomeCenterObjectBeaconProcessor {
 
     void beaconWelcomeCenterObject(WelcomeCenter welcomeCenter) {
         if (welcomeCenter.isOpen() && (welcomeCenter.getLatitude() != null) && (welcomeCenter.getLongitude() != null)) {
-            String statusMessage = String.format(STATUS_MESSAGE, 
-                                                    welcomeCenter.getName(), 
-                                                    (welcomeCenter.getDescription() != null) ? welcomeCenter.getDescription() : "");
+            String statusMessage = String.format(
+                    STATUS_MESSAGE,
+                    welcomeCenter.getName(),
+                    (welcomeCenter.getDescription() != null) ? welcomeCenter.getDescription() : "");
             String symbolCode = welcomeCenter.getSymbolCode();
             String symbolId = welcomeCenter.getSymbolId();
 

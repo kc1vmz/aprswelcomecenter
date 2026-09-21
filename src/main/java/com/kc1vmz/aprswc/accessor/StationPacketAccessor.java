@@ -37,6 +37,9 @@ public class StationPacketAccessor {
     private StationPacketRepository repository;
 
     @Autowired
+    private com.kc1vmz.aprswc.database.StationRepository stations;
+
+    @Autowired
     private StationPacketQueue queue;
 
     @Autowired
@@ -97,7 +100,13 @@ public class StationPacketAccessor {
     }
 
     public Mono<StationPacket> save(StationPacket value) {
-        return Mono.fromCallable(() -> repository.save(value)).subscribeOn(Schedulers.boundedElastic());
+        return Mono.fromCallable(() -> {
+                    var saved = repository.save(value);
+                    if (saved.getCallsign() != null && saved.getReceivedTime() != null)
+                        stations.recordActivity(saved.getCallsign(), saved.getReceivedTime());
+                    return saved;
+                })
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     public Mono<StationPacket> replace(UUID id, StationPacket value) {

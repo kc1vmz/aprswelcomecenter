@@ -17,132 +17,110 @@
  */
 package com.kc1vmz.aprswc.processor.aprs.kiss;
 
-import com.kc1vmz.aprswc.accessor.ApplicationSettingsAccessor;
-import com.kc1vmz.aprswc.object.ApplicationSettings;
-import java.util.ArrayList;
-import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import com.kc1vmz.aprswc.communication.*;
+import com.kc1vmz.aprswc.constants.ApplicationToCallConstant;
+import com.kc1vmz.aprswc.object.*;
+import com.kc1vmz.aprswc.processor.aprs.is.APRSInternetServerListenerAccessor;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.*;
 
-@Component
-public class APRSKISSListenerAccessor {
-    private static final Logger logger = LogManager.getLogger(APRSKISSListenerAccessor.class);
+/** Per-instance KISS framing shared by TCP and serial accessors. */
+public abstract class APRSKISSListenerAccessor implements CommunicationTransport {
+    protected final CommunicationConfig config;
+    protected InputStream input;
+    protected OutputStream output;
 
-    @Autowired
-    private ApplicationSettingsAccessor applicationSettingsAccessor;
-
-    @Autowired
-    private APRSSerialListenerAccessor aprsSerialListenerAccessor;
-
-    @Autowired
-    private APRSTCPIPListenerAccessor aprsTCPIPListenerAccessor;
-
-    @Autowired
-    private APRSKISSListenerState aprsKISSListenerState;
-
-    private int communicationType = 0;
-    private static final int TYPE_UNKNOWN = 0;
-    private static final int TYPE_SERIAL = 1;
-    private static final int TYPE_TCPIP = 2;
-
-    public List<String> getPacketProcessorIds() {
-        List<String> ret = new ArrayList<>();
-        ret.addAll(aprsSerialListenerAccessor.getPacketProcessorIds());
-        ret.addAll(aprsTCPIPListenerAccessor.getPacketProcessorIds());
-        return ret;
+    protected APRSKISSListenerAccessor(CommunicationConfig config) {
+        this.config = config;
     }
 
-    public void sendQuery(String callsignFrom, String callsignTo, String queryType) {
-        switch (communicationType) {
-            case 1:
-                aprsSerialListenerAccessor.sendQuery(callsignFrom, callsignTo, queryType);
-                break;
-            case 2:
-                aprsTCPIPListenerAccessor.sendQuery(callsignFrom, callsignTo, queryType);
-                break;
-            default:
-                break;
-        }
-    }
-
-    public void sendMessage(String callsignFrom, String callsignTo, String messageText) {
-        switch (communicationType) {
-            case 1:
-                aprsSerialListenerAccessor.sendMessage(callsignFrom, callsignTo, messageText);
-                break;
-            case 2:
-                aprsTCPIPListenerAccessor.sendMessage(callsignFrom, callsignTo, messageText);
-                break;
-            default:
-                break;
-        }
-    }
-
-    public void sendBulletin(String callsignFrom, String bulletinId, String messageText) {
-        switch (communicationType) {
-            case 1:
-                aprsSerialListenerAccessor.sendBulletin(callsignFrom, bulletinId, messageText);
-                break;
-            case 2:
-                aprsTCPIPListenerAccessor.sendBulletin(callsignFrom, bulletinId, messageText);
-                break;
-            default:
-                break;
-        }
-    }
-
-    public void sendObject(
-            String objectName,
-            String messageText,
-            boolean alive,
-            String lat,
-            String lon,
-            String symbolTableId,
-            String symbolTableCode) {}
-
-    public void connectAndListen() throws InterruptedException {
-        boolean loop = true;
-        while (loop) {
-            try {
-                aprsKISSListenerState.setRestart(false);
-                communicationType = TYPE_UNKNOWN;
-                boolean startKISS = false;
-                ApplicationSettings applicationSettings = null;
-                List<ApplicationSettings> settingsList =
-                        applicationSettingsAccessor.findAll().collectList().block();
-                if ((settingsList != null) && (settingsList.size() > 0)) {
-                    applicationSettings = settingsList.getFirst();
-                    startKISS = applicationSettings.isUsingKISS();
-                }
-                if (startKISS) {
-                    connectAndListen(applicationSettings);
-                } else {
-                    Thread.sleep(30000); // sleep for 30 seconds - check again
-                }
-            } catch (InterruptedException e) {
-                loop = false;
-                break;
-            } catch (Exception e) {
-                logger.error("Exception caught in upper listener loop", e);
+    public StationPacket read() throws IOException {
+        ByteArrayOutputStream frame = new ByteArrayOutputStream();
+        boolean started = false, escaped = false;
+        while (true) {
+            int b = input.read();
+            if (b < 0) throw new EOFException("Connection closed");
+            if (b == 0xc0) {
+                if (started && frame.size() > 0) break;
+                started = true;
+                continue;
+            }
+            if (!started) continue;
+            if (b == 0xdb) {
+                escaped = true;
+                continue;
+            }
+            if (escaped) {
+                b = b == 0xdc ? 0xc0 : b == 0xdd ? 0xdb : b;
+                escaped = false;
+            }
+            frame.write(b);
+            if (frame.size() > 4096) {
+                frame.reset();
+                started = false;
             }
         }
+        byte[] bytes = frame.toByteArray();
+        if (bytes.length < 17 || (bytes[0] & 15) != 0) return null;
+        List<String> addresses = new ArrayList<>();
+        int offset = 1;
+        boolean last = false;
+        while (!last) {
+            if (offset + 7 > bytes.length || addresses.size() > 10) return null;
+            StringBuilder call = new StringBuilder();
+            for (int i = 0; i < 6; i++) call.append((char) ((bytes[offset + i] & 255) >> 1));
+            int ssid = (bytes[offset + 6] >> 1) & 15;
+            addresses.add(call.toString().trim() + (ssid == 0 ? "" : "-" + ssid));
+            last = (bytes[offset + 6] & 1) != 0;
+            offset += 7;
+        }
+        if (addresses.size() < 2
+                || offset + 2 > bytes.length
+                || bytes[offset] != 3
+                || (bytes[offset + 1] & 255) != 0xf0) return null;
+        String from = addresses.get(1);
+        String path = addresses.get(0)
+                + (addresses.size() > 2 ? "," + String.join(",", addresses.subList(2, addresses.size())) : "");
+        String data = new String(bytes, offset + 2, bytes.length - offset - 2, StandardCharsets.US_ASCII);
+        KISSPacket packet = new KISSPacket();
+        packet.setCallsignFrom(from);
+        packet.setCallsignTo(addresses.get(0));
+        return new StationPacket(
+                UUID.randomUUID(),
+                config.id().toString(),
+                from,
+                LocalDateTime.now(),
+                from + ">" + path + ":" + data,
+                HexFormat.of().withUpperCase().formatHex(packet.getHeaderBytes()));
     }
 
-    public void connectAndListen(ApplicationSettings applicationSettings) throws InterruptedException {
-        if (!applicationSettings.isUsingKISS()) {
-            communicationType = TYPE_UNKNOWN;
-            return;
-        }
-        if ((applicationSettings.getKissHost() == null)
-                || (applicationSettings.getKissHost().isEmpty())) {
-            // assume serial communications
-            communicationType = TYPE_SERIAL;
-            aprsSerialListenerAccessor.connectAndListen(applicationSettings);
-        } else {
-            communicationType = TYPE_TCPIP;
-            aprsTCPIPListenerAccessor.connectAndListen(applicationSettings);
-        }
+    private KISSPacket packet(String from, String to, String data) {
+        KISSPacket p = new KISSPacket();
+        p.setCallsignFrom(from);
+        p.setCallsignTo(to);
+        p.setApplicationName(ApplicationToCallConstant.TOCALL_NC2);
+        p.setData(data);
+        p.setValid(true);
+        p.setDigipeaters(Arrays.stream(Objects.toString(config.digiPath(), "").split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList());
+        return p;
+    }
+
+    private synchronized void write(byte[] bytes) throws IOException {
+        output.write(KissPacketBuilder.build(bytes, (byte) 0));
+        output.flush();
+    }
+
+    public void sendMessage(String from, String to, String content) throws IOException {
+        write(AX25PacketBuilder.buildPacket(packet(from, to, content), ":"));
+    }
+
+    public void sendObject(ObjectBeacon b) throws IOException {
+        write(AX25PacketBuilder.buildObjectPacket(
+                packet(b.getObjectName(), null, ";" + APRSInternetServerListenerAccessor.objectData(b))));
     }
 }

@@ -73,9 +73,8 @@ public class WelcomeCenterLifecycle {
         if (welcomeCenterSnapshot.longitude() == null || welcomeCenterSnapshot.latitude() == null) {
             return;
         }
-        String statusMessage = String.format("Welcome Center - %s - %s", 
-                                                welcomeCenterSnapshot.name(), 
-                                                (active) ? "now open" : "now closed");
+        String statusMessage = String.format(
+                "Welcome Center - %s - %s", welcomeCenterSnapshot.name(), (active) ? "now open" : "now closed");
         objectBeaconQueue.offer(new ObjectBeacon(
                 welcomeCenterSnapshot.callsign(),
                 welcomeCenterSnapshot.ownerCallsign(),
