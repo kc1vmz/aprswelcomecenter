@@ -19,14 +19,11 @@ package com.kc1vmz.aprswc.processor.aprs.is;
 
 import com.kc1vmz.aprswc.accessor.ApplicationVersionAccessor;
 import com.kc1vmz.aprswc.object.ApplicationVersion;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class APRSUtilityAccessor {
-    private static final Logger logger = LogManager.getLogger(APRSUtilityAccessor.class);
 
     @Autowired
     private ApplicationVersionAccessor applicationVersionAccessor;
@@ -63,7 +60,7 @@ public class APRSUtilityAccessor {
                     applicationVersion.getApplicationName(),
                     applicationVersion.getVersion());
         }
-        logger.debug(String.format("auth string generated: %s", ret));
+
         return ret;
     }
 }

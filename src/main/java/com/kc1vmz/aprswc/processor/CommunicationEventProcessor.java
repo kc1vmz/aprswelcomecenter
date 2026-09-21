@@ -98,6 +98,7 @@ public class CommunicationEventProcessor {
                     policy.getMessageText(),
                     null,
                     MessageType.MESSAGE);
+            stationMessage.setPacketProcessorId(event.getPacketProcessorId());
             stationMessage.setRequiresOpenCenter(true);
             stationMessageQueue.offer(stationMessage);
         }

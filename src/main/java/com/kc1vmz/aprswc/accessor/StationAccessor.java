@@ -117,12 +117,12 @@ public class StationAccessor {
     }
 
     public Mono<Station> replace(UUID id, Station value) {
-        return findById(id)
-                .then(Mono.fromCallable(() -> {
-                            value.setId(id);
-                            return stations.save(value);
-                        })
-                        .subscribeOn(Schedulers.boundedElastic()));
+        return findById(id).flatMap(existing -> Mono.fromCallable(() -> {
+                    value.setId(id);
+                    value.setLastActivityTime(existing.getLastActivityTime());
+                    return stations.save(value);
+                })
+                .subscribeOn(Schedulers.boundedElastic()));
     }
 
     public Mono<Void> delete(UUID id) {

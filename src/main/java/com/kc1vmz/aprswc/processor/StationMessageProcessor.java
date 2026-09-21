@@ -17,18 +17,15 @@
  */
 package com.kc1vmz.aprswc.processor;
 
-import com.kc1vmz.aprswc.accessor.ApplicationSettingsAccessor;
 import com.kc1vmz.aprswc.accessor.StationAccessor;
 import com.kc1vmz.aprswc.accessor.StationMessageAccessor;
 import com.kc1vmz.aprswc.accessor.StationPacketAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
+import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
 import com.kc1vmz.aprswc.enumeration.MessageType;
-import com.kc1vmz.aprswc.object.ApplicationSettings;
 import com.kc1vmz.aprswc.object.Station;
 import com.kc1vmz.aprswc.object.StationMessage;
 import com.kc1vmz.aprswc.object.StationPacket;
-import com.kc1vmz.aprswc.processor.aprs.is.APRSInternetServerListenerAccessor;
-import com.kc1vmz.aprswc.processor.aprs.kiss.APRSKISSListenerAccessor;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.time.LocalDateTime;
@@ -51,12 +48,6 @@ public class StationMessageProcessor {
     private StationMessageQueue queue;
 
     @Autowired
-    private APRSInternetServerListenerAccessor aprsInternetServerListenerAccessor;
-
-    @Autowired
-    private APRSKISSListenerAccessor aprsKISSListenerAccessor;
-
-    @Autowired
     private WelcomeCenterAccessor welcomeCenterAccessor;
 
     @Autowired
@@ -69,7 +60,7 @@ public class StationMessageProcessor {
     private StationPacketAccessor stationPacketAccessor;
 
     @Autowired
-    private ApplicationSettingsAccessor applicationSettingsAccessor;
+    private CommunicationInstanceManager communications;
 
     private final ExecutorService worker =
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "StationMessageProcessor"));
@@ -109,7 +100,7 @@ public class StationMessageProcessor {
         if (message.getMessageType().equals(MessageType.MESSAGE)) {
             if (message.getCallsignTo() != null) {
                 // send directed single message
-                sendDirectedMessaage(message);
+                sendDirectedMessage(message);
                 return;
             }
             if (message.getWelcomeCenter() != null) {
@@ -119,33 +110,19 @@ public class StationMessageProcessor {
         } else if (message.getMessageType().equals(MessageType.BULLETIN)) {
             if (message.getCallsignTo() != null) {
                 // send bulletin
-                sendBulletinMessaage(message);
+                sendBulletinMessage(message);
                 return;
             }
         }
     }
 
-    private void sendBulletinMessaage(StationMessage message) {
+    private void sendBulletinMessage(StationMessage message) {
         if (message.getCallsignFrom() == null) {
             log.error("No callsignFrom in StationMessage");
             return;
         }
 
-        ApplicationSettings applicationSettings =
-                applicationSettingsAccessor.findAll().next().block();
-        if (applicationSettings == null) {
-            log.warn("Bulletin cannot be sent because application settings are not configured");
-            return;
-        }
-
-        if (applicationSettings.isUsingInternetServer()) {
-            aprsInternetServerListenerAccessor.sendBulletin(
-                    message.getCallsignFrom(), message.getCallsignTo(), message.getContent());
-        }
-        if (applicationSettings.isUsingKISS()) {
-            aprsKISSListenerAccessor.sendBulletin(
-                    message.getCallsignFrom(), message.getCallsignTo(), message.getContent());
-        }
+        communications.sendBulletin(message.getCallsignFrom(), message.getCallsignTo(), message.getContent());
     }
 
     private void sendWelcomeCenterMessage(StationMessage message) {
@@ -184,22 +161,32 @@ public class StationMessageProcessor {
         }
     }
 
-    private void sendDirectedMessaage(StationMessage message) {
+    private void sendDirectedMessage(StationMessage message) {
         if (message.getCallsignFrom() == null) {
             log.error("No callsignFrom in StationMessage");
             return;
         }
-        // this will go to APRS
-        message.setPacketProcessorId(determinePacketProcessor(message));
-        if (aprsInternetServerListenerAccessor.getPacketProcessorIds().contains(message.getPacketProcessorId())) {
-            aprsInternetServerListenerAccessor.sendMessage(
-                    message.getCallsignFrom(), message.getCallsignTo(), message.getContent());
-        } else if (aprsKISSListenerAccessor.getPacketProcessorIds().contains(message.getPacketProcessorId())) {
-            aprsKISSListenerAccessor.sendMessage(
-                    message.getCallsignFrom(), message.getCallsignTo(), message.getContent());
-        }
-        message.setSentTime(LocalDateTime.now());
-        stationMessageAccessor.saveProcessedMessage(message).block();
+        if (message.getPacketProcessorId() == null
+                || message.getPacketProcessorId().isBlank())
+            message.setPacketProcessorId(determinePacketProcessor(message));
+        boolean queued = communications.sendMessage(
+                message.getPacketProcessorId(),
+                message.getCallsignFrom(),
+                message.getCallsignTo(),
+                message.getContent(),
+                () -> !message.isRequiresOpenCenter()
+                        || (message.getWelcomeCenter() != null
+                                && welcomeCenterAccessor
+                                                .findOpenById(message.getWelcomeCenter()
+                                                        .getId())
+                                                .block()
+                                        != null),
+                () -> {
+                    message.setSentTime(LocalDateTime.now());
+                    stationMessageAccessor.saveProcessedMessage(message).block();
+                });
+        if (!queued)
+            log.debug("Dropping message with unavailable communication route {}", message.getPacketProcessorId());
     }
 
     private String determinePacketProcessor(StationMessage message) {

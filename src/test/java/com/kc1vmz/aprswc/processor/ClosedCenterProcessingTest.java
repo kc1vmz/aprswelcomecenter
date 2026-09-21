@@ -146,10 +146,10 @@ class ClosedCenterProcessingTest {
     void outgoingAutomaticMessagesAreDiscardedIfCenterClosedSinceQueueing() {
         var processor = new StationMessageProcessor();
         var centers = mock(WelcomeCenterAccessor.class);
-        var settings = mock(ApplicationSettingsAccessor.class);
+        var settings = mock(com.kc1vmz.aprswc.communication.CommunicationInstanceManager.class);
         var messages = mock(StationMessageAccessor.class);
         ReflectionTestUtils.setField(processor, "welcomeCenterAccessor", centers);
-        ReflectionTestUtils.setField(processor, "applicationSettingsAccessor", settings);
+        ReflectionTestUtils.setField(processor, "communications", settings);
         ReflectionTestUtils.setField(processor, "stationMessageAccessor", messages);
         var center = center();
         when(centers.findOpenById(center.getId())).thenReturn(Mono.empty());

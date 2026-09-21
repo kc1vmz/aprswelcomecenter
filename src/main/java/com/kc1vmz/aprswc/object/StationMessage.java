@@ -52,6 +52,15 @@ public class StationMessage {
 
     private LocalDateTime sentTime;
 
+    @Column(nullable = false, updatable = false)
+    @com.fasterxml.jackson.annotation.JsonProperty(
+            access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private LocalDateTime createdTime;
+
+    public LocalDateTime getCreatedTime() {
+        return createdTime;
+    }
+
     @Column(length = 4000)
     private String content;
 
@@ -85,6 +94,7 @@ public class StationMessage {
     @PrePersist
     void assignId() {
         if (id == null) id = UUID.randomUUID();
+        if (createdTime == null) createdTime = LocalDateTime.now();
         if (messageType == null) messageType = MessageType.MESSAGE;
     }
 

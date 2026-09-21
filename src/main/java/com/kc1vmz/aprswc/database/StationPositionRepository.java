@@ -28,6 +28,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface StationPositionRepository extends JpaRepository<StationPosition, UUID> {
+    @Modifying
+    @Transactional
+    @Query("delete from StationPosition position where position.createdTime < :cutoff")
+    int deleteCreatedBefore(@Param("cutoff") java.time.LocalDateTime cutoff);
+
     @Query(
             value =
                     """

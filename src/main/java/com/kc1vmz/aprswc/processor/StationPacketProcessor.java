@@ -505,6 +505,7 @@ public class StationPacketProcessor {
                 packet.getReceivedTime(),
                 packet.getCommand(),
                 type);
+        command.setPacketProcessorId(packet.getPacketProcessorId());
         stationCommandQueue.offer(command);
     }
 

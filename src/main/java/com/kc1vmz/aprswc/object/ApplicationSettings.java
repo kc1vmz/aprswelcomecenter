@@ -17,69 +17,67 @@
  */
 package com.kc1vmz.aprswc.object;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 @Entity
 @Table(name = "application_settings")
 public class ApplicationSettings {
+    public static final int DEFAULT_PACKET_RETENTION_DAYS = 1;
+
+    public static final int DEFAULT_STATION_RETENTION_DAYS = 10;
+    public static final int DEFAULT_MESSAGE_RETENTION_DAYS = 10;
+
+    @NotNull
+    @Min(1)
+    @Column(nullable = false)
+    private Integer stationRetentionDays = DEFAULT_STATION_RETENTION_DAYS;
+
+    @NotNull
+    @Min(1)
+    @Column(nullable = false)
+    private Integer messageRetentionDays = DEFAULT_MESSAGE_RETENTION_DAYS;
+
+    public Integer getStationRetentionDays() {
+        return stationRetentionDays;
+    }
+
+    public void setStationRetentionDays(Integer value) {
+        stationRetentionDays = value;
+    }
+
+    public Integer getMessageRetentionDays() {
+        return messageRetentionDays;
+    }
+
+    public void setMessageRetentionDays(Integer value) {
+        messageRetentionDays = value;
+    }
+
     @Id
     private UUID id;
 
-    private boolean usingInternetServer;
-    private boolean usingKISS;
-    private String internetServerAddress;
-    private String internetServerUsername;
-    private String internetServerPasscode;
-    private String internetServerPort;
-    private String kissHost;
-    private String kissPort;
-    private String kissBaudRate;
-    private String kissInitCommand1;
-    private String kissInitCommand2;
-    private String digiPath;
     private String mapTileUrl;
 
-    @Column(name = "aprs_filter")
-    private String filter;
+    @NotNull
+    @Min(1)
+    @Column(nullable = false)
+    private Integer packetRetentionDays = DEFAULT_PACKET_RETENTION_DAYS;
 
-    /** Required only by JPA. */
+    public Integer getPacketRetentionDays() {
+        return packetRetentionDays;
+    }
+
+    public void setPacketRetentionDays(Integer value) {
+        packetRetentionDays = value;
+    }
+
     protected ApplicationSettings() {}
 
-    public ApplicationSettings(
-            UUID id,
-            boolean usingInternetServer,
-            boolean usingKISS,
-            String internetServerAddress,
-            String internetServerUsername,
-            String internetServerPasscode,
-            String internetServerPort,
-            String kissHost,
-            String kissPort,
-            String kissBaudRate,
-            String kissInitCommand1,
-            String kissInitCommand2,
-            String digiPath,
-            String filter,
-            String mapTileUrl) {
+    public ApplicationSettings(UUID id, String mapTileUrl) {
         this.id = id;
-        this.usingInternetServer = usingInternetServer;
-        this.usingKISS = usingKISS;
-        this.internetServerAddress = internetServerAddress;
-        this.internetServerUsername = internetServerUsername;
-        this.internetServerPasscode = internetServerPasscode;
-        this.internetServerPort = internetServerPort;
-        this.kissHost = kissHost;
-        this.kissPort = kissPort;
-        this.kissBaudRate = kissBaudRate;
-        this.kissInitCommand1 = kissInitCommand1;
-        this.kissInitCommand2 = kissInitCommand2;
-        this.digiPath = digiPath;
-        this.filter = filter;
         this.mapTileUrl = mapTileUrl;
     }
 
@@ -94,110 +92,6 @@ public class ApplicationSettings {
 
     public void setId(UUID id) {
         this.id = id;
-    }
-
-    public boolean isUsingInternetServer() {
-        return usingInternetServer;
-    }
-
-    public void setUsingInternetServer(boolean value) {
-        usingInternetServer = value;
-    }
-
-    public boolean isUsingKISS() {
-        return usingKISS;
-    }
-
-    public void setUsingKISS(boolean value) {
-        usingKISS = value;
-    }
-
-    public String getInternetServerAddress() {
-        return internetServerAddress;
-    }
-
-    public void setInternetServerAddress(String value) {
-        internetServerAddress = value;
-    }
-
-    public String getInternetServerUsername() {
-        return internetServerUsername;
-    }
-
-    public void setInternetServerUsername(String value) {
-        internetServerUsername = value;
-    }
-
-    public String getInternetServerPasscode() {
-        return internetServerPasscode;
-    }
-
-    public void setInternetServerPasscode(String value) {
-        internetServerPasscode = value;
-    }
-
-    public String getInternetServerPort() {
-        return internetServerPort;
-    }
-
-    public void setInternetServerPort(String value) {
-        internetServerPort = value;
-    }
-
-    public String getKissHost() {
-        return kissHost;
-    }
-
-    public void setKissHost(String value) {
-        kissHost = value;
-    }
-
-    public String getKissPort() {
-        return kissPort;
-    }
-
-    public void setKissPort(String value) {
-        kissPort = value;
-    }
-
-    public String getKissBaudRate() {
-        return kissBaudRate;
-    }
-
-    public void setKissBaudRate(String value) {
-        kissBaudRate = value;
-    }
-
-    public String getKissInitCommand1() {
-        return kissInitCommand1;
-    }
-
-    public void setKissInitCommand1(String value) {
-        kissInitCommand1 = value;
-    }
-
-    public String getKissInitCommand2() {
-        return kissInitCommand2;
-    }
-
-    public void setKissInitCommand2(String value) {
-        kissInitCommand2 = value;
-    }
-
-    public String getDigiPath() {
-        return digiPath;
-    }
-
-    public void setDigiPath(String value) {
-        digiPath = value;
-    }
-
-    public String getFilter() {
-        return filter;
-    }
-
-    public void setFilter(String value) {
-        filter = value;
     }
 
     public String getMapTileUrl() {

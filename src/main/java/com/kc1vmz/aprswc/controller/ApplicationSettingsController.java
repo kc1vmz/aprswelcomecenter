@@ -19,6 +19,7 @@ package com.kc1vmz.aprswc.controller;
 
 import com.kc1vmz.aprswc.accessor.ApplicationSettingsAccessor;
 import com.kc1vmz.aprswc.object.ApplicationSettings;
+import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -51,13 +52,13 @@ public class ApplicationSettingsController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<ApplicationSettings>> create(@RequestBody ApplicationSettings value) {
+    public Mono<ResponseEntity<ApplicationSettings>> create(@Valid @RequestBody ApplicationSettings value) {
         return accessor.create(value)
                 .map(saved -> ResponseEntity.status(HttpStatus.CREATED).body(saved));
     }
 
     @PutMapping("/{id}")
-    public Mono<ApplicationSettings> replace(@PathVariable UUID id, @RequestBody ApplicationSettings value) {
+    public Mono<ApplicationSettings> replace(@PathVariable UUID id, @Valid @RequestBody ApplicationSettings value) {
         return accessor.replace(id, value);
     }
 

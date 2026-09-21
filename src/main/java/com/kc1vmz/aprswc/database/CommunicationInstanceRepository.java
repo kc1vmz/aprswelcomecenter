@@ -15,21 +15,10 @@
  *
  * http://www.kc1vmz.com
  */
-package com.kc1vmz.aprswc.object;
+package com.kc1vmz.aprswc.database;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import com.kc1vmz.aprswc.object.CommunicationInstance;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-class ApplicationSettingsTest {
-    @Test
-    void storesMapPreference() {
-        var id = UUID.randomUUID();
-        var settings = new ApplicationSettings(id, "https://tiles/{z}/{x}/{y}");
-        assertEquals(id, settings.getId());
-        assertEquals("https://tiles/{z}/{x}/{y}", settings.getMapTileUrl());
-        settings.setMapTileUrl(null);
-        assertNull(settings.getMapTileUrl());
-    }
-}
+public interface CommunicationInstanceRepository extends JpaRepository<CommunicationInstance, UUID> {}

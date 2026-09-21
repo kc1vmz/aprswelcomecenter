@@ -37,6 +37,9 @@ public class StationCommand {
     private LocalDateTime receivedTime;
     private String command;
 
+    @Transient
+    private String packetProcessorId;
+
     @Enumerated(EnumType.STRING)
     private StationCommandType type;
     /** Required only by JPA. */
@@ -109,5 +112,13 @@ public class StationCommand {
 
     public void setType(StationCommandType v) {
         type = v;
+    }
+
+    public String getPacketProcessorId() {
+        return packetProcessorId;
+    }
+
+    public void setPacketProcessorId(String value) {
+        packetProcessorId = value;
     }
 }

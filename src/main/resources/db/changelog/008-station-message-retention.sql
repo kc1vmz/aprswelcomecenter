@@ -1,0 +1,18 @@
+ALTER TABLE application_settings ADD COLUMN IF NOT EXISTS station_retention_days INTEGER DEFAULT 10;
+UPDATE application_settings SET station_retention_days = 10 WHERE station_retention_days IS NULL;
+ALTER TABLE application_settings ALTER COLUMN station_retention_days SET NOT NULL;
+ALTER TABLE application_settings ADD CONSTRAINT IF NOT EXISTS ck_station_retention_days CHECK (station_retention_days > 0);
+ALTER TABLE application_settings ADD COLUMN IF NOT EXISTS message_retention_days INTEGER DEFAULT 10;
+UPDATE application_settings SET message_retention_days = 10 WHERE message_retention_days IS NULL;
+ALTER TABLE application_settings ALTER COLUMN message_retention_days SET NOT NULL;
+ALTER TABLE application_settings ADD CONSTRAINT IF NOT EXISTS ck_message_retention_days CHECK (message_retention_days > 0);
+ALTER TABLE stations ADD COLUMN IF NOT EXISTS last_activity_time TIMESTAMP(6);
+UPDATE stations s SET last_activity_time=COALESCE(GREATEST(COALESCE((SELECT MAX(p.received_time) FROM station_packets p WHERE UPPER(p.callsign)=UPPER(s.callsign)),(SELECT MAX(p.created_time) FROM station_positions p WHERE p.station_id=s.id)),COALESCE((SELECT MAX(p.created_time) FROM station_positions p WHERE p.station_id=s.id),(SELECT MAX(p.received_time) FROM station_packets p WHERE UPPER(p.callsign)=UPPER(s.callsign)))),LOCALTIMESTAMP) WHERE last_activity_time IS NULL;
+ALTER TABLE stations ALTER COLUMN last_activity_time SET DEFAULT LOCALTIMESTAMP;
+ALTER TABLE stations ALTER COLUMN last_activity_time SET NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_stations_last_activity_time ON stations(last_activity_time);
+ALTER TABLE station_messages ADD COLUMN IF NOT EXISTS created_time TIMESTAMP(6);
+UPDATE station_messages SET created_time=COALESCE(sent_time,LOCALTIMESTAMP) WHERE created_time IS NULL;
+ALTER TABLE station_messages ALTER COLUMN created_time SET DEFAULT LOCALTIMESTAMP;
+ALTER TABLE station_messages ALTER COLUMN created_time SET NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_station_messages_sent_created ON station_messages(sent_time,created_time);

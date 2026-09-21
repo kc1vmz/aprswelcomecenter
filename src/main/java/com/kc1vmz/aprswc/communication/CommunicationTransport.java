@@ -15,21 +15,20 @@
  *
  * http://www.kc1vmz.com
  */
-package com.kc1vmz.aprswc.object;
+package com.kc1vmz.aprswc.communication;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.kc1vmz.aprswc.object.ObjectBeacon;
+import com.kc1vmz.aprswc.object.StationPacket;
+import java.io.IOException;
 
-import java.util.UUID;
-import org.junit.jupiter.api.Test;
+public interface CommunicationTransport extends AutoCloseable {
+    void connect() throws Exception;
 
-class ApplicationSettingsTest {
-    @Test
-    void storesMapPreference() {
-        var id = UUID.randomUUID();
-        var settings = new ApplicationSettings(id, "https://tiles/{z}/{x}/{y}");
-        assertEquals(id, settings.getId());
-        assertEquals("https://tiles/{z}/{x}/{y}", settings.getMapTileUrl());
-        settings.setMapTileUrl(null);
-        assertNull(settings.getMapTileUrl());
-    }
+    StationPacket read() throws IOException;
+
+    void sendMessage(String from, String to, String content) throws IOException;
+
+    void sendObject(ObjectBeacon beacon) throws IOException;
+
+    void close();
 }

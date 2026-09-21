@@ -20,4 +20,43 @@
             ALTER TABLE welcome_centers ADD CONSTRAINT IF NOT EXISTS ck_welcome_center_status CHECK (status IN ('OPEN', 'CLOSED'));
         </sql>
     </changeSet>
+    <changeSet id="004-communication-instances" author="aprswc" dbms="h2">
+        <sqlFile path="004-communication-instances.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+    <changeSet id="005-remove-global-communication-settings" author="aprswc" dbms="h2">
+        <sql>
+ALTER TABLE application_settings DROP COLUMN IF EXISTS using_internet_server;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS usingkiss;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS aprs_filter;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS digi_path;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS internet_server_address;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS internet_server_passcode;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS internet_server_port;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS internet_server_username;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_baud_rate;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_host;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_init_command1;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_init_command2;
+ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
+        </sql>
+    </changeSet>
+    <changeSet id="006-packet-retention" author="aprswc" dbms="h2">
+        <sql>
+            ALTER TABLE application_settings ADD COLUMN IF NOT EXISTS packet_retention_days INTEGER DEFAULT 30;
+            UPDATE application_settings SET packet_retention_days = 30 WHERE packet_retention_days IS NULL;
+            ALTER TABLE application_settings ALTER COLUMN packet_retention_days SET NOT NULL;
+            ALTER TABLE application_settings ADD CONSTRAINT IF NOT EXISTS ck_packet_retention_days CHECK (packet_retention_days &gt; 0);
+            CREATE INDEX IF NOT EXISTS idx_station_packets_received_time ON station_packets(received_time);
+        </sql>
+    </changeSet>
+    <changeSet id="007-position-retention-one-day-default" author="aprswc" dbms="h2">
+        <sql>
+            ALTER TABLE application_settings ALTER COLUMN packet_retention_days SET DEFAULT 1;
+            UPDATE application_settings SET packet_retention_days = 1 WHERE packet_retention_days = 30;
+            CREATE INDEX IF NOT EXISTS idx_station_positions_created_time ON station_positions(created_time);
+        </sql>
+    </changeSet>
+    <changeSet id="008-station-message-retention" author="aprswc" dbms="h2">
+        <sqlFile path="008-station-message-retention.sql" relativeToChangelogFile="true"/>
+    </changeSet>
 </databaseChangeLog>

@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg?v=20260918-1" type="image/svg+xml">
     <script src="/theme.js?v=20260918-2"></script>
     <link rel="stylesheet" href="/webjars/leaflet/1.9.4/leaflet.css">
-    <link rel="stylesheet" href="/app.css?v=20260918-6">
+    <link rel="stylesheet" href="/app.css?v=20260920-1">
 </head>
 <body>
     <header>
@@ -844,6 +844,41 @@
             </div>
         </form>
     </dialog>
+    <dialog id="communication-confirm-dialog" aria-labelledby="communication-confirm-title">
+        <form id="communication-confirm-form">
+            <div class="dialog-heading">
+                <h2 id="communication-confirm-title">Confirm connection change</h2>
+                <button type="button" id="close-communication-confirm" class="icon-button" aria-label="Close">&times;</button>
+            </div>
+            <p id="communication-confirm-description"></p>
+            <p id="communication-confirm-message" class="form-message" role="status" aria-live="polite"></p>
+            <div class="form-actions">
+                <button type="button" id="cancel-communication-change" class="secondary">Cancel</button>
+                <button type="submit" id="confirm-communication-change">Confirm</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="communication-dialog">
+        <form id="communication-form">
+            <div class="dialog-heading"><h2>Communication instance</h2><button type="button" id="close-communication" class="icon-button" aria-label="Close">&times;</button></div>
+            <div class="form-grid">
+                <label>Type<select name="type"><option value="APRS_IS">APRS-IS</option><option value="KISS_TCP">KISS TCP</option><option value="KISS_SERIAL">KISS Serial</option></select></label>
+                <label>State<select name="state"><option value="ACTIVE">Active</option><option value="PAUSED">Paused</option></select></label>
+                <label data-connection-types="APRS_IS KISS_TCP">Host<input name="host" maxlength="255" required></label>
+                <label data-connection-types="APRS_IS KISS_TCP">TCP port<input name="port" type="number" min="1" max="65535" required></label>
+                <label data-connection-types="APRS_IS">Username (callsign)<input name="username" maxlength="10" required></label>
+                <label data-connection-types="APRS_IS">Passcode<input name="passcode" type="password" autocomplete="new-password" maxlength="255"><small>Leave blank when editing to keep the existing passcode.</small></label>
+                <label data-connection-types="APRS_IS">Filter<input name="filter" maxlength="255"></label>
+                <label data-connection-types="KISS_SERIAL">Serial device<input name="serialDevice" placeholder="COM3 or /dev/ttyUSB0" maxlength="255" required></label>
+                <label data-connection-types="KISS_SERIAL">Baud rate<input name="baudRate" type="number" min="1" max="4000000" value="9600" required></label>
+                <label data-connection-types="KISS_SERIAL">Initialization command 1<input name="initCommand1" maxlength="255"></label>
+                <label data-connection-types="KISS_SERIAL">Initialization command 2<input name="initCommand2" maxlength="255"></label>
+                <label data-connection-types="KISS_TCP KISS_SERIAL">Digipeater path<input name="digiPath" maxlength="255" placeholder="WIDE1-1,WIDE2-1"></label>
+            </div>
+            <p id="communication-message" class="form-message" role="status"></p>
+            <div class="form-actions"><button type="button" id="cancel-communication" class="secondary">Cancel</button><button type="submit">Save connection</button></div>
+        </form>
+    </dialog>
     <dialog id="settings-dialog">
         <form id="settings-form">
             <div class="dialog-heading">
@@ -851,39 +886,25 @@
                 <button type="button" id="close-settings" class="icon-button" aria-label="Close">×</button>
             </div>
             <fieldset>
-                <legend><label class="checkbox-label">
-                    <input name="usingInternetServer" id="using-internet-server" type="checkbox">
-                    Use Internet Server
-                </label></legend>
-                <div class="form-grid" id="internet-server-fields">
-                    <label>Internet server address<input name="internetServerAddress"></label>
-                    <label>Internet server port<input name="internetServerPort"></label>
-                    <label>Internet server username<input name="internetServerUsername"></label>
-                    <label>Internet server passcode<input name="internetServerPasscode" type="password"></label>
-                    <label>Filter<input name="filter"></label>
+                <legend>Communication methods</legend>
+                <button type="button" id="add-communication" class="secondary">Add connection</button>
+                <button type="button" id="refresh-communications" class="secondary">Refresh status</button>
+                <div id="communication-list" aria-live="polite"></div>
+                <p id="communication-list-message" class="form-message" role="status"></p>
+            </fieldset>
+            <fieldset>
+                <legend>Information Retention</legend>
+                <div class="form-grid">
+                    <label>Retain packets and positions for (days)<input name="packetRetentionDays" type="number" min="1" max="2147483647" step="1" value="1" required></label>
+                    <label>Retain inactive stations for (days)<input name="stationRetentionDays" type="number" min="1" max="2147483647" step="1" value="10" required></label>
+                    <label>Retain messages for (days)<input name="messageRetentionDays" type="number" min="1" max="2147483647" step="1" value="10" required></label>
                 </div>
             </fieldset>
             <fieldset>
-                <legend><label class="checkbox-label">
-                    <input name="usingKISS" id="using-kiss" type="checkbox"> Use KISS
-                </label></legend>
-                <div class="kiss-mode-selector" role="group" aria-label="KISS connection mode">
-                    <button type="button" id="use-kiss-serial" class="secondary" aria-pressed="false">Serial</button>
-                    <button type="button" id="use-kiss-tcp-ip" class="secondary" aria-pressed="true">TCP/IP</button>
-                </div>
-                <div class="form-grid" id="kiss-fields">
-                    <label class="kiss-tcp-ip-field">KISS host<input name="kissHost"></label>
-                    <label>KISS port<input name="kissPort"></label>
-                    <label class="kiss-serial-field" hidden>KISS baud rate<input name="kissBaudRate"></label>
-                    <label>KISS initialization command 1<input name="kissInitCommand1"></label>
-                    <label>KISS initialization command 2<input name="kissInitCommand2"></label>
-                </div>
-            </fieldset>
-            <div class="form-grid independent-setting">
-                <label>Digi path<input name="digiPath"></label>
+                <legend>Map settings</legend>
                 <label>Map tile URL<input name="mapTileUrl"
                     placeholder="https://tile.openstreetmap.org/{z}/{x}/{y}.png"></label>
-            </div>
+            </fieldset>
             <fieldset>
                 <legend>Stations</legend>
                 <div class="settings-summary">
@@ -957,7 +978,7 @@
                 <button type="button" id="close-confirm-settings" class="icon-button" aria-label="Close">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>These settings affect how APRS Welcome Center connects to external services and radio hardware.</p>
+                <p>Save the application settings? Communication instance changes are saved separately.</p>
                 <p>Changes may take up to 30 seconds to reflect in the application.</p>
                 <strong>Apply these changes?</strong>
             </div>
@@ -971,6 +992,7 @@
     <script src="/webjars/leaflet/1.9.4/leaflet.js"></script>
     <script src="/region-map-editor.js?v=20260824-17"></script>
     <script src="/station-list.js?v=20260918-2"></script>
-    <script src="/app.js?v=20260918-6"></script>
+    <script src="/app.js?v=20260920-3"></script>
+<script src="/communications.js?v=20260920-3"></script>
 </body>
 </html>

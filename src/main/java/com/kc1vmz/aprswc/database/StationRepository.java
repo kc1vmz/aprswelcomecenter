@@ -23,5 +23,21 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StationRepository extends JpaRepository<Station, UUID> {
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query(
+            "update Station s set s.lastActivityTime = :time where upper(s.callsign) = upper(:callsign) and s.lastActivityTime < :time")
+    int recordActivity(
+            @org.springframework.data.repository.query.Param("callsign") String callsign,
+            @org.springframework.data.repository.query.Param("time") java.time.LocalDateTime time);
+
+    @org.springframework.data.jpa.repository.Query("select s.id from Station s where s.lastActivityTime < :cutoff")
+    java.util.List<UUID> findExpiredIds(
+            @org.springframework.data.repository.query.Param("cutoff") java.time.LocalDateTime cutoff);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select s from Station s where s.id = :id")
+    Optional<Station> findForRetention(@org.springframework.data.repository.query.Param("id") UUID id);
+
     Optional<Station> findByCallsignIgnoreCase(String callsign);
 }
