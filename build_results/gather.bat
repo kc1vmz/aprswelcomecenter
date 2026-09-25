@@ -7,4 +7,4 @@ copy ..\README.md target
 copy ..\installers\linux\aprswc_installer.sh target
 copy ..\installers\linux\aprswc_uninstaller.sh target
 copy ..\installers\windows\aprswc_installer.bat target
-copy ..\target\aprs-welcome-center-1.0.5.jar target
+copy ..\target\aprs-welcome-center-1.0.6.jar target
