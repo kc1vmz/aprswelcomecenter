@@ -73,7 +73,8 @@ class ScopedTransmissionTest {
             });
             workers.put(entry.getKey(), worker);
         }
-        var object = new ObjectBeacon("LANDMARK", "N1TEST", "07258.30W", "4336.50N", "c", "/", "POI", true, (CommunicationScope.of(center)));
+        var object = new ObjectBeacon(
+                "LANDMARK", "N1TEST", "07258.30W", "4336.50N", "c", "/", "POI", true, (CommunicationScope.of(center)));
         manager.sendObject(object);
         assertThat(pendingA.get().getAsBoolean()).isTrue();
         assertThat(pendingB.get().getAsBoolean()).isTrue();

@@ -23,6 +23,7 @@ function setup(status = 200) {
     });
     const context = vm.createContext({
         setTimeout: callback => callback(), mapTileUrl: 'tiles',
+        aprsSymbolPicker: { load() {} },
         poiMap: { point: () => null, add() {} },
         L: {
             map: () => ({ setView() { return this; }, fitBounds() {}, invalidateSize() {} }),

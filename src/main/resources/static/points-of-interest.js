@@ -65,6 +65,7 @@
         form.reset();
         for (const key of ["name", "description", "latitude", "longitude", "symbolCode", "symbolTableId"])
             form.elements[key].value = p?.[key] ?? ({ symbolCode: "c", symbolTableId: "/" }[key] || "");
+        aprsSymbolPicker.load(form, "symbolTableId");
         form.elements.temporarilyUnavailable.checked = p?.temporarilyUnavailable || false;
         $("#poi-edit-title").textContent = p ? `Edit ${p.name}` : "Create Point of Interest";
         $("#poi-edit-message").textContent = "";

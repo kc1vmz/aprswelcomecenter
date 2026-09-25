@@ -1353,6 +1353,7 @@ function openEditDialog(id) {
 }
 
 function openDialog() {
+    aprsSymbolPicker.load(document.querySelector("#center-form"), "symbolId");
     document.querySelector("#form-message").textContent = "";
     document.querySelector("#center-dialog").showModal();
     document.querySelector('#center-form input[name="name"]').focus();

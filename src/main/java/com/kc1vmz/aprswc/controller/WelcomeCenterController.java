@@ -20,18 +20,17 @@ package com.kc1vmz.aprswc.controller;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.object.StationPosition;
 import com.kc1vmz.aprswc.object.WelcomeCenter;
+import com.kc1vmz.aprswc.object.WelcomeCenterStatusChange;
 import com.kc1vmz.aprswc.object.WelcomeRegion;
 import jakarta.validation.Valid;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import java.util.Objects;
-import java.util.Map;
-import com.kc1vmz.aprswc.object.WelcomeCenterStatusChange;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -42,8 +41,7 @@ public class WelcomeCenterController {
     private WelcomeCenterAccessor accessor;
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String, String>> routingError(
-            ResponseStatusException error) {
+    public ResponseEntity<Map<String, String>> routingError(ResponseStatusException error) {
         return ResponseEntity.status(error.getStatusCode())
                 .body(Map.of("message", Objects.toString(error.getReason(), "Request failed")));
     }

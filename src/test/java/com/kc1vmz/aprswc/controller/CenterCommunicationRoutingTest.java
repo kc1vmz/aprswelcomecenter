@@ -92,6 +92,35 @@ class CenterCommunicationRoutingTest {
     }
 
     @Test
+    void symbolsPersistAndInvalidSelectionsAreRejected() {
+        var c = client.post()
+                .uri("/api/v1/welcome-centers")
+                .bodyValue(Map.of("callsign", "N6SYMB", "symbolId", "\\", "symbolCode", "?"))
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .expectBody(WelcomeCenter.class)
+                .returnResult()
+                .getResponseBody();
+        assertThat(c.getSymbolId()).isEqualTo("\\");
+        assertThat(c.getSymbolCode()).isEqualTo("?");
+        c.setSymbolId("/");
+        c.setSymbolCode("h");
+        c = save(c);
+        var stored = centers.findById(c.getId()).orElseThrow();
+        assertThat(stored.getSymbolId()).isEqualTo("/");
+        assertThat(stored.getSymbolCode()).isEqualTo("h");
+        c.setSymbolCode("J");
+        client.put()
+                .uri("/api/v1/welcome-centers/" + c.getId())
+                .bodyValue(c)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+        assertThat(centers.findById(c.getId()).orElseThrow().getSymbolCode()).isEqualTo("h");
+    }
+
+    @Test
     void defaultsAllSupportsEmptySelectionAndIncludesFutureInstances() {
         var c = center("N1ROUT");
         var a = connection();

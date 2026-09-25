@@ -17,13 +17,13 @@
  */
 package com.kc1vmz.aprswc.object;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.JdbcTypeCode;
-import com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus;
 
 @Entity
 @Table(

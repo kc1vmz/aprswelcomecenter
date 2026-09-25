@@ -184,6 +184,8 @@
             <div class="form-grid">
                 <label>Name<input name="name" autocomplete="organization"></label>
                 <label>Callsign *<input name="callsign" maxlength="10" required autocomplete="off"></label>
+                <input type="hidden" name="symbolCode" value="c"><input type="hidden" name="symbolId" value="/">
+                <fieldset class="full-width"><legend>APRS symbol</legend><div data-symbol-picker></div></fieldset>
                 <label>Status *<select name="status" required><option value="OPEN" selected>Open</option><option value="CLOSED">Closed</option></select></label>
                 <label class="full-width">Description<textarea name="description" rows="3"></textarea></label>
                 <label>Owner name<input name="ownerName" autocomplete="name"></label>
@@ -1022,8 +1024,8 @@
                 <label>Description<input name="description" maxlength="40" pattern="[ -~]*" title="Up to 40 printable ASCII characters"></label>
                 <label>Latitude<input name="latitude" required placeholder="4336.50N or 43.60833"></label>
                 <label>Longitude<input name="longitude" required placeholder="07258.30W or -72.97167"></label>
-                <label>Symbol code<input name="symbolCode" required minlength="1" maxlength="1" value="c"></label>
-                <label>Symbol table ID<input name="symbolTableId" required minlength="1" maxlength="1" value="/"></label>
+                <input type="hidden" name="symbolCode" value="c"><input type="hidden" name="symbolTableId" value="/">
+                <fieldset class="full-width"><legend>APRS symbol</legend><div data-symbol-picker></div></fieldset>
             </div>
             <button type="button" id="poi-pick-location" class="secondary">Choose location on map</button>
             <label class="poi-availability"><input type="checkbox" name="temporarilyUnavailable"> Make temporarily unavailable</label>
@@ -1053,8 +1055,9 @@
     <script src="/region-map-editor.js?v=20260824-17"></script>
     <script src="/station-list.js?v=20260918-2"></script>
     <script src="/poi-map.js?v=20260921-2"></script>
-    <script src="/app.js?v=20260924-1"></script>
-    <script src="/points-of-interest.js?v=20260921-3"></script>
+    <script src="/aprs-symbol-picker.js?v=20260925-2"></script>
+    <script src="/app.js?v=20260925-1"></script>
+    <script src="/points-of-interest.js?v=20260925-1"></script>
     <script src="/center-communications.js?v=20260924-1"></script>
 <script src="/communications.js?v=20260920-3"></script>
 </body>

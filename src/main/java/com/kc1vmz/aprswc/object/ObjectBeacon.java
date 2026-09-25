@@ -17,10 +17,9 @@
  */
 package com.kc1vmz.aprswc.object;
 
+import com.kc1vmz.aprswc.communication.CommunicationScope;
 import java.util.Set;
 import java.util.UUID;
-
-import com.kc1vmz.aprswc.communication.CommunicationScope;
 
 public class ObjectBeacon {
     private String objectName;
@@ -42,7 +41,7 @@ public class ObjectBeacon {
             String symbolCode,
             String symbolId,
             String statusMessage,
-            boolean active, 
+            boolean active,
             CommunicationScope communicationScope) {
         this.objectName = objectName;
         this.callsignFrom = callsignFrom;
@@ -118,6 +117,7 @@ public class ObjectBeacon {
     public void setActive(boolean value) {
         active = value;
     }
+
     public CommunicationScope getCommunicationScope() {
         return communicationScope;
     }

@@ -18,6 +18,7 @@
 package com.kc1vmz.aprswc.accessor;
 
 import com.kc1vmz.aprswc.communication.CommunicationScope;
+import com.kc1vmz.aprswc.constants.AprsSymbols;
 import com.kc1vmz.aprswc.database.*;
 import com.kc1vmz.aprswc.object.*;
 import java.math.BigDecimal;
@@ -69,7 +70,15 @@ public class PointOfInterestService {
             CommunicationScope communicationScope) {
         public ObjectBeacon beacon(boolean active) {
             var beacon = new ObjectBeacon(
-                    name, callsignFrom, longitude, latitude, symbolCode, symbolTableId, description, active, communicationScope);
+                    name,
+                    callsignFrom,
+                    longitude,
+                    latitude,
+                    symbolCode,
+                    symbolTableId,
+                    description,
+                    active,
+                    communicationScope);
             return beacon;
         }
     }
@@ -187,10 +196,11 @@ public class PointOfInterestService {
         String description = Objects.toString(edit.description(), "");
         if (description.length() > 40 || !description.chars().allMatch(c -> c >= 32 && c <= 126))
             throw error(HttpStatus.BAD_REQUEST, "Description must be at most 40 printable ASCII characters");
-        if (edit.symbolCode() == null || !edit.symbolCode().matches("[!-~]"))
-            throw error(HttpStatus.BAD_REQUEST, "Symbol code must be one printable APRS symbol character");
-        if (edit.symbolTableId() == null || !edit.symbolTableId().matches("[/\\\\A-Za-z0-9]"))
-            throw error(HttpStatus.BAD_REQUEST, "Symbol table must be /, backslash, or a letter/digit overlay");
+        AprsSymbols.validate(
+                edit.symbolTableId(),
+                edit.symbolCode(),
+                id == null ? null : p.getSymbolTableId(),
+                id == null ? null : p.getSymbolCode());
         p.setLatitude(coordinate(edit.latitude(), true));
         p.setLongitude(coordinate(edit.longitude(), false));
         if (id == null) {

@@ -20,6 +20,7 @@ package com.kc1vmz.aprswc.communication;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.kc1vmz.aprswc.object.ObjectBeacon;
 import com.kc1vmz.aprswc.processor.StationPacketQueue;
 import com.kc1vmz.aprswc.processor.aprs.is.*;
 import com.kc1vmz.aprswc.processor.aprs.kiss.*;
@@ -80,13 +81,13 @@ class CommunicationTransportTest {
                     });
                     t1.sendMessage("N1TEST", "N2TEST", "Hello");
                     assertTrue(in1.readLine().endsWith("::N2TEST   :Hello"));
-                    var object = new com.kc1vmz.aprswc.object.ObjectBeacon(
-                            "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "c", "/", "Local landmark", true, null);
+                    var object = new ObjectBeacon(
+                            "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "?", "\\", "Local landmark", true, null);
                     t1.sendObject(object);
                     String live = in1.readLine();
                     assertTrue(live.startsWith("N1TEST-7>"));
                     assertTrue(live.contains(":;LANDMARK9*"));
-                    assertTrue(live.endsWith("4336.50N/07258.30WcLocal landmark"));
+                    assertTrue(live.endsWith("4336.50N\\07258.30W?Local landmark"));
                     object.setActive(false);
                     t1.sendObject(object);
                     assertTrue(in1.readLine().contains(":;LANDMARK9_"));
@@ -156,8 +157,8 @@ class CommunicationTransportTest {
             }
         }
         var transport = new MemoryKiss();
-        var beacon = new com.kc1vmz.aprswc.object.ObjectBeacon(
-                "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "c", "/", "Local landmark", true, null);
+        var beacon = new ObjectBeacon(
+                "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "?", "\\", "Local landmark", true, null);
         transport.sendObject(beacon);
         beacon.setActive(false);
         transport.sendObject(beacon);
@@ -166,7 +167,7 @@ class CommunicationTransportTest {
         var down = transport.read();
         assertEquals("N1TEST-7", live.getCallsign());
         assertTrue(live.getCommand().contains(":;LANDMARK9*"));
-        assertTrue(live.getCommand().endsWith("4336.50N/07258.30WcLocal landmark"));
+        assertTrue(live.getCommand().endsWith("4336.50N\\07258.30W?Local landmark"));
         assertTrue(down.getCommand().contains(":;LANDMARK9_"));
     }
 

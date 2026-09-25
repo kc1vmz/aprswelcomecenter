@@ -210,8 +210,7 @@ public class StationMessageProcessor {
                 .filter(p ->
                         routingCenterId == null || communications.isEligible(routingCenterId, p.getPacketProcessorId()))
                 .sorted(Comparator.comparing(
-                        StationPacket::getReceivedTime,
-                        Comparator.nullsLast(Comparator.reverseOrder())))
+                        StationPacket::getReceivedTime, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
         Set<String> uniquePacketProcessorIds = new HashSet<>();
         for (StationPacket stationPacket : stationPackets) {

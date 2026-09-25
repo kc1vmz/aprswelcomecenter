@@ -1,0 +1,730 @@
+{
+  "source": "https://www.aprs.org/symbols/symbolsX.txt",
+  "symbols": [
+    {
+      "table": "/",
+      "code": "!",
+      "name": "Police / Sheriff"
+    },
+    {
+      "table": "/",
+      "code": "#",
+      "name": "Digipeater"
+    },
+    {
+      "table": "/",
+      "code": "$",
+      "name": "Telephone"
+    },
+    {
+      "table": "/",
+      "code": "%",
+      "name": "DX Cluster"
+    },
+    {
+      "table": "/",
+      "code": "&",
+      "name": "HF Gateway"
+    },
+    {
+      "table": "/",
+      "code": "'",
+      "name": "Small Aircraft"
+    },
+    {
+      "table": "/",
+      "code": "(",
+      "name": "Mobile Satellite Station"
+    },
+    {
+      "table": "/",
+      "code": ")",
+      "name": "Wheelchair"
+    },
+    {
+      "table": "/",
+      "code": "*",
+      "name": "Snowmobile"
+    },
+    {
+      "table": "/",
+      "code": "+",
+      "name": "Red Cross"
+    },
+    {
+      "table": "/",
+      "code": ",",
+      "name": "Boy Scouts"
+    },
+    {
+      "table": "/",
+      "code": "-",
+      "name": "House / QTH"
+    },
+    {
+      "table": "/",
+      "code": ".",
+      "name": "X"
+    },
+    {
+      "table": "/",
+      "code": "/",
+      "name": "Red Dot"
+    },
+    {
+      "table": "/",
+      "code": ":",
+      "name": "Fire"
+    },
+    {
+      "table": "/",
+      "code": ";",
+      "name": "Campground / Portable Operations"
+    },
+    {
+      "table": "/",
+      "code": "<",
+      "name": "Motorcycle"
+    },
+    {
+      "table": "/",
+      "code": "=",
+      "name": "Railroad Engine"
+    },
+    {
+      "table": "/",
+      "code": ">",
+      "name": "Car"
+    },
+    {
+      "table": "/",
+      "code": "?",
+      "name": "File Server"
+    },
+    {
+      "table": "/",
+      "code": "@",
+      "name": "Hurricane Predicted Position"
+    },
+    {
+      "table": "/",
+      "code": "A",
+      "name": "Aid Station"
+    },
+    {
+      "table": "/",
+      "code": "B",
+      "name": "BBS / PBBS"
+    },
+    {
+      "table": "/",
+      "code": "C",
+      "name": "Canoe"
+    },
+    {
+      "table": "/",
+      "code": "E",
+      "name": "Eyeball / Event"
+    },
+    {
+      "table": "/",
+      "code": "F",
+      "name": "Farm Vehicle / Tractor"
+    },
+    {
+      "table": "/",
+      "code": "G",
+      "name": "Grid Square (6 digits)"
+    },
+    {
+      "table": "/",
+      "code": "H",
+      "name": "Hotel"
+    },
+    {
+      "table": "/",
+      "code": "I",
+      "name": "TCP/IP Network Station"
+    },
+    {
+      "table": "/",
+      "code": "K",
+      "name": "School"
+    },
+    {
+      "table": "/",
+      "code": "L",
+      "name": "PC User"
+    },
+    {
+      "table": "/",
+      "code": "M",
+      "name": "MacAPRS"
+    },
+    {
+      "table": "/",
+      "code": "N",
+      "name": "NTS Station"
+    },
+    {
+      "table": "/",
+      "code": "O",
+      "name": "Balloon"
+    },
+    {
+      "table": "/",
+      "code": "P",
+      "name": "Police"
+    },
+    {
+      "table": "/",
+      "code": "R",
+      "name": "Recreational Vehicle"
+    },
+    {
+      "table": "/",
+      "code": "S",
+      "name": "Space Shuttle"
+    },
+    {
+      "table": "/",
+      "code": "T",
+      "name": "SSTV"
+    },
+    {
+      "table": "/",
+      "code": "U",
+      "name": "Bus"
+    },
+    {
+      "table": "/",
+      "code": "V",
+      "name": "ATV"
+    },
+    {
+      "table": "/",
+      "code": "W",
+      "name": "National Weather Service Site"
+    },
+    {
+      "table": "/",
+      "code": "X",
+      "name": "Helicopter"
+    },
+    {
+      "table": "/",
+      "code": "Y",
+      "name": "Yacht / Sailboat"
+    },
+    {
+      "table": "/",
+      "code": "Z",
+      "name": "WinAPRS"
+    },
+    {
+      "table": "/",
+      "code": "[",
+      "name": "Person"
+    },
+    {
+      "table": "/",
+      "code": "\\",
+      "name": "Direction Finding Triangle"
+    },
+    {
+      "table": "/",
+      "code": "]",
+      "name": "Mail / Post Office"
+    },
+    {
+      "table": "/",
+      "code": "^",
+      "name": "Large Aircraft"
+    },
+    {
+      "table": "/",
+      "code": "_",
+      "name": "Weather Station"
+    },
+    {
+      "table": "/",
+      "code": "`",
+      "name": "Dish Antenna"
+    },
+    {
+      "table": "/",
+      "code": "a",
+      "name": "Ambulance"
+    },
+    {
+      "table": "/",
+      "code": "b",
+      "name": "Bicycle"
+    },
+    {
+      "table": "/",
+      "code": "c",
+      "name": "Incident Command Post"
+    },
+    {
+      "table": "/",
+      "code": "d",
+      "name": "Fire Department"
+    },
+    {
+      "table": "/",
+      "code": "e",
+      "name": "Horse"
+    },
+    {
+      "table": "/",
+      "code": "f",
+      "name": "Fire Truck"
+    },
+    {
+      "table": "/",
+      "code": "g",
+      "name": "Glider"
+    },
+    {
+      "table": "/",
+      "code": "h",
+      "name": "Hospital"
+    },
+    {
+      "table": "/",
+      "code": "i",
+      "name": "Islands on the Air"
+    },
+    {
+      "table": "/",
+      "code": "j",
+      "name": "Jeep"
+    },
+    {
+      "table": "/",
+      "code": "k",
+      "name": "Truck"
+    },
+    {
+      "table": "/",
+      "code": "l",
+      "name": "Laptop"
+    },
+    {
+      "table": "/",
+      "code": "m",
+      "name": "Mic-E Repeater"
+    },
+    {
+      "table": "/",
+      "code": "n",
+      "name": "Node"
+    },
+    {
+      "table": "/",
+      "code": "o",
+      "name": "Emergency Operations Center"
+    },
+    {
+      "table": "/",
+      "code": "p",
+      "name": "Rover / Dog"
+    },
+    {
+      "table": "/",
+      "code": "q",
+      "name": "Grid Square (above 128 miles)"
+    },
+    {
+      "table": "/",
+      "code": "r",
+      "name": "Repeater"
+    },
+    {
+      "table": "/",
+      "code": "s",
+      "name": "Ship / Powerboat"
+    },
+    {
+      "table": "/",
+      "code": "t",
+      "name": "Truck Stop"
+    },
+    {
+      "table": "/",
+      "code": "u",
+      "name": "Truck (18-wheeler)"
+    },
+    {
+      "table": "/",
+      "code": "v",
+      "name": "Van"
+    },
+    {
+      "table": "/",
+      "code": "w",
+      "name": "Water Station"
+    },
+    {
+      "table": "/",
+      "code": "x",
+      "name": "xAPRS"
+    },
+    {
+      "table": "/",
+      "code": "y",
+      "name": "Yagi at QTH"
+    },
+    {
+      "table": "\\",
+      "code": "!",
+      "name": "Emergency"
+    },
+    {
+      "table": "\\",
+      "code": "#",
+      "name": "Digipeater (overlay capable)"
+    },
+    {
+      "table": "\\",
+      "code": "$",
+      "name": "Bank / ATM"
+    },
+    {
+      "table": "\\",
+      "code": "%",
+      "name": "Power Plant"
+    },
+    {
+      "table": "\\",
+      "code": "&",
+      "name": "Gateway"
+    },
+    {
+      "table": "\\",
+      "code": "'",
+      "name": "Crash / Incident Site"
+    },
+    {
+      "table": "\\",
+      "code": "(",
+      "name": "Cloudy"
+    },
+    {
+      "table": "\\",
+      "code": ")",
+      "name": "Firenet / MODIS Earth Observation"
+    },
+    {
+      "table": "\\",
+      "code": "+",
+      "name": "Church"
+    },
+    {
+      "table": "\\",
+      "code": ",",
+      "name": "Girl Scouts"
+    },
+    {
+      "table": "\\",
+      "code": "-",
+      "name": "House (alternate)"
+    },
+    {
+      "table": "\\",
+      "code": ".",
+      "name": "Unknown / Ambiguous"
+    },
+    {
+      "table": "\\",
+      "code": "/",
+      "name": "Destination Waypoint"
+    },
+    {
+      "table": "\\",
+      "code": "0",
+      "name": "Circle / IRLP / EchoLink / WIRES"
+    },
+    {
+      "table": "\\",
+      "code": "8",
+      "name": "Network Node / 802.11"
+    },
+    {
+      "table": "\\",
+      "code": "9",
+      "name": "Gas Station"
+    },
+    {
+      "table": "\\",
+      "code": ";",
+      "name": "Park / Picnic / Event"
+    },
+    {
+      "table": "\\",
+      "code": "<",
+      "name": "Advisory"
+    },
+    {
+      "table": "\\",
+      "code": ">",
+      "name": "Vehicle (overlay capable)"
+    },
+    {
+      "table": "\\",
+      "code": "?",
+      "name": "Information Kiosk"
+    },
+    {
+      "table": "\\",
+      "code": "@",
+      "name": "Hurricane / Tropical Storm"
+    },
+    {
+      "table": "\\",
+      "code": "A",
+      "name": "Box / DTMF / RFID"
+    },
+    {
+      "table": "\\",
+      "code": "C",
+      "name": "Coast Guard"
+    },
+    {
+      "table": "\\",
+      "code": "D",
+      "name": "Depot"
+    },
+    {
+      "table": "\\",
+      "code": "E",
+      "name": "Smoke / Visibility"
+    },
+    {
+      "table": "\\",
+      "code": "H",
+      "name": "Haze / Hazard"
+    },
+    {
+      "table": "\\",
+      "code": "I",
+      "name": "Rain Shower"
+    },
+    {
+      "table": "\\",
+      "code": "K",
+      "name": "Kenwood Handheld"
+    },
+    {
+      "table": "\\",
+      "code": "L",
+      "name": "Lighthouse"
+    },
+    {
+      "table": "\\",
+      "code": "M",
+      "name": "MARS"
+    },
+    {
+      "table": "\\",
+      "code": "N",
+      "name": "Navigation Buoy"
+    },
+    {
+      "table": "\\",
+      "code": "O",
+      "name": "Rocket / Balloon (alternate)"
+    },
+    {
+      "table": "\\",
+      "code": "P",
+      "name": "Parking"
+    },
+    {
+      "table": "\\",
+      "code": "Q",
+      "name": "Earthquake"
+    },
+    {
+      "table": "\\",
+      "code": "R",
+      "name": "Restaurant"
+    },
+    {
+      "table": "\\",
+      "code": "S",
+      "name": "Satellite / PACSAT"
+    },
+    {
+      "table": "\\",
+      "code": "T",
+      "name": "Thunderstorm"
+    },
+    {
+      "table": "\\",
+      "code": "U",
+      "name": "Sunny"
+    },
+    {
+      "table": "\\",
+      "code": "V",
+      "name": "VORTAC Navigation Aid"
+    },
+    {
+      "table": "\\",
+      "code": "W",
+      "name": "National Weather Service Site (alternate)"
+    },
+    {
+      "table": "\\",
+      "code": "X",
+      "name": "Pharmacy"
+    },
+    {
+      "table": "\\",
+      "code": "Y",
+      "name": "Radio / Device"
+    },
+    {
+      "table": "\\",
+      "code": "[",
+      "name": "Wall Cloud"
+    },
+    {
+      "table": "\\",
+      "code": "\\",
+      "name": "GPS (overlay capable)"
+    },
+    {
+      "table": "\\",
+      "code": "^",
+      "name": "Aircraft (overlay capable)"
+    },
+    {
+      "table": "\\",
+      "code": "_",
+      "name": "Weather Station (alternate)"
+    },
+    {
+      "table": "\\",
+      "code": "`",
+      "name": "Rain"
+    },
+    {
+      "table": "\\",
+      "code": "a",
+      "name": "ARRL / ARES / Communications Organization"
+    },
+    {
+      "table": "\\",
+      "code": "c",
+      "name": "Civil Defense / RACES"
+    },
+    {
+      "table": "\\",
+      "code": "d",
+      "name": "DX Spot"
+    },
+    {
+      "table": "\\",
+      "code": "e",
+      "name": "Sleet"
+    },
+    {
+      "table": "\\",
+      "code": "f",
+      "name": "Funnel Cloud"
+    },
+    {
+      "table": "\\",
+      "code": "g",
+      "name": "Gale Flags"
+    },
+    {
+      "table": "\\",
+      "code": "h",
+      "name": "Store / Hamfest"
+    },
+    {
+      "table": "\\",
+      "code": "i",
+      "name": "Box / Point of Interest"
+    },
+    {
+      "table": "\\",
+      "code": "j",
+      "name": "Work Zone"
+    },
+    {
+      "table": "\\",
+      "code": "k",
+      "name": "SUV / Special Vehicle"
+    },
+    {
+      "table": "\\",
+      "code": "l",
+      "name": "Area (requires area data)"
+    },
+    {
+      "table": "\\",
+      "code": "m",
+      "name": "Value Sign (requires comment data)"
+    },
+    {
+      "table": "\\",
+      "code": "n",
+      "name": "Triangle (overlay capable)"
+    },
+    {
+      "table": "\\",
+      "code": "o",
+      "name": "Small Circle"
+    },
+    {
+      "table": "\\",
+      "code": "r",
+      "name": "Restrooms"
+    },
+    {
+      "table": "\\",
+      "code": "s",
+      "name": "Ship / Boat (overlay capable)"
+    },
+    {
+      "table": "\\",
+      "code": "t",
+      "name": "Tornado"
+    },
+    {
+      "table": "\\",
+      "code": "u",
+      "name": "Truck (overlay capable)"
+    },
+    {
+      "table": "\\",
+      "code": "v",
+      "name": "Van (overlay capable)"
+    },
+    {
+      "table": "\\",
+      "code": "w",
+      "name": "Flooding / Avalanche / Landslide"
+    },
+    {
+      "table": "\\",
+      "code": "x",
+      "name": "Wreck / Obstruction"
+    },
+    {
+      "table": "\\",
+      "code": "y",
+      "name": "Skywarn"
+    },
+    {
+      "table": "\\",
+      "code": "z",
+      "name": "Shelter"
+    }
+  ]
+}

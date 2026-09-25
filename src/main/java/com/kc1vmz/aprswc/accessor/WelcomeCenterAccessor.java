@@ -17,35 +17,36 @@
  */
 package com.kc1vmz.aprswc.accessor;
 
+import com.kc1vmz.aprswc.communication.CenterCommunicationRouting;
 import com.kc1vmz.aprswc.communication.CommunicationScope;
+import com.kc1vmz.aprswc.constants.AprsSymbols;
 import com.kc1vmz.aprswc.constants.ObjectSymbolTableConstants;
 import com.kc1vmz.aprswc.database.StationPositionRepository;
 import com.kc1vmz.aprswc.database.WelcomeCenterRepository;
 import com.kc1vmz.aprswc.database.WelcomeRegionRepository;
+import com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus;
 import com.kc1vmz.aprswc.object.ObjectBeacon;
 import com.kc1vmz.aprswc.object.StationPosition;
 import com.kc1vmz.aprswc.object.WelcomeCenter;
+import com.kc1vmz.aprswc.object.WelcomeCenterChanged;
+import com.kc1vmz.aprswc.object.WelcomeCenterSnapshot;
+import com.kc1vmz.aprswc.object.WelcomeCenterStatusChange;
 import com.kc1vmz.aprswc.object.WelcomeRegion;
 import com.kc1vmz.aprswc.processor.ObjectBeaconQueue;
 import com.kc1vmz.aprswc.utils.GeoFenceUtils;
-import com.kc1vmz.aprswc.object.WelcomeCenterChanged;
-import com.kc1vmz.aprswc.object.WelcomeCenterStatusChange;
-import com.kc1vmz.aprswc.communication.CenterCommunicationRouting;
-import com.kc1vmz.aprswc.object.WelcomeCenterSnapshot;
-import com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 public class WelcomeCenterAccessor {
@@ -119,8 +120,9 @@ public class WelcomeCenterAccessor {
     }
 
     public Mono<WelcomeCenter> create(WelcomeCenter value) {
-        value.setSymbolCode(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE);
-        value.setSymbolId(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID);
+        if (value.getSymbolCode() == null) value.setSymbolCode(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE);
+        if (value.getSymbolId() == null) value.setSymbolId(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID);
+        AprsSymbols.validate(value.getSymbolId(), value.getSymbolCode(), null, null);
         value.setId(null);
         if (value.getStatus() == null) value.setStatus(WelcomeCenterStatus.OPEN);
         return Mono.fromCallable(() -> transactions.execute(tx -> {
@@ -180,14 +182,19 @@ public class WelcomeCenterAccessor {
                     existing.setContactCallsign(value.getContactCallsign());
                     existing.setLongitude(value.getLongitude());
                     existing.setLatitude(value.getLatitude());
-                    existing.setSymbolCode(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE);
-                    existing.setSymbolId(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID);
+                    String symbolCode =
+                            value.getSymbolCode() == null ? existing.getSymbolCode() : value.getSymbolCode();
+                    String symbolId = value.getSymbolId() == null ? existing.getSymbolId() : value.getSymbolId();
+                    if (symbolCode == null) symbolCode = ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE;
+                    if (symbolId == null) symbolId = ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID;
+                    AprsSymbols.validate(symbolId, symbolCode, existing.getSymbolId(), existing.getSymbolCode());
+                    existing.setSymbolCode(symbolCode);
+                    existing.setSymbolId(symbolId);
                     WelcomeCenter saved = centers.saveAndFlush(existing);
                     if (previous.status() != saved.getStatus()
                             || !previous.callsign().equalsIgnoreCase(saved.getCallsign()))
                         pois.afterCenterChange(saved, previousPois);
-                    events.publishEvent(new WelcomeCenterChanged(
-                            previous, WelcomeCenterSnapshot.of(saved)));
+                    events.publishEvent(new WelcomeCenterChanged(previous, WelcomeCenterSnapshot.of(saved)));
                     return saved;
                 }))
                 .subscribeOn(Schedulers.boundedElastic());
@@ -210,8 +217,7 @@ public class WelcomeCenterAccessor {
                     if (previous.status() != saved.getStatus()
                             || !previous.callsign().equalsIgnoreCase(saved.getCallsign()))
                         pois.afterCenterChange(saved, previousPois);
-                    events.publishEvent(new WelcomeCenterChanged(
-                            previous, WelcomeCenterSnapshot.of(saved)));
+                    events.publishEvent(new WelcomeCenterChanged(previous, WelcomeCenterSnapshot.of(saved)));
                     return saved;
                 }))
                 .subscribeOn(Schedulers.boundedElastic());
