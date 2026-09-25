@@ -22,17 +22,17 @@ import java.util.*;
 import org.springframework.data.jpa.repository.*;
 
 public interface PointOfInterestRepository extends JpaRepository<PointOfInterest, UUID> {
-    @EntityGraph(attributePaths = "welcomeCenter")
+    @EntityGraph(attributePaths = {"welcomeCenter", "welcomeCenter.communicationInstanceIds"})
     List<PointOfInterest> findByWelcomeCenterIdOrderByName(UUID centerId);
 
-    @EntityGraph(attributePaths = "welcomeCenter")
+    @EntityGraph(attributePaths = {"welcomeCenter", "welcomeCenter.communicationInstanceIds"})
     Optional<PointOfInterest> findByName(String name);
 
     @Override
-    @EntityGraph(attributePaths = "welcomeCenter")
+    @EntityGraph(attributePaths = {"welcomeCenter", "welcomeCenter.communicationInstanceIds"})
     Optional<PointOfInterest> findById(UUID id);
 
     @Override
-    @EntityGraph(attributePaths = "welcomeCenter")
+    @EntityGraph(attributePaths = {"welcomeCenter", "welcomeCenter.communicationInstanceIds"})
     List<PointOfInterest> findAll();
 }

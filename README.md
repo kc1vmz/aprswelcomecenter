@@ -394,6 +394,14 @@ Sending the message "WARNINGS" to the welcome center's callsign will trigger the
 
 
 
+## Welcome Center communication methods
+
+The Welcome Center editor can use **All communication methods** (the default, including future connections) or **Selected communication methods**. Paused connections remain selectable. An empty selection means the center will not communicate; deleting its last selected connection leaves that selection empty.
+
+Welcome Center and POI beacons and bulletins use the eligible active, connected methods. Command replies and automatic entry/exit messages use their incoming packet's connection, provided it is eligible. Directed messages without an assigned route use the recipient's most recent eligible packet history. Missing or unavailable routes are dropped.
+
+Packets and positions are still stored globally. Commands received on excluded methods are ignored without acknowledgment, and excluded methods cannot trigger automatic entry/exit messages. Selection is checked again before queued transmissions are written. Changing a selection does not restart connection threads or withdraw objects from removed connections. Newly added routes receive immediate live beacons for open centers and available POIs, subject to connection availability.
+
 ## Points of Interest
 
 Use **Points of Interest** on a Welcome Center card to create, edit, or delete its points of interest. Enter coordinates in APRS notation or decimal degrees, or choose a location on the map. Points of Interest may be outside the center's regions.
@@ -409,8 +417,16 @@ Points of Interest transmit using their Welcome Center's callsign **Make tempora
 APRS Welcome Center does not need an installation, but installation scripts are provided in GitHub to easily download and configure it to run on Linux and Windows.
 
 
-
 See aprswc_installer.bat for Microsoft Windows and aprswc_installer.sh for Linux.  Both are located included in each release, and are located in source in .\installers\windows and ./installers/linux.
+
+
+To install on Linux, make aprswc_installer.sh executable (chmod +X aprswc_installer.sh) and run it  (./aprswc_installer.sh).  Answer the questions or take the defaults.  By default, the APRS Welcome Center will be installed as a service in your HOME directory tree, started, and available at http://localhost:8080 .
+
+
+### Upgrade
+
+
+On Linux, fetching the aprswc_installer.sh script file for the version you want and running it will detect if an upgrade will be performed.  The upgrade will install and run everything in the same locations as the previous installation.
 
 
 
@@ -426,6 +442,6 @@ java -jar aprs-welcome-center-1.0.2.jar
 
 
 
-Open `http://localhost:8080`. The durable database is created below `./data`.
+Open `http://localhost:8080`. By default, the database is created below `./data`.
 
 

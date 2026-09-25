@@ -23,8 +23,10 @@ import com.kc1vmz.aprswc.accessor.StationAccessor;
 import com.kc1vmz.aprswc.accessor.StationPacketAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterWeatherReportAccessor;
+import com.kc1vmz.aprswc.communication.CommunicationScope;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.DistanceUnit;
+import com.kc1vmz.aprswc.enumeration.MessageType;
 import com.kc1vmz.aprswc.enumeration.PacketType;
 import com.kc1vmz.aprswc.enumeration.StationCommandType;
 import com.kc1vmz.aprswc.enumeration.StationState;
@@ -276,7 +278,7 @@ public class StationPacketProcessor {
 
     void triggerEvents(
             WelcomeCenter welcomeCenter, Station station, CommunicationEventType eventType, String packetProcessorId) {
-        if (!welcomeCenter.isOpen()) {
+        if (!welcomeCenter.isOpen() || !CommunicationScope.of(welcomeCenter).allows(packetProcessorId)) {
             return;
         }
         // determine the communication policies and execute them
@@ -421,7 +423,9 @@ public class StationPacketProcessor {
 
     private void processMessagePacket(StationPacket packet, Station station) {
         determineCallsignTo(packet);
-        if (welcomeCenterAccessor.findOpenByCallsign(packet.getCallsignTo()).block() == null) {
+        var center =
+                welcomeCenterAccessor.findOpenByCallsign(packet.getCallsignTo()).block();
+        if (center == null || !CommunicationScope.of(center).allows(packet.getPacketProcessorId())) {
             // not ours
             return;
         }
@@ -431,41 +435,43 @@ public class StationPacketProcessor {
             return;
         }
         if (isWelcomeCenterCommand(packet)) {
-            ackPacket(packet);
+            ackPacket(packet, center);
             processWelcomeCenterCommand(packet);
         } else {
-            rejectPacket(packet);
+            rejectPacket(packet, center);
         }
     }
 
-    private void rejectPacket(StationPacket packet) {
+    private void rejectPacket(StationPacket packet, WelcomeCenter center) {
         String ackId = getPacketAckId(packet);
         if (ackId != null) {
             StationMessage stationMessage = new StationMessage(
                     UUID.randomUUID(),
                     packet.getCallsign(),
                     packet.getCallsignTo(),
-                    null,
+                    center,
                     null,
                     "rej" + ackId,
                     packet.getPacketProcessorId(),
                     com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
+            stationMessage.setRequiresOpenCenter(true);
             stationMessageQueue.offer(stationMessage);
         }
     }
 
-    private void ackPacket(StationPacket packet) {
+    private void ackPacket(StationPacket packet, WelcomeCenter center) {
         String ackId = getPacketAckId(packet);
         if (ackId != null) {
             StationMessage stationMessage = new StationMessage(
                     UUID.randomUUID(),
                     packet.getCallsign(),
                     packet.getCallsignTo(),
-                    null,
+                    center,
                     null,
                     "ack" + ackId,
                     packet.getPacketProcessorId(),
-                    com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
+                    MessageType.MESSAGE);
+            stationMessage.setRequiresOpenCenter(true);
             stationMessageQueue.offer(stationMessage);
         }
     }
@@ -497,7 +503,8 @@ public class StationPacketProcessor {
         StationCommandType type = StationCommandType.UNKNOWN; // will get filled in later
         WelcomeCenter welcomeCenter =
                 welcomeCenterAccessor.findOpenByCallsign(packet.getCallsignTo()).block();
-        if (welcomeCenter == null) return;
+        if (welcomeCenter == null || !CommunicationScope.of(welcomeCenter).allows(packet.getPacketProcessorId()))
+            return;
         StationCommand command = new StationCommand(
                 UUID.randomUUID(),
                 packet.getCallsign(),

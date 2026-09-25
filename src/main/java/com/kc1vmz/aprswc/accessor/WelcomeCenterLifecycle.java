@@ -75,7 +75,7 @@ public class WelcomeCenterLifecycle {
         }
         String statusMessage = String.format(
                 "Welcome Center - %s - %s", welcomeCenterSnapshot.name(), (active) ? "now open" : "now closed");
-        objectBeaconQueue.offer(new ObjectBeacon(
+        ObjectBeacon beacon = new ObjectBeacon(
                 welcomeCenterSnapshot.callsign(),
                 welcomeCenterSnapshot.callsign(),
                 welcomeCenterSnapshot.longitude(),
@@ -83,7 +83,9 @@ public class WelcomeCenterLifecycle {
                 welcomeCenterSnapshot.symbolCode(),
                 welcomeCenterSnapshot.symbolId(),
                 statusMessage,
-                active));
+                active,
+                welcomeCenterSnapshot.communicationScope());
+        objectBeaconQueue.offer(beacon);
     }
 
     private void announceOpen(WelcomeCenterSnapshot welcomeCenterSnapshot) {

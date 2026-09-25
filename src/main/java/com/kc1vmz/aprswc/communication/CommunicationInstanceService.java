@@ -20,6 +20,8 @@ package com.kc1vmz.aprswc.communication;
 import com.kc1vmz.aprswc.database.CommunicationInstanceRepository;
 import com.kc1vmz.aprswc.object.CommunicationInstance;
 import java.util.*;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -31,6 +33,12 @@ public class CommunicationInstanceService {
     private final CommunicationInstanceRepository repository;
     private final CommunicationInstanceManager manager;
     private final TransactionTemplate transaction;
+
+    @Autowired
+    private CenterCommunicationRouting routing;
+
+    @Autowired
+    private org.springframework.context.ApplicationEventPublisher events;
 
     public CommunicationInstanceService(
             CommunicationInstanceRepository repository,
@@ -63,6 +71,7 @@ public class CommunicationInstanceService {
 
     public synchronized CommunicationInstance save(UUID id, CommunicationInstance value) {
         var saved = transaction.execute(status -> {
+            routing.lockConfiguration();
             if (id == null) {
                 value.setId(UUID.randomUUID());
                 value.setVersion(0);
@@ -87,16 +96,20 @@ public class CommunicationInstanceService {
             return repository.saveAndFlush(value);
         });
         manager.reconcile(); // TransactionTemplate has committed before the runtime changes.
+        if ("ACTIVE".equals(saved.getState()))
+            events.publishEvent(new CenterCommunicationRouting.InstanceAvailable(saved.getId()));
         return saved;
     }
 
     public synchronized void delete(UUID id, long expectedVersion) {
         transaction.executeWithoutResult(status -> {
+            routing.lockConfiguration();
             var value = repository
                     .findById(id)
                     .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Communication instance no longer exists"));
             if (value.getVersion() != expectedVersion)
                 throw error(HttpStatus.CONFLICT, "Configuration changed. Refresh and try again.");
+            routing.beforeInstanceDeleted(id);
             repository.delete(value);
             repository.flush();
         });

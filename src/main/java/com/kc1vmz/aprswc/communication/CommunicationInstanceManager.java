@@ -27,12 +27,17 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CommunicationInstanceManager {
+    @Autowired
+    private CenterCommunicationRouting routing;
+
     public record Health(String status, String lastError, LocalDateTime lastPacketTime) {}
 
     private final CommunicationInstanceRepository repository;
@@ -113,18 +118,47 @@ public class CommunicationInstanceManager {
         if (id == null) return false;
         try {
             var w = workers.get(UUID.fromString(id));
-            return w != null && w.send(t -> t.sendMessage(from, to, content), permitted, onSent);
+            UUID owner = routing.senderCenter(from);
+            return w != null
+                    && w.send(
+                            t -> t.sendMessage(from, to, content),
+                            () -> permitted.getAsBoolean() && routing.permits(owner, id),
+                            onSent);
         } catch (IllegalArgumentException ignored) {
             return false;
         }
     }
 
     public void sendBulletin(String from, String to, String content) {
-        workers.values().forEach(w -> w.send(t -> t.sendMessage(from, to, content), () -> {}));
+        sendBulletin(null, from, to, content, () -> true);
+    }
+
+    public boolean isEligible(UUID centerId, String instanceId) {
+        return routing.permits(centerId, instanceId);
+    }
+
+    public UUID centerIdForSender(String callsign) {
+        return routing.senderCenter(callsign);
+    }
+
+    public void sendBulletin(UUID centerId, String from, String to, String content, BooleanSupplier permitted) {
+        UUID owner = centerId == null ? routing.senderCenter(from) : centerId;
+        workers.forEach((id, w) -> w.send(
+                t -> t.sendMessage(from, to, content),
+                () -> permitted.getAsBoolean() && routing.permits(owner, id.toString()),
+                () -> {}));
     }
 
     public void sendObject(ObjectBeacon beacon) {
-        workers.values().forEach(w -> w.send(t -> t.sendObject(beacon), beacon::isTransmissionPermitted, () -> {}));
+        workers.forEach((id, w) -> {
+            if (beacon.getTargetInstanceIds() != null
+                    && !beacon.getTargetInstanceIds().contains(id)) return;
+            w.send(
+                    t -> t.sendObject(beacon),
+                    () -> beacon.isTransmissionPermitted()
+                            && routing.permits(beacon.getCommunicationScope(), id.toString(), !beacon.isActive()),
+                    () -> {});
+        });
     }
 
     @PreDestroy

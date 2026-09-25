@@ -31,7 +31,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 class WelcomeCenterLifecycleTest {
     private WelcomeCenterSnapshot snapshot(String callsign, WelcomeCenterStatus status) {
         return new WelcomeCenterSnapshot(
-                UUID.randomUUID(), "Name", callsign, "KC1VMZ", "07106.00W", "4218.00N", "c", "/", status);
+                UUID.randomUUID(), "Name", callsign, "KC1VMZ", "07106.00W", "4218.00N", "c", "/", status, null);
     }
 
     @Test

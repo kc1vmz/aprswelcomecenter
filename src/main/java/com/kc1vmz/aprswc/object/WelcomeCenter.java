@@ -21,6 +21,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.JdbcTypeCode;
+import com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus;
 
 @Entity
 @Table(
@@ -30,22 +33,57 @@ public class WelcomeCenter {
     @Id
     private UUID id;
 
-    @Enumerated(EnumType.STRING)
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
-    @Column(nullable = false, length = 6)
-    private com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus status;
+    @Column(nullable = false, length = 8)
+    private String communicationMode = "ALL";
 
-    public com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus getStatus() {
+    @Column(nullable = false)
+    private long routingVersion;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "welcome_center_communications", joinColumns = @JoinColumn(name = "welcome_center_id"))
+    @Column(name = "communication_instance_id", nullable = false)
+    private Set<UUID> communicationInstanceIds = new HashSet<>();
+
+    public String getCommunicationMode() {
+        return communicationMode;
+    }
+
+    public void setCommunicationMode(String value) {
+        communicationMode = value;
+    }
+
+    public long getRoutingVersion() {
+        return routingVersion;
+    }
+
+    public void setRoutingVersion(long value) {
+        routingVersion = value;
+    }
+
+    public Set<UUID> getCommunicationInstanceIds() {
+        return communicationInstanceIds;
+    }
+
+    public void setCommunicationInstanceIds(Set<UUID> value) {
+        communicationInstanceIds = value;
+    }
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 6)
+    private WelcomeCenterStatus status;
+
+    public WelcomeCenterStatus getStatus() {
         return status;
     }
 
-    public void setStatus(com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus status) {
+    public void setStatus(WelcomeCenterStatus status) {
         this.status = status;
     }
 
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JsonIgnore
     public boolean isOpen() {
-        return status == com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus.OPEN;
+        return status == WelcomeCenterStatus.OPEN;
     }
 
     private String name;
@@ -103,7 +141,7 @@ public class WelcomeCenter {
             String symbolCode,
             String symbolId,
             List<WelcomeRegion> regions) {
-        this.status = com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus.OPEN;
+        this.status = WelcomeCenterStatus.OPEN;
         this.id = id;
         this.name = name;
         this.description = description;

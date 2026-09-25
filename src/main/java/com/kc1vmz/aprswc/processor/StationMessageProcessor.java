@@ -29,6 +29,7 @@ import com.kc1vmz.aprswc.object.StationPacket;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -122,7 +123,14 @@ public class StationMessageProcessor {
             return;
         }
 
-        communications.sendBulletin(message.getCallsignFrom(), message.getCallsignTo(), message.getContent());
+        communications.sendBulletin(
+                message.getWelcomeCenter() == null
+                        ? null
+                        : message.getWelcomeCenter().getId(),
+                message.getCallsignFrom(),
+                message.getCallsignTo(),
+                message.getContent(),
+                () -> centerIsOpenIfRequired(message));
     }
 
     private void sendWelcomeCenterMessage(StationMessage message) {
@@ -153,7 +161,7 @@ public class StationMessageProcessor {
                         null,
                         message.getContent(),
                         null,
-                        com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
+                        MessageType.MESSAGE);
                 stationMessageAccessor.create(specificMessage).block();
             } catch (Exception e) {
                 log.error("Exception caught sending welcome center message to station", e);
@@ -166,21 +174,20 @@ public class StationMessageProcessor {
             log.error("No callsignFrom in StationMessage");
             return;
         }
+        UUID routingCenterId = message.getWelcomeCenter() == null
+                ? communications.centerIdForSender(message.getCallsignFrom())
+                : message.getWelcomeCenter().getId();
         if (message.getPacketProcessorId() == null
                 || message.getPacketProcessorId().isBlank())
-            message.setPacketProcessorId(determinePacketProcessor(message));
+            message.setPacketProcessorId(determinePacketProcessor(message, routingCenterId));
         boolean queued = communications.sendMessage(
                 message.getPacketProcessorId(),
                 message.getCallsignFrom(),
                 message.getCallsignTo(),
                 message.getContent(),
-                () -> !message.isRequiresOpenCenter()
-                        || (message.getWelcomeCenter() != null
-                                && welcomeCenterAccessor
-                                                .findOpenById(message.getWelcomeCenter()
-                                                        .getId())
-                                                .block()
-                                        != null),
+                () -> centerIsOpenIfRequired(message)
+                        && (routingCenterId == null
+                                || communications.isEligible(routingCenterId, message.getPacketProcessorId())),
                 () -> {
                     message.setSentTime(LocalDateTime.now());
                     stationMessageAccessor.saveProcessedMessage(message).block();
@@ -189,7 +196,7 @@ public class StationMessageProcessor {
             log.debug("Dropping message with unavailable communication route {}", message.getPacketProcessorId());
     }
 
-    private String determinePacketProcessor(StationMessage message) {
+    private String determinePacketProcessor(StationMessage message, UUID routingCenterId) {
         String ret = "";
 
         List<StationPacket> stationPackets = stationPacketAccessor
@@ -199,6 +206,13 @@ public class StationMessageProcessor {
         if ((stationPackets == null) || (stationPackets.isEmpty())) {
             return "";
         }
+        stationPackets = stationPackets.stream()
+                .filter(p ->
+                        routingCenterId == null || communications.isEligible(routingCenterId, p.getPacketProcessorId()))
+                .sorted(Comparator.comparing(
+                        StationPacket::getReceivedTime,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
         Set<String> uniquePacketProcessorIds = new HashSet<>();
         for (StationPacket stationPacket : stationPackets) {
             uniquePacketProcessorIds.add(stationPacket.getPacketProcessorId());
@@ -222,5 +236,14 @@ public class StationMessageProcessor {
     @PreDestroy
     void stop() {
         worker.shutdownNow();
+    }
+
+    private boolean centerIsOpenIfRequired(StationMessage message) {
+        return !message.isRequiresOpenCenter()
+                || (message.getWelcomeCenter() != null
+                        && welcomeCenterAccessor
+                                        .findOpenById(message.getWelcomeCenter().getId())
+                                        .block()
+                                != null);
     }
 }

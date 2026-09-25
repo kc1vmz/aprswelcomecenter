@@ -17,6 +17,7 @@
  */
 package com.kc1vmz.aprswc.accessor;
 
+import com.kc1vmz.aprswc.communication.CommunicationScope;
 import com.kc1vmz.aprswc.database.*;
 import com.kc1vmz.aprswc.object.*;
 import java.math.BigDecimal;
@@ -64,10 +65,12 @@ public class PointOfInterestService {
             String symbolCode,
             String symbolTableId,
             String callsignFrom,
-            boolean up) {
+            boolean up,
+            CommunicationScope communicationScope) {
         public ObjectBeacon beacon(boolean active) {
-            return new ObjectBeacon(
-                    name, callsignFrom, longitude, latitude, symbolCode, symbolTableId, description, active);
+            var beacon = new ObjectBeacon(
+                    name, callsignFrom, longitude, latitude, symbolCode, symbolTableId, description, active, communicationScope);
+            return beacon;
         }
     }
 
@@ -159,7 +162,8 @@ public class PointOfInterestService {
                 p.getSymbolCode(),
                 p.getSymbolTableId(),
                 p.getWelcomeCenter().getCallsign().toUpperCase(Locale.ROOT),
-                p.getWelcomeCenter().isOpen() && !p.isTemporarilyUnavailable());
+                p.getWelcomeCenter().isOpen() && !p.isTemporarilyUnavailable(),
+                CommunicationScope.of(p.getWelcomeCenter()));
     }
 
     @Transactional

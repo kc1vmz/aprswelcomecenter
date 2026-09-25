@@ -18,6 +18,8 @@
 package com.kc1vmz.aprswc.processor;
 
 import com.kc1vmz.aprswc.accessor.CommunicationPolicyAccessor;
+import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
+import com.kc1vmz.aprswc.communication.CommunicationScope;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
 import com.kc1vmz.aprswc.object.CommunicationEvent;
@@ -47,7 +49,7 @@ public class CommunicationEventProcessor {
     private StationMessageQueue stationMessageQueue;
 
     @Autowired
-    private com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor welcomeCenterAccessor;
+    private WelcomeCenterAccessor welcomeCenterAccessor;
 
     private final ExecutorService worker =
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "CommunicationEventProcessor"));
@@ -87,7 +89,7 @@ public class CommunicationEventProcessor {
         var center = welcomeCenterAccessor
                 .findOpenById(policy.getWelcomeCenter().getId())
                 .block();
-        if (center == null) return;
+        if (center == null || !CommunicationScope.of(center).allows(event.getPacketProcessorId())) return;
         if (policy.getMessageType().equals(MessageType.MESSAGE)) {
             StationMessage stationMessage = new StationMessage(
                     UUID.randomUUID(),

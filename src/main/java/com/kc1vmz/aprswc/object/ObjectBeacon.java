@@ -17,17 +17,12 @@
  */
 package com.kc1vmz.aprswc.object;
 
+import java.util.Set;
+import java.util.UUID;
+
+import com.kc1vmz.aprswc.communication.CommunicationScope;
+
 public class ObjectBeacon {
-    private java.util.function.BooleanSupplier transmissionPermitted = () -> true;
-
-    public void setTransmissionPermitted(java.util.function.BooleanSupplier value) {
-        transmissionPermitted = value;
-    }
-
-    public boolean isTransmissionPermitted() {
-        return transmissionPermitted.getAsBoolean();
-    }
-
     private String objectName;
     private String callsignFrom;
     private String longitude;
@@ -36,6 +31,8 @@ public class ObjectBeacon {
     private String symbolId;
     private String statusMessage;
     private boolean active;
+    private CommunicationScope communicationScope;
+    private Set<UUID> targetInstanceIds;
 
     public ObjectBeacon(
             String objectName,
@@ -45,7 +42,8 @@ public class ObjectBeacon {
             String symbolCode,
             String symbolId,
             String statusMessage,
-            boolean active) {
+            boolean active, 
+            CommunicationScope communicationScope) {
         this.objectName = objectName;
         this.callsignFrom = callsignFrom;
         this.longitude = longitude;
@@ -54,6 +52,7 @@ public class ObjectBeacon {
         this.symbolId = symbolId;
         this.statusMessage = statusMessage;
         this.active = active;
+        this.communicationScope = communicationScope;
     }
 
     public String getObjectName() {
@@ -118,5 +117,30 @@ public class ObjectBeacon {
 
     public void setActive(boolean value) {
         active = value;
+    }
+    public CommunicationScope getCommunicationScope() {
+        return communicationScope;
+    }
+
+    public void setCommunicationScope(CommunicationScope value) {
+        communicationScope = value;
+    }
+
+    public java.util.Set<java.util.UUID> getTargetInstanceIds() {
+        return targetInstanceIds;
+    }
+
+    public void setTargetInstanceIds(java.util.Set<java.util.UUID> value) {
+        targetInstanceIds = java.util.Set.copyOf(value);
+    }
+
+    private java.util.function.BooleanSupplier transmissionPermitted = () -> true;
+
+    public void setTransmissionPermitted(java.util.function.BooleanSupplier value) {
+        transmissionPermitted = value;
+    }
+
+    public boolean isTransmissionPermitted() {
+        return transmissionPermitted.getAsBoolean();
     }
 }

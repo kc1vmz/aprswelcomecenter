@@ -857,6 +857,10 @@ legend {
 #poi-pick-location { margin-top: 1rem; }
 #poi-location-map { color-scheme: light; }
 .poi-toolbar { justify-content: flex-end; flex-wrap: wrap; }
+.center-communication-option { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem; }
+.center-communication-option input { width: auto; }
+#center-communication-warning:empty, #center-communication-message:empty { display: none; }
+#refresh-center-communications { margin-top: 0.75rem; }
 #poi-list { margin-top: 0.75rem; }
 .poi-summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem 1rem; }
 .poi-summary-details { min-width: 0; overflow-wrap: anywhere; }

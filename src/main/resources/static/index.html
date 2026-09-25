@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg?v=20260918-1" type="image/svg+xml">
     <script src="/theme.js?v=20260918-2"></script>
     <link rel="stylesheet" href="/webjars/leaflet/1.9.4/leaflet.css">
-    <link rel="stylesheet" href="/app.css?v=20260921-3">
+    <link rel="stylesheet" href="/app.css?v=20260924-1">
 </head>
 <body>
     <header>
@@ -192,6 +192,17 @@
                 <label>Organization callsign<input name="organizationCallsign" maxlength="10"></label>
                 <label>Contact name<input name="contactName" autocomplete="name"></label>
                 <label>Contact callsign<input name="contactCallsign" maxlength="10"></label>
+                <fieldset class="full-width">
+                    <legend>Communication methods</legend>
+                    <label>Use<select id="center-communication-mode" name="communicationMode">
+                        <option value="ALL">All communication methods</option>
+                        <option value="SELECTED">Selected communication methods</option>
+                    </select></label>
+                    <div id="center-communication-options" hidden></div>
+                    <p id="center-communication-warning" class="form-message" role="status"></p>
+                    <p id="center-communication-message" class="form-message" role="status"></p>
+                    <button type="button" id="refresh-center-communications" class="secondary">Refresh methods</button>
+                </fieldset>
                 <fieldset class="full-width location-fields">
                     <legend>Location</legend>
                     <div class="form-grid">
@@ -1042,8 +1053,9 @@
     <script src="/region-map-editor.js?v=20260824-17"></script>
     <script src="/station-list.js?v=20260918-2"></script>
     <script src="/poi-map.js?v=20260921-2"></script>
-    <script src="/app.js?v=20260921-2"></script>
+    <script src="/app.js?v=20260924-1"></script>
     <script src="/points-of-interest.js?v=20260921-3"></script>
+    <script src="/center-communications.js?v=20260924-1"></script>
 <script src="/communications.js?v=20260920-3"></script>
 </body>
 </html>

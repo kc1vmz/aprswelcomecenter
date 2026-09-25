@@ -1275,6 +1275,7 @@ async function deleteAllPackets(event) {
 
 async function saveCenter(event) {
     event.preventDefault();
+    if (!centerCommunications.isReady()) return;
     const form = event.currentTarget;
     const submitButton = document.querySelector("#save-center");
     const message = document.querySelector("#form-message");
@@ -1283,6 +1284,7 @@ async function saveCenter(event) {
     Object.entries(Object.fromEntries(new FormData(form))).forEach(([key, value]) => {
         center[key] = value.trim() || null;
     });
+    Object.assign(center, centerCommunications.value());
 
     submitButton.disabled = true;
     message.className = "form-message";
@@ -1292,11 +1294,21 @@ async function saveCenter(event) {
         const url = editingCenterId
             ? `/api/v1/welcome-centers/${editingCenterId}`
             : "/api/v1/welcome-centers";
-        await requestJson(url, {
+        const response = await fetch(url, {
             method: editingCenterId ? "PUT" : "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(center)
         });
+        if (!response.ok) {
+            const detail = await response.json().catch(() => ({}));
+            if (response.status === 409) {
+                await refreshWelcomeCenters();
+                await centerCommunications.refresh();
+                throw new Error((detail.message || "The Welcome Center or communication methods changed.")
+                    + " Review the refreshed selection before saving again.");
+            }
+            throw new Error(detail.message || "The welcome center could not be saved.");
+        }
 
         form.reset();
         message.className = "form-message success";
@@ -1305,9 +1317,9 @@ async function saveCenter(event) {
         setTimeout(closeDialog, 600);
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The welcome center could not be saved.";
+        message.textContent = error.message || "The welcome center could not be saved.";
     } finally {
-        submitButton.disabled = false;
+        submitButton.disabled = !centerCommunications.isReady();
     }
 }
 
@@ -1344,6 +1356,7 @@ function openDialog() {
     document.querySelector("#form-message").textContent = "";
     document.querySelector("#center-dialog").showModal();
     document.querySelector('#center-form input[name="name"]').focus();
+    centerCommunications.load(editingCenterId ? welcomeCenters.get(editingCenterId) : null);
 }
 
 function closeDialog() {

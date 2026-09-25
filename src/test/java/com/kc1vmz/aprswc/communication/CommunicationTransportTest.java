@@ -81,7 +81,7 @@ class CommunicationTransportTest {
                     t1.sendMessage("N1TEST", "N2TEST", "Hello");
                     assertTrue(in1.readLine().endsWith("::N2TEST   :Hello"));
                     var object = new com.kc1vmz.aprswc.object.ObjectBeacon(
-                            "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "c", "/", "Local landmark", true);
+                            "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "c", "/", "Local landmark", true, null);
                     t1.sendObject(object);
                     String live = in1.readLine();
                     assertTrue(live.startsWith("N1TEST-7>"));
@@ -157,7 +157,7 @@ class CommunicationTransportTest {
         }
         var transport = new MemoryKiss();
         var beacon = new com.kc1vmz.aprswc.object.ObjectBeacon(
-                "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "c", "/", "Local landmark", true);
+                "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "c", "/", "Local landmark", true, null);
         transport.sendObject(beacon);
         beacon.setActive(false);
         transport.sendObject(beacon);

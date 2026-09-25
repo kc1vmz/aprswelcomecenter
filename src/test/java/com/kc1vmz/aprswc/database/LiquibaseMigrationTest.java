@@ -82,6 +82,8 @@ class LiquibaseMigrationTest {
         try (Connection c = ds.getConnection();
                 Statement s = c.createStatement()) {
             s.execute("insert into welcome_centers(id, callsign) values(random_uuid(), 'N1FRESH')");
+            assertThat(scalar(c, "select communication_mode from welcome_centers"))
+                    .isEqualTo("ALL");
             assertThat(scalar(c, "select status from welcome_centers")).isEqualTo("OPEN");
             assertThatThrownBy(() -> s.execute("update welcome_centers set status=null"))
                     .isInstanceOf(SQLException.class);
@@ -107,12 +109,17 @@ class LiquibaseMigrationTest {
             assertThat(scalar(c, "select status from welcome_centers")).isEqualTo("OPEN");
             assertThat(scalar(c, "select name from welcome_centers")).isEqualTo("Existing name");
             assertThat(scalar(c, "select name from welcome_regions")).isEqualTo("Existing region");
+            assertThat(scalar(c, "select communication_mode from welcome_centers"))
+                    .isEqualTo("ALL");
+            s.execute("update welcome_centers set communication_mode='SELECTED'");
             s.execute("update welcome_centers set status='CLOSED'");
         }
         migrate(ds);
         try (Connection c = ds.getConnection()) {
             assertThat(scalar(c, "select status from welcome_centers")).isEqualTo("CLOSED");
-            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("9");
+            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("10");
+            assertThat(scalar(c, "select communication_mode from welcome_centers"))
+                    .isEqualTo("SELECTED");
         }
     }
 

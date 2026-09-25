@@ -17,6 +17,7 @@
  */
 package com.kc1vmz.aprswc.accessor;
 
+import com.kc1vmz.aprswc.communication.CommunicationScope;
 import com.kc1vmz.aprswc.constants.ObjectSymbolTableConstants;
 import com.kc1vmz.aprswc.database.StationPositionRepository;
 import com.kc1vmz.aprswc.database.WelcomeCenterRepository;
@@ -27,6 +28,11 @@ import com.kc1vmz.aprswc.object.WelcomeCenter;
 import com.kc1vmz.aprswc.object.WelcomeRegion;
 import com.kc1vmz.aprswc.processor.ObjectBeaconQueue;
 import com.kc1vmz.aprswc.utils.GeoFenceUtils;
+import com.kc1vmz.aprswc.object.WelcomeCenterChanged;
+import com.kc1vmz.aprswc.object.WelcomeCenterStatusChange;
+import com.kc1vmz.aprswc.communication.CenterCommunicationRouting;
+import com.kc1vmz.aprswc.object.WelcomeCenterSnapshot;
+import com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +44,8 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 public class WelcomeCenterAccessor {
@@ -54,6 +62,9 @@ public class WelcomeCenterAccessor {
     private PointOfInterestService pois;
 
     @Autowired
+    private CenterCommunicationRouting routing;
+
+    @Autowired
     private ContainmentDeletionService deletions;
 
     @Autowired
@@ -63,10 +74,10 @@ public class WelcomeCenterAccessor {
     private ObjectBeaconQueue objectBeaconQueue;
 
     @Autowired
-    private org.springframework.transaction.support.TransactionTemplate transactions;
+    private TransactionTemplate transactions;
 
     @Autowired
-    private org.springframework.context.ApplicationEventPublisher events;
+    private ApplicationEventPublisher events;
 
     private static final String STATUS_MESSAGE = "Welcome Center - %s - %s";
 
@@ -111,10 +122,12 @@ public class WelcomeCenterAccessor {
         value.setSymbolCode(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE);
         value.setSymbolId(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID);
         value.setId(null);
-        if (value.getStatus() == null) value.setStatus(com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus.OPEN);
+        if (value.getStatus() == null) value.setStatus(WelcomeCenterStatus.OPEN);
         return Mono.fromCallable(() -> transactions.execute(tx -> {
                     pois.lockNames();
                     pois.validateCenterName(value.getCallsign());
+                    routing.validate(value);
+                    value.setRoutingVersion(0);
                     return centers.saveAndFlush(value);
                 }))
                 .subscribeOn(Schedulers.boundedElastic())
@@ -138,7 +151,8 @@ public class WelcomeCenterAccessor {
                     welcomeCenter.getSymbolCode(),
                     welcomeCenter.getSymbolId(),
                     statusMessage,
-                    true);
+                    true,
+                    CommunicationScope.of(welcomeCenter));
             objectBeaconQueue.offer(objectBeacon);
         }
     }
@@ -150,8 +164,9 @@ public class WelcomeCenterAccessor {
                     pois.lockNames();
                     WelcomeCenter existing = centers.findForUpdate(id)
                             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-                    var previous = com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(existing);
+                    var previous = WelcomeCenterSnapshot.of(existing);
                     var previousPois = pois.beforeCenterChange(existing);
+                    routing.update(existing, value);
                     existing.setStatus(value.getStatus());
                     existing.setName(value.getName());
                     existing.setDescription(value.getDescription());
@@ -171,14 +186,14 @@ public class WelcomeCenterAccessor {
                     if (previous.status() != saved.getStatus()
                             || !previous.callsign().equalsIgnoreCase(saved.getCallsign()))
                         pois.afterCenterChange(saved, previousPois);
-                    events.publishEvent(new com.kc1vmz.aprswc.object.WelcomeCenterChanged(
-                            previous, com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(saved)));
+                    events.publishEvent(new WelcomeCenterChanged(
+                            previous, WelcomeCenterSnapshot.of(saved)));
                     return saved;
                 }))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Mono<WelcomeCenter> changeStatus(UUID id, com.kc1vmz.aprswc.object.WelcomeCenterStatusChange change) {
+    public Mono<WelcomeCenter> changeStatus(UUID id, WelcomeCenterStatusChange change) {
         return Mono.fromCallable(() -> transactions.execute(transaction -> {
                     pois.lockNames();
                     WelcomeCenter existing = centers.findForUpdate(id)
@@ -188,15 +203,15 @@ public class WelcomeCenterAccessor {
                                 HttpStatus.CONFLICT, "Welcome Center status has changed. Refresh and try again.");
                     }
                     if (existing.getStatus() == change.status()) return existing;
-                    var previous = com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(existing);
+                    var previous = WelcomeCenterSnapshot.of(existing);
                     var previousPois = pois.beforeCenterChange(existing);
                     existing.setStatus(change.status());
                     WelcomeCenter saved = centers.saveAndFlush(existing);
                     if (previous.status() != saved.getStatus()
                             || !previous.callsign().equalsIgnoreCase(saved.getCallsign()))
                         pois.afterCenterChange(saved, previousPois);
-                    events.publishEvent(new com.kc1vmz.aprswc.object.WelcomeCenterChanged(
-                            previous, com.kc1vmz.aprswc.object.WelcomeCenterSnapshot.of(saved)));
+                    events.publishEvent(new WelcomeCenterChanged(
+                            previous, WelcomeCenterSnapshot.of(saved)));
                     return saved;
                 }))
                 .subscribeOn(Schedulers.boundedElastic());
@@ -223,7 +238,8 @@ public class WelcomeCenterAccessor {
                     welcomeCenter.getSymbolCode(),
                     welcomeCenter.getSymbolId(),
                     statusMessage,
-                    false);
+                    false,
+                    CommunicationScope.of(welcomeCenter));
             objectBeaconQueue.offer(objectBeacon);
         }
     }

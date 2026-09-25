@@ -18,6 +18,7 @@
 package com.kc1vmz.aprswc.processor;
 
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
+import com.kc1vmz.aprswc.communication.CommunicationScope;
 import com.kc1vmz.aprswc.constants.ObjectSymbolTableConstants;
 import com.kc1vmz.aprswc.object.ObjectBeacon;
 import com.kc1vmz.aprswc.object.WelcomeCenter;
@@ -29,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -47,7 +50,7 @@ public class WelcomeCenterObjectBeaconProcessor {
     private final ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor(
             runnable -> new Thread(runnable, "WelcomeCenterObjectBeaconProcessor"));
 
-    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
+    @EventListener(ApplicationReadyEvent.class)
     void start() {
         // waiti a minute before starting to let communication threads start
         worker.scheduleWithFixedDelay(this::beaconWelcomeCenters, 1, BEACON_INTERVAL_MINUTES, TimeUnit.MINUTES);
@@ -92,7 +95,8 @@ public class WelcomeCenterObjectBeaconProcessor {
                     symbolCode,
                     symbolId,
                     statusMessage,
-                    true);
+                    true,
+                    CommunicationScope.of(welcomeCenter));
             objectBeaconQueue.offer(objectBeacon);
         }
     }

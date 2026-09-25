@@ -27,6 +27,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import java.util.Objects;
+import java.util.Map;
+import com.kc1vmz.aprswc.object.WelcomeCenterStatusChange;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,6 +40,13 @@ import reactor.core.publisher.Mono;
 public class WelcomeCenterController {
     @Autowired
     private WelcomeCenterAccessor accessor;
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> routingError(
+            ResponseStatusException error) {
+        return ResponseEntity.status(error.getStatusCode())
+                .body(Map.of("message", Objects.toString(error.getReason(), "Request failed")));
+    }
 
     @GetMapping
     public Flux<WelcomeCenter> all() {
@@ -59,7 +71,7 @@ public class WelcomeCenterController {
 
     @PatchMapping("/{id}/status")
     public Mono<WelcomeCenter> changeStatus(
-            @PathVariable UUID id, @Valid @RequestBody com.kc1vmz.aprswc.object.WelcomeCenterStatusChange change) {
+            @PathVariable UUID id, @Valid @RequestBody WelcomeCenterStatusChange change) {
         return accessor.changeStatus(id, change);
     }
 

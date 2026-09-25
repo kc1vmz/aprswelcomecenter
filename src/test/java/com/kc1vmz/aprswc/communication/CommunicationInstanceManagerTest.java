@@ -60,6 +60,9 @@ class CommunicationInstanceManagerTest {
             when(repository.findAll()).thenAnswer(i -> desired.get());
             var manager = new CommunicationInstanceManager(
                     repository, new StationPacketQueue(), mock(APRSUtilityAccessor.class));
+            var routing = mock(CenterCommunicationRouting.class);
+            when(routing.permits((java.util.UUID) any(), anyString())).thenReturn(true);
+            org.springframework.test.util.ReflectionTestUtils.setField(manager, "routing", routing);
             try {
                 manager.start();
                 try (var peer1 = server1.accept();

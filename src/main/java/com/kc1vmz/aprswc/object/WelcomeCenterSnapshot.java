@@ -17,6 +17,7 @@
  */
 package com.kc1vmz.aprswc.object;
 
+import com.kc1vmz.aprswc.communication.CommunicationScope;
 import com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus;
 import java.util.UUID;
 
@@ -30,7 +31,8 @@ public record WelcomeCenterSnapshot(
         String latitude,
         String symbolCode,
         String symbolId,
-        WelcomeCenterStatus status) {
+        WelcomeCenterStatus status,
+        CommunicationScope communicationScope) {
     public static WelcomeCenterSnapshot of(WelcomeCenter center) {
         return new WelcomeCenterSnapshot(
                 center.getId(),
@@ -41,6 +43,7 @@ public record WelcomeCenterSnapshot(
                 center.getLatitude(),
                 center.getSymbolCode(),
                 center.getSymbolId(),
-                center.getStatus());
+                center.getStatus(),
+                CommunicationScope.of(center));
     }
 }

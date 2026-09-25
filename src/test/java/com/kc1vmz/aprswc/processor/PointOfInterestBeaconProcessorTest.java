@@ -34,9 +34,19 @@ class PointOfInterestBeaconProcessorTest {
         var queue = mock(ObjectBeaconQueue.class);
         var processor = new PointOfInterestBeaconProcessor(service, queue);
         var up = new Snapshot(
-                UUID.randomUUID(), 1, "LANDMARK9", "Test", "4336.50N", "07258.30W", "c", "/", "N1TEST", true);
+                UUID.randomUUID(), 1, "LANDMARK9", "Test", "4336.50N", "07258.30W", "c", "/", "N1TEST", true, null);
         var down = new Snapshot(
-                up.id(), 2, up.name(), up.description(), up.latitude(), up.longitude(), "c", "/", "N1TEST", false);
+                up.id(),
+                2,
+                up.name(),
+                up.description(),
+                up.latitude(),
+                up.longitude(),
+                "c",
+                "/",
+                "N1TEST",
+                false,
+                null);
         processor.afterCommit(new Changed(null, down));
         verifyNoInteractions(queue);
         processor.afterCommit(new Changed(null, up));
