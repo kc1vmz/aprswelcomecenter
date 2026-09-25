@@ -420,7 +420,7 @@ APRS Welcome Center does not need an installation, but installation scripts are 
 See aprswc_installer.bat for Microsoft Windows and aprswc_installer.sh for Linux.  Both are located included in each release, and are located in source in .\installers\windows and ./installers/linux.
 
 
-To install on Linux, make aprswc_installer.sh executable (chmod +X aprswc_installer.sh) and run it  (./aprswc_installer.sh).  Answer the questions or take the defaults.  By default, the APRS Welcome Center will be installed as a service in your HOME directory tree, started, and available at http://localhost:8080 .
+To install on Linux, make aprswc_installer.sh executable (chmod +x aprswc_installer.sh) and run it  (./aprswc_installer.sh).  Answer the questions or take the defaults.  By default, the APRS Welcome Center will be installed as a service in your HOME directory tree, started, and available at http://localhost:8080 .
 
 
 ### Upgrade
