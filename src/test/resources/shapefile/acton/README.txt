@@ -1,0 +1,1 @@
+Single ACTON feature extracted from the user-provided MassGIS TOWNSSURVEY_POLYM dataset. Original projected coordinates and attribute values are preserved. SHP/SHX/DBF record counts and offsets were rewritten for this one-feature fixture. Expected first WGS84 point from pyproj: longitude -71.38494690485916, latitude 42.50446446980484.

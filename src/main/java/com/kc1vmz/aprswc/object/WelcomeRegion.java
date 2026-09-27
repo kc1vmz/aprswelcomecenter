@@ -20,6 +20,8 @@ package com.kc1vmz.aprswc.object;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kc1vmz.aprswc.enumeration.*;
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -27,6 +29,19 @@ import java.util.UUID;
 public class WelcomeRegion {
     @Id
     private UUID id;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "welcome_region_vertices", joinColumns = @JoinColumn(name = "region_id"))
+    @OrderColumn(name = "vertex_order")
+    private List<RegionVertex> vertices = new ArrayList<>();
+
+    public List<RegionVertex> getVertices() {
+        return vertices;
+    }
+
+    public void setVertices(List<RegionVertex> vertices) {
+        this.vertices = vertices == null ? new ArrayList<>() : new ArrayList<>(vertices);
+    }
 
     private String name;
 

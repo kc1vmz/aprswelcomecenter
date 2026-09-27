@@ -14,7 +14,7 @@ A Welcome Center is a callsign (real or tactical) that will be used for communic
 
 
 
-A Region is a rectangular or circlular area that the Welcome Center should concern itself.
+A Region is a rectangular, circular, or polygonal area monitored by a Welcome Center.
 
 
 
@@ -445,3 +445,31 @@ java -jar aprs-welcome-center-1.0.2.jar
 Open `http://localhost:8080`. By default, the database is created below `./data`.
 
 
+
+
+## Polygon regions
+
+Choose **Polygon** in the region editor, then **Draw Polygon**. Click each vertex on the map and click the orange starting marker (or **Finish boundary**) to close the boundary. Closing the boundary does not save it; use **Create Region** or **Save Changes** to persist it.
+
+While drawing, **Undo point** removes the last vertex and **Cancel drawing** restores the previous boundary. After closing, drag vertices to adjust them, click faded midpoint handles to insert vertices, and right-click a vertex to delete it. Keyboard users can focus a vertex and press Delete or Backspace to remove it. Clearing a polygon requires drawing a new boundary before saving.
+
+Polygons support 3 to 1000 distinct vertices and may be concave. Holes, crossing or overlapping edges, zero-area boundaries, and date-line crossings are unsupported. Latitude must be within approximately 85.05112878 degrees north or south, longitude within -180 to 180 degrees, and the total longitude span must be less than 180 degrees.
+
+Vertices retain decimal-degree precision. Straight edges and containment use the map's Web Mercator plane; edges and vertices count as inside. Existing circle and rectangle regions and the observed-position entry/exit rules are unchanged. There is no inferred crossing between position reports.
+
+The region API accepts an ordered `vertices` array for `POLYGON`, with numeric `latitude` and `longitude` properties. Do not repeat the first vertex at the end. The server validates the complete boundary and returns a validation message for invalid input. Liquibase migration 011 adds the ordered vertex table without converting existing regions.
+
+
+
+
+### Importing a shapefile boundary
+
+In Create Region or View / Edit Region, select **Import Coordinates** and choose either a ZIP or a folder containing the shapefile companion files. Include matching `.shp`, `.shx`, `.dbf`, and `.prj` files; `.cpg` is recommended for attribute encoding. Nested folders are supported, and matching basenames in different folders remain separate layers.
+
+Choose a layer and the attribute to display as the feature name, then search its attributes. For the Massachusetts town survey collection, choose `TOWNSSURVEY_POLYM`, use `TOWN` as the name field, and search for Acton. Select the feature to transform and validate its full boundary and preview it on the map. **Use boundary** loads the polygon into the editor and suggests a name if the name field is blank. Review or edit it, then use the existing Create Region or Save Changes action. Cancelling import leaves the current drawing unchanged.
+
+The importer reads ordinary 2D Polygon shapefiles and dBASE III text/numeric attributes. It uses Apache SIS to interpret the `.prj` and convert source coordinates to WGS84; it does not use JTS. Missing or unsupported projections are reported rather than guessed. Other shape types, holes, multipart features, and boundaries over 1000 vertices remain listed with an explanation but cannot be used. No automatic simplification occurs. Features must also pass the existing polygon validation after transformation. The preview limit is 100,000 source points per feature.
+
+Uploads are held temporarily in memory, never extracted to user-supplied filesystem paths. Close the import dialog to release them; otherwise they expire after 15 minutes (cleanup runs each minute), or disappear when the application stops. Limits are 64 MiB uploaded, 128 MiB expanded ZIP data, 256 files/ZIP entries, 32 layers, 20,000 records and 500,000 attribute cells per layer. Two uploads may process concurrently and four completed imports may remain open. Parsing has a 30-second processing budget, and uploads have a two-minute timeout. No new database tables or region constructor changes are required for importing.
+
+Common Shapefiles for the United States of America can be found at https://www.census.gov/cgi-bin/geo/shapefiles/index.php

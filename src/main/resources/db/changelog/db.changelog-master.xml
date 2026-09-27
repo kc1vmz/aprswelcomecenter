@@ -65,4 +65,20 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
     <changeSet id="010-center-communications" author="aprswc" dbms="h2">
         <sqlFile path="010-center-communications.sql" relativeToChangelogFile="true"/>
     </changeSet>
+    <changeSet id="011-polygon-regions" author="aprswc" dbms="h2">
+        <sql>
+            ALTER TABLE welcome_regions ALTER COLUMN type ENUM ('CIRCLE', 'RECTANGLE', 'POLYGON');
+            CREATE TABLE welcome_region_vertices (
+                region_id UUID NOT NULL,
+                vertex_order INTEGER NOT NULL,
+                latitude DOUBLE PRECISION NOT NULL,
+                longitude DOUBLE PRECISION NOT NULL,
+                PRIMARY KEY (region_id, vertex_order),
+                FOREIGN KEY (region_id) REFERENCES welcome_regions(id) ON DELETE CASCADE,
+                CHECK (latitude BETWEEN -85.0511287798066 AND 85.0511287798066),
+                CHECK (longitude BETWEEN -180 AND 180),
+                CHECK (vertex_order &gt;= 0)
+            );
+        </sql>
+    </changeSet>
 </databaseChangeLog>

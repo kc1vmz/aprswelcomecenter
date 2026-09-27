@@ -333,8 +333,17 @@ button.danger-solid {
 
 .region-map-toolbar { margin-bottom: 0.75rem; }
 
-#region-editor-map {
+.region-map-resizer {
     height: 24rem;
+    min-height: 16rem;
+    max-height: 80vh;
+    resize: vertical;
+    overflow: hidden;
+    padding-bottom: 12px;
+}
+
+#region-editor-map {
+    height: 100%;
     overflow: hidden;
     border: 1px solid var(--line);
     border-radius: 0.5rem;
@@ -456,6 +465,15 @@ dialog::backdrop { background: var(--backdrop); }
 dialog form { padding: 1.5rem; }
 .dialog-content { padding: 1.5rem; }
 .wide-dialog { width: min(900px, calc(100vw - 2rem)); }
+
+#region-editor-dialog {
+    resize: horizontal;
+    min-width: min(600px, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+}
+
+#region-form textarea[name="description"] { resize: vertical; }
+
 
 .dialog-heading {
     display: flex;
@@ -869,3 +887,11 @@ legend {
 @media (max-width: 480px) {
     .poi-summary .card-actions { flex-direction: column; }
 }
+
+
+#region-import-map { height: 22rem; border: 1px solid var(--line); border-radius: 0.5rem; margin: 1rem 0; }
+.region-import-table { overflow: auto; max-height: 22rem; margin: 1rem 0; }
+.region-import-table table { width: 100%; border-collapse: collapse; }
+.region-import-table th, .region-import-table td { padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--line); }
+#region-import-details { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 12rem; overflow: auto; }
+.region-input-mode { flex-wrap: wrap; }

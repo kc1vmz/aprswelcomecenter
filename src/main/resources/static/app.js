@@ -83,7 +83,8 @@ const render = (selector, rows, format, emptyMessage = "No records yet.") => {
 async function requestJson(url, options) {
     const response = await fetch(url, options);
     if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}.`);
+        const details = await response.json().catch(() => ({}));
+        throw new Error(details.message || `Request failed with status ${response.status}.`);
     }
     return response.status === 204 ? null : response.json();
 }
@@ -1024,6 +1025,7 @@ async function renderWelcomeCenterStationsMap(positions, regions, points = [], r
         latitude: position.latitude
     }));
     const regionCoordinates = regions.map(region => {
+        if (region.type === "POLYGON") return { region };
         if (region.type === "CIRCLE") {
             const centerIndex = coordinateRequests.push({
                 longitude: region.centerLongitude,
@@ -1062,7 +1064,9 @@ async function renderWelcomeCenterStationsMap(positions, regions, points = [], r
     regionCoordinates.forEach(entry => {
         const region = entry.region;
         let layer = null;
-        if (region.type === "CIRCLE") {
+        if (region.type === "POLYGON") {
+            layer = L.polygon(region.vertices.map(v => [v.latitude, v.longitude]), { color: "#1677d2", fillOpacity: 0.2, smoothFactor: 0 });
+        } else if (region.type === "CIRCLE") {
             const center = converted[entry.centerIndex];
             if (center?.valid) {
                 layer = L.circle([center.latitude, center.longitude], {
@@ -1575,6 +1579,7 @@ async function renderRegionMap(regions) {
 
     const requests = [];
     const regionCoordinates = regions.map(region => {
+        if (region.type === "POLYGON") return { region };
         if (region.type === "CIRCLE") {
             const centerIndex = requests.push({
                 longitude: region.centerLongitude,
@@ -1605,7 +1610,9 @@ async function renderRegionMap(regions) {
         regionCoordinates.forEach(entry => {
             const region = entry.region;
             let layer = null;
-            if (region.type === "CIRCLE") {
+            if (region.type === "POLYGON") {
+                layer = L.polygon(region.vertices.map(v => [v.latitude, v.longitude]), { color: "#1677d2", fillOpacity: 0.2, smoothFactor: 0 });
+            } else if (region.type === "CIRCLE") {
                 const center = converted[entry.centerIndex];
                 if (center?.valid) {
                     layer = L.circle([center.latitude, center.longitude], {
@@ -1654,6 +1661,7 @@ function diameterRadiusMeters(diameter, unit) {
 }
 
 function describeGeometry(region) {
+    if (region.type === "POLYGON") return `Polygon - ${region.vertices.length} vertices`;
     if (region.type === "CIRCLE") {
         return `Circle centered at ${region.centerLatitude ?? "?"}, ${region.centerLongitude ?? "?"}`;
     }
@@ -1665,6 +1673,7 @@ function describeGeometry(region) {
 function openCreateRegionDialog() {
     editingRegionId = null;
     document.querySelector("#region-form").reset();
+    document.querySelector("#region-form").polygonVertices = [];
     document.querySelector("#region-dialog-title").textContent = "Create Region";
     document.querySelector("#save-region").textContent = "Create Region";
     setRegionInputMode("MAP");
@@ -1680,6 +1689,7 @@ function openEditRegionDialog(id) {
 
     editingRegionId = id;
     const form = document.querySelector("#region-form");
+    form.polygonVertices = (region.vertices || []).map(v => ({ ...v }));
     form.reset();
     Array.from(form.elements).forEach(control => {
         if (control.name) {
@@ -1707,13 +1717,16 @@ function closeRegionEditor() {
 }
 
 function updateGeometryFields() {
-    const isCircle = document.querySelector("#region-type").value === "CIRCLE";
-    document.querySelector("#rectangle-fields").hidden = isCircle;
-    document.querySelector("#circle-fields").hidden = !isCircle;
-    window.regionMapEditor?.setType(isCircle ? "CIRCLE" : "RECTANGLE");
+    const type = document.querySelector("#region-type").value;
+    document.querySelector("#rectangle-fields").hidden = type !== "RECTANGLE";
+    document.querySelector("#circle-fields").hidden = type !== "CIRCLE";
+    document.querySelector("#use-manual-region-input").disabled = type === "POLYGON";
+    if (type === "POLYGON") setRegionInputMode("MAP");
+    window.regionMapEditor?.setType(type);
 }
 
 function setRegionInputMode(mode) {
+    if (document.querySelector("#region-type").value === "POLYGON") mode = "MAP";
     const useMap = mode === "MAP";
     document.querySelector("#manual-region-controls").hidden = useMap;
     document.querySelector("#map-region-controls").hidden = !useMap;
@@ -1736,6 +1749,11 @@ async function saveRegion(event) {
         region[field] = region[field] === null ? null : Number(region[field]);
     });
 
+    if (region.type === "POLYGON") {
+        const error = window.regionMapEditor?.polygonError();
+        if (error) { message.textContent = error; message.className = "form-message error"; return; }
+        region.vertices = form.polygonVertices;
+    }
     saveButton.disabled = true;
     message.textContent = editingRegionId ? "Saving changes…" : "Creating Region…";
 
@@ -1750,7 +1768,7 @@ async function saveRegion(event) {
         await loadRegions();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The Region could not be saved.";
+        message.textContent = error.message || "The Region could not be saved.";
     } finally {
         saveButton.disabled = false;
     }

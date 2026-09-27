@@ -602,7 +602,7 @@
             <div class="dialog-heading">
                 <div>
                     <h2 id="region-dialog-title">Create Region</h2>
-                    <p>Define a rectangular or circular APRS welcome area.</p>
+                    <p>Define a rectangular, circular, or polygonal APRS welcome area.</p>
                 </div>
                 <button type="button" id="close-region-editor" class="icon-button" aria-label="Close">×</button>
             </div>
@@ -612,12 +612,14 @@
                     Region type
                     <select name="type" id="region-type">
                         <option value="RECTANGLE">Rectangle</option>
+                        <option value="POLYGON">Polygon</option>
                         <option value="CIRCLE">Circle</option>
                     </select>
                 </label>
-                <label class="full-width">Description<textarea name="description" rows="3"></textarea></label>
+                <label class="full-width">Description<textarea name="description" rows="1"></textarea></label>
             </div>
             <div class="region-input-mode" role="group" aria-label="Region boundary entry mode">
+                <button type="button" id="import-region-boundary" class="secondary">Import Coordinates</button>
                 <button type="button" id="use-map-region-input" class="secondary" aria-pressed="true">
                     Define on Map
                 </button>
@@ -655,12 +657,19 @@
             </div>
             <fieldset id="map-region-controls" class="region-map-editor-panel">
                 <legend>Define on map</legend>
-                <p class="field-help">Draw or adjust the region boundary visually.</p>
+                <p class="field-help">Draw or adjust the region boundary visually. Drag the map's bottom-right corner to change its height; drag the dialog's bottom-right corner to widen it.</p>
                 <div class="toolbar region-map-toolbar">
                     <button type="button" id="draw-region-shape" class="secondary">Draw Rectangle</button>
+                    <span id="polygon-tools" hidden>
+                        <button type="button" id="finish-polygon" class="secondary">Finish boundary</button>
+                        <button type="button" id="undo-polygon" class="secondary">Undo point</button>
+                        <button type="button" id="cancel-polygon" class="secondary">Cancel drawing</button>
+                    </span>
                     <button type="button" id="clear-region-shape" class="secondary">Clear Map Shape</button>
                 </div>
-                <div id="region-editor-map" aria-label="Interactive region boundary editor"></div>
+                <div class="region-map-resizer">
+                    <div id="region-editor-map" aria-label="Interactive region boundary editor"></div>
+                </div>
                 <p id="region-editor-map-message" class="map-message" role="status" aria-live="polite"></p>
             </fieldset>
             <p id="region-form-message" class="form-message" role="status" aria-live="polite"></p>
@@ -669,6 +678,44 @@
                 <button type="submit" id="save-region">Create Region</button>
             </div>
         </form>
+    </dialog>
+    <dialog id="region-import-dialog" class="wide-dialog" aria-labelledby="region-import-title">
+        <div class="dialog-content">
+            <div class="dialog-heading">
+                <div><h2 id="region-import-title">Import Region Coordinates</h2>
+                    <p>Choose a shapefile collection, preview a feature, then load its boundary into the region editor.</p></div>
+                <button type="button" id="region-import-close" class="icon-button" aria-label="Close import">&times;</button>
+            </div>
+            <div class="form-grid">
+                <label>Upload ZIP<input id="region-import-zip" type="file" accept=".zip"></label>
+                <label>Choose folder<input id="region-import-folder" type="file" webkitdirectory multiple></label>
+            </div>
+            <p class="field-help">Include matching .shp, .shx, .dbf and .prj files, plus .cpg if available. Maximum upload: 64 MiB. Single polygons with up to 1000 vertices are supported; holes and multiple components cannot be imported.</p>
+            <div id="region-import-controls" hidden>
+                <div class="form-grid">
+                    <label>Layer<select id="region-import-layer"></select></label>
+                    <label>Feature name field<select id="region-import-label"></select></label>
+                    <label class="full-width">Search attributes<input id="region-import-search" type="search" maxlength="200" placeholder="For example, Acton"></label>
+                </div>
+                <p id="region-import-layer-info" class="field-help"></p>
+                <div class="region-import-table">
+                    <table><thead><tr><th>Feature</th><th>Import status</th></tr></thead>
+                        <tbody id="region-import-results"></tbody></table>
+                </div>
+                <div class="toolbar">
+                    <button type="button" id="region-import-previous" class="secondary" disabled>Previous</button>
+                    <span id="region-import-page" aria-live="polite"></span>
+                    <button type="button" id="region-import-next" class="secondary" disabled>Next</button>
+                </div>
+            </div>
+            <div id="region-import-map" aria-label="Imported boundary preview"></div>
+            <details><summary>Selected feature attributes</summary><pre id="region-import-details"></pre></details>
+            <p id="region-import-message" class="form-message" role="status" aria-live="polite"></p>
+            <div class="form-actions">
+                <button type="button" id="region-import-cancel" class="secondary">Cancel</button>
+                <button type="button" id="region-import-use" disabled>Use boundary</button>
+            </div>
+        </div>
     </dialog>
     <dialog id="delete-region-dialog">
         <form id="delete-region-form">
@@ -1057,6 +1104,7 @@
     <script src="/poi-map.js?v=20260921-2"></script>
     <script src="/aprs-symbol-picker.js?v=20260925-2"></script>
     <script src="/app.js?v=20260925-1"></script>
+    <script src="/region-import.js?v=20260926-1"></script>
     <script src="/points-of-interest.js?v=20260925-1"></script>
     <script src="/center-communications.js?v=20260924-1"></script>
 <script src="/communications.js?v=20260920-3"></script>

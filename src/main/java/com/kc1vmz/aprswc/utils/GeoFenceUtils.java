@@ -92,6 +92,12 @@ public class GeoFenceUtils {
         if ((region == null) || (position == null)) {
             return false;
         }
+        if (region.getType() == RegionType.POLYGON) {
+            return PolygonGeometry.covers(
+                    region.getVertices(),
+                    ConvertLonLat.convertLatitude(position.getLatitude()),
+                    ConvertLonLat.convertLongitude(position.getLongitude()));
+        }
         if (region.getType().equals(RegionType.CIRCLE)) {
             return isInGeofenceCircle(
                     region.getCenterLongitude(),

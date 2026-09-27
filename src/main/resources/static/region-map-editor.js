@@ -1,4 +1,9 @@
 (() => {
+    let polygonPoints = [];
+    let polygonClosed = false;
+    let polygonPreview = null;
+    let originalPolygon = [];
+    let geometryRevision = 0;
     let map = null;
     let form = null;
     let shape = null;
@@ -28,7 +33,19 @@
             maxZoom: 19,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
+        if (typeof ResizeObserver !== "undefined") {
+            const resizeObserver = new ResizeObserver(() => {
+                map.invalidateSize({ pan: false, debounceMoveend: true });
+            });
+            resizeObserver.observe(map.getContainer());
+        }
         map.on("click", handleMapClick);
+        map.on("mousemove", event => {
+            if (drawingType !== "POLYGON" || !polygonPoints.length) return;
+            if (polygonPreview) polygonPreview.remove();
+            polygonPreview = L.polyline([polygonPoints[polygonPoints.length - 1], event.latlng],
+                { color: "#1677d2", dashArray: "5,5", interactive: false }).addTo(map);
+        });
     }
 
     function setTileUrl(url) {
@@ -45,6 +62,8 @@
             return;
         }
         clearShape(false);
+        polygonPoints = (form.polygonVertices || []).map(v => L.latLng(v.latitude, v.longitude));
+        polygonClosed = polygonPoints.length >= 3;
         inputHandler = event => {
             if (event.target.matches("input, select")) {
                 window.clearTimeout(manualUpdateTimer);
@@ -56,6 +75,7 @@
         window.setTimeout(() => {
             map.invalidateSize({ pan: false });
             syncShapeFromForm();
+            if (form?.elements.type.value === "POLYGON" && polygonPoints.length) map.fitBounds(L.latLngBounds(polygonPoints), { padding: [30,30], maxZoom: 16 });
         }, 0);
         setType(form.elements.type.value);
     }
@@ -73,9 +93,11 @@
 
     function setType(type) {
         const button = document.querySelector("#draw-region-shape");
-        button.textContent = type === "CIRCLE" ? "Draw Circle" : "Draw Rectangle";
+        button.textContent = type === "POLYGON" ? "Draw Polygon" : type === "CIRCLE" ? "Draw Circle" : "Draw Rectangle";
+        document.querySelector("#polygon-tools").hidden = type !== "POLYGON";
         if (form && shape && shape.regionType !== type) {
             clearShape();
+            polygonPoints = []; polygonClosed = false; form.polygonVertices = [];
             message("Region type changed. Draw a new boundary or enter its coordinates manually.");
         }
     }
@@ -94,8 +116,15 @@
         if (!map || !form) {
             return;
         }
+        originalPolygon = (form.polygonVertices || []).map(v => ({ ...v }));
         clearShape();
         drawingType = form.elements.type.value;
+        if (drawingType === "POLYGON") {
+            polygonPoints = []; polygonClosed = false; form.polygonVertices = [];
+            map.doubleClickZoom.disable();
+            message("Click vertices, then click the starting marker to close. Maximum 1000 vertices; no date-line crossings or holes.");
+            return;
+        }
         firstPoint = null;
         map.getContainer().style.cursor = "crosshair";
         message(drawingType === "CIRCLE"
@@ -105,6 +134,12 @@
 
     async function handleMapClick(event) {
         if (!drawingType) {
+            return;
+        }
+        if (drawingType === "POLYGON") {
+            if (polygonPoints.length >= 1000) { message("Maximum 1000 vertices.", true); return; }
+            polygonPoints.push(event.latlng);
+            renderPolygon();
             return;
         }
         if (!firstPoint) {
@@ -138,6 +173,8 @@
     }
 
     function cancelDrawing() {
+        if (polygonPreview) { polygonPreview.remove(); polygonPreview = null; }
+        map?.doubleClickZoom.enable();
         drawingType = null;
         firstPoint = null;
         if (map) {
@@ -148,10 +185,16 @@
     }
 
     function clearShape(showMessage = true) {
+        geometryRevision++;
         cancelDrawing();
         if (shape) {
             shape.remove();
             shape = null;
+        }
+        if (showMessage && form?.elements.type.value === "POLYGON") {
+            polygonPoints = []; polygonClosed = false; form.polygonVertices = [];
+            message("Polygon cleared. Draw a new boundary before saving.");
+            return;
         }
         if (showMessage) {
             message("Map shape cleared. Manual coordinate values were not changed.");
@@ -219,7 +262,12 @@
         if (!form || !map) {
             return;
         }
+        const revision = geometryRevision;
         const type = form.elements.type.value;
+        if (type === "POLYGON") {
+            if (drawingType !== "POLYGON") renderPolygon();
+            return;
+        }
         const requests = type === "CIRCLE"
             ? [{ longitude: form.elements.centerLongitude.value, latitude: form.elements.centerLatitude.value }]
             : [
@@ -236,6 +284,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(requests)
             });
+            if (!form || revision !== geometryRevision || form.elements.type.value !== type) return;
             if (converted.some(item => !item.valid)) {
                 message("One or more manual coordinates are invalid.", true);
                 return;
@@ -262,6 +311,8 @@
         if (!form || !shape) {
             return;
         }
+        if (shape.regionType === "POLYGON") return;
+        const revision = geometryRevision;
         let decimalCoordinates;
         if (shape.regionType === "CIRCLE") {
             const center = shape.getLatLng();
@@ -279,6 +330,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(decimalCoordinates)
             });
+            if (!form || !shape || revision !== geometryRevision) return;
             if (converted.some(item => !item.longitude || !item.latitude)) {
                 message("The selected map boundary is outside valid APRS coordinate ranges.", true);
                 return;
@@ -304,8 +356,115 @@
         return Number(diameter || 0) / 2 * (metersPerUnit[unit] || 1);
     }
 
+    function polygonError() {
+        if (!polygonClosed || drawingType === "POLYGON") return "Finish the polygon boundary before saving.";
+        return validatePolygon(polygonPoints);
+    }
+
+    // Mirrors server validation in projected metres, matching Leaflet's straight segments.
+    function validatePolygon(vertices) {
+        if (vertices.length < 3 || vertices.length > 1000) return "Polygon requires 3 to 1000 vertices.";
+        if (vertices.some(v => !Number.isFinite(v.lat) || !Number.isFinite(v.lng) || Math.abs(v.lat) > 85.0511287798066 || Math.abs(v.lng) > 180))
+            return "Polygon coordinates exceed supported map limits.";
+        if (Math.max(...vertices.map(v => v.lng)) - Math.min(...vertices.map(v => v.lng)) >= 180)
+            return "Polygon must span less than 180 degrees and cannot cross the date line.";
+        const points = vertices.map(v => L.Projection.SphericalMercator.project(v));
+        const eps = 0.000001;
+        const cross = (a,b,p) => (b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x);
+        const side = (a,b,p) => Math.abs(cross(a,b,p)) <= eps*Math.hypot(b.x-a.x,b.y-a.y) ? 0 : Math.sign(cross(a,b,p));
+        const on = (a,b,p) => side(a,b,p) === 0 && p.x >= Math.min(a.x,b.x)-eps && p.x <= Math.max(a.x,b.x)+eps && p.y >= Math.min(a.y,b.y)-eps && p.y <= Math.max(a.y,b.y)+eps;
+        const intersects = (a,b,c,d) => on(a,b,c)||on(a,b,d)||on(c,d,a)||on(c,d,b)||(side(a,b,c)*side(a,b,d)<0 && side(c,d,a)*side(c,d,b)<0);
+        let area = 0;
+        for (let i=0; i<points.length; i++) {
+            const a=points[i], b=points[(i+1)%points.length], c=points[(i+2)%points.length];
+            area += cross(points[0],a,b);
+            if (on(a,b,c)||on(b,c,a)) return "Polygon edges must not overlap.";
+            for (let j=i+1; j<points.length; j++) {
+                if (Math.hypot(a.x-points[j].x,a.y-points[j].y)<=eps) return "Polygon vertices must be distinct.";
+                if (j===i+1 || (i===0 && j===points.length-1)) continue;
+                if (intersects(a,b,points[j],points[(j+1)%points.length])) return "Polygon edges must not cross or touch.";
+            }
+        }
+        return Math.abs(area)<=eps*eps ? "Polygon must have nonzero area." : null;
+    }
+
+    function renderPolygon() {
+        if (shape) shape.remove();
+        handles.forEach(h => h.remove()); handles = [];
+        if (!polygonPoints.length) { shape = null; form.polygonVertices = []; message("Click the map to add the first vertex."); return; }
+        shape = (polygonClosed ? L.polygon(polygonPoints, { smoothFactor: 0 }) : L.polyline(polygonPoints)).addTo(map);
+        shape.regionType = "POLYGON";
+        polygonPoints.forEach((point,index) => {
+            const marker = L.marker(point, { draggable: polygonClosed, icon: index === 0
+                ? L.divIcon({ className: "", html: '<div class="region-map-handle" style="background:#d97706;border-radius:50%"></div>', iconSize: [18,18] }) : handleIcon(),
+                title: index === 0 ? "Starting vertex: click to finish" : "Vertex: right-click to delete" }).addTo(map);
+            marker.on("click", () => { if (index === 0 && !polygonClosed) finishPolygon(); });
+            marker.on("drag", () => { polygonPoints[index] = marker.getLatLng(); shape.setLatLngs(polygonPoints); });
+            marker.on("dragend", renderPolygon);
+            marker.getElement()?.addEventListener("keydown", event => {
+                if (polygonClosed && (event.key === "Delete" || event.key === "Backspace")) {
+                    event.preventDefault(); event.stopPropagation(); polygonPoints.splice(index,1); renderPolygon();
+                }
+            });
+            marker.on("contextmenu", () => {
+                if (!polygonClosed) return;
+                polygonPoints.splice(index,1); renderPolygon();
+            });
+            handles.push(marker);
+            if (polygonClosed) {
+                const next = polygonPoints[(index+1)%polygonPoints.length];
+                const a = map.project(point, 0), b = map.project(next, 0);
+                const middle = map.unproject(L.point((a.x+b.x)/2,(a.y+b.y)/2),0);
+                const insert = L.marker(middle, { icon: handleIcon(), opacity: 0.45, title: "Click to insert a vertex" }).addTo(map);
+                insert.on("click", () => {
+                    if (polygonPoints.length >= 1000) return;
+                    polygonPoints.splice(index+1,0,middle); renderPolygon();
+                });
+                handles.push(insert);
+            }
+        });
+        form.polygonVertices = polygonPoints.map(p => ({ latitude: p.lat, longitude: p.lng }));
+        const error = polygonPoints.length >= 3 ? validatePolygon(polygonPoints) : null;
+        shape.setStyle({ color: error ? "#c62828" : "#1677d2" });
+        message(error || (polygonClosed ? "Drag vertices to adjust. Click faded midpoint handles to insert; right-click vertices or focus a vertex and press Delete to remove." : "Click more vertices, then the starting marker or Finish boundary."), Boolean(error));
+    }
+
+    function finishPolygon() {
+        if (drawingType !== "POLYGON") return;
+        const error = validatePolygon(polygonPoints);
+        if (error) { message(error, true); return; }
+        cancelDrawing(); polygonClosed = true; renderPolygon();
+    }
+    document.querySelector("#finish-polygon").addEventListener("click", finishPolygon);
+    document.querySelector("#undo-polygon").addEventListener("click", () => {
+        if (drawingType !== "POLYGON") return;
+        polygonPoints.pop(); renderPolygon();
+    });
+    document.querySelector("#cancel-polygon").addEventListener("click", () => {
+        if (drawingType !== "POLYGON") return;
+        cancelDrawing();
+        polygonPoints = originalPolygon.map(v => L.latLng(v.latitude,v.longitude));
+        polygonClosed = polygonPoints.length >= 3; renderPolygon();
+        form.polygonVertices = originalPolygon.map(v => ({ ...v }));
+    });
+
     document.querySelector("#draw-region-shape").addEventListener("click", startDrawing);
     document.querySelector("#clear-region-shape").addEventListener("click", () => clearShape());
 
-    window.regionMapEditor = { open, close, setType, setMode, setTileUrl };
+    function importBoundary(vertices) {
+        if (!form || !map) throw new Error("Open the region editor with a working map before importing.");
+        const points = vertices.map(v => L.latLng(v.latitude, v.longitude));
+        const error = validatePolygon(points);
+        if (error) throw new Error(error);
+        window.clearTimeout(manualUpdateTimer);
+        clearShape(false);
+        form.elements.type.value = "POLYGON";
+        polygonPoints = points;
+        polygonClosed = true;
+        setType("POLYGON");
+        renderPolygon();
+        map.fitBounds(L.latLngBounds(points), { padding: [30, 30], maxZoom: 16 });
+    }
+
+    window.regionMapEditor = { open, close, setType, setMode, setTileUrl, polygonError, importBoundary };
 })();

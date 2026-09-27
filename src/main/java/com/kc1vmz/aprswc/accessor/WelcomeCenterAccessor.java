@@ -24,6 +24,7 @@ import com.kc1vmz.aprswc.constants.ObjectSymbolTableConstants;
 import com.kc1vmz.aprswc.database.StationPositionRepository;
 import com.kc1vmz.aprswc.database.WelcomeCenterRepository;
 import com.kc1vmz.aprswc.database.WelcomeRegionRepository;
+import com.kc1vmz.aprswc.enumeration.RegionType;
 import com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus;
 import com.kc1vmz.aprswc.object.ObjectBeacon;
 import com.kc1vmz.aprswc.object.StationPosition;
@@ -34,6 +35,7 @@ import com.kc1vmz.aprswc.object.WelcomeCenterStatusChange;
 import com.kc1vmz.aprswc.object.WelcomeRegion;
 import com.kc1vmz.aprswc.processor.ObjectBeaconQueue;
 import com.kc1vmz.aprswc.utils.GeoFenceUtils;
+import com.kc1vmz.aprswc.utils.PolygonGeometry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -120,6 +122,7 @@ public class WelcomeCenterAccessor {
     }
 
     public Mono<WelcomeCenter> create(WelcomeCenter value) {
+        value.getRegions().forEach(this::validateRegion);
         if (value.getSymbolCode() == null) value.setSymbolCode(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_CODE);
         if (value.getSymbolId() == null) value.setSymbolId(ObjectSymbolTableConstants.DEFAULT_SYMBOL_TABLE_ID);
         AprsSymbols.validate(value.getSymbolId(), value.getSymbolCode(), null, null);
@@ -278,10 +281,10 @@ public class WelcomeCenterAccessor {
 
     public Mono<WelcomeRegion> addRegion(UUID centerId, WelcomeRegion region) {
         return findById(centerId).flatMap(center -> Mono.fromCallable(() -> {
+                    validateRegion(region);
                     region.setId(null);
                     center.addRegion(region);
-                    centers.save(center);
-                    return region;
+                    return regions.save(region);
                 })
                 .subscribeOn(Schedulers.boundedElastic()));
     }
@@ -289,6 +292,7 @@ public class WelcomeCenterAccessor {
     public Mono<WelcomeRegion> replaceRegion(UUID centerId, UUID regionId, WelcomeRegion replacement) {
         return findById(centerId).flatMap(center -> Mono.fromCallable(() -> {
                     requireRegion(centerId, regionId);
+                    validateRegion(replacement);
                     replacement.setId(regionId);
                     replacement.setWelcomeCenter(center);
                     return regions.save(replacement);
@@ -307,6 +311,16 @@ public class WelcomeCenterAccessor {
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .then());
+    }
+
+    private void validateRegion(WelcomeRegion region) {
+        if (region.getType() == RegionType.POLYGON) {
+            try {
+                PolygonGeometry.validate(region.getVertices());
+            } catch (IllegalArgumentException ex) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+            }
+        } else region.getVertices().clear();
     }
 
     private WelcomeRegion requireRegion(UUID centerId, UUID regionId) {

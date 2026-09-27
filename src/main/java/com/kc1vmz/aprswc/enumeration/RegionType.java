@@ -19,5 +19,6 @@ package com.kc1vmz.aprswc.enumeration;
 
 public enum RegionType {
     RECTANGLE,
-    CIRCLE
+    CIRCLE,
+    POLYGON
 }
