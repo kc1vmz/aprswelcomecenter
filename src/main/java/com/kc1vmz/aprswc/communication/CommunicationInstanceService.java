@@ -59,11 +59,14 @@ public class CommunicationInstanceService {
     }
 
     private List<String> warnings(CommunicationInstance c, List<CommunicationInstance> all) {
-        if (!"KISS_SERIAL".equals(c.getType())
-                && all.stream()
-                        .anyMatch(other -> !other.getId().equals(c.getId())
-                                && Objects.equals(other.getHost(), c.getHost())
-                                && Objects.equals(other.getPort(), c.getPort())))
+        if (("KISS_SERIAL".equals(c.getType())) || ("TNC2_SERIAL".equals(c.getType()))) {
+            return List.of();
+        }
+
+        if (all.stream()
+                .anyMatch(other -> !other.getId().equals(c.getId())
+                        && Objects.equals(other.getHost(), c.getHost())
+                        && Objects.equals(other.getPort(), c.getPort())))
             return List.of("Another instance uses the same TCP endpoint.");
         return List.of();
     }
@@ -85,11 +88,11 @@ public class CommunicationInstanceService {
             }
             validate(value);
             if ("ACTIVE".equals(value.getState())
-                    && "KISS_SERIAL".equals(value.getType())
+                    && ("KISS_SERIAL".equals(value.getType()) || "TNC2_SERIAL".equals(value.getType()))
                     && repository.findAll().stream()
                             .anyMatch(c -> !c.getId().equals(value.getId())
                                     && "ACTIVE".equals(c.getState())
-                                    && "KISS_SERIAL".equals(c.getType())
+                                    && ("KISS_SERIAL".equals(c.getType()) || "TNC2_SERIAL".equals(c.getType()))
                                     && value.getSerialDevice().equalsIgnoreCase(c.getSerialDevice())))
                 throw error(HttpStatus.CONFLICT, "Another ACTIVE instance already owns this serial device.");
             return repository.saveAndFlush(value);
@@ -124,7 +127,8 @@ public class CommunicationInstanceService {
     }
 
     private static void validate(CommunicationInstance c) {
-        if (!Set.of("APRS_IS", "KISS_TCP", "KISS_SERIAL").contains(Objects.toString(c.getType(), "")))
+        if (!Set.of("APRS_IS", "KISS_TCP", "KISS_SERIAL", "TNC2_TCP", "TNC2_SERIAL")
+                .contains(Objects.toString(c.getType(), "")))
             throw error(HttpStatus.BAD_REQUEST, "Invalid communication type");
         if (!Set.of("ACTIVE", "PAUSED").contains(Objects.toString(c.getState(), "")))
             throw error(HttpStatus.BAD_REQUEST, "Invalid state");
@@ -142,7 +146,7 @@ public class CommunicationInstanceService {
                 throw error(
                         HttpStatus.BAD_REQUEST,
                         "Configuration fields must contain at most 255 printable ASCII characters");
-        if ("KISS_SERIAL".equals(c.getType())) {
+        if (("KISS_SERIAL".equals(c.getType())) || ("TNC2_SERIAL".equals(c.getType()))) {
             required(c.getSerialDevice(), "Serial device");
             c.setSerialDevice(c.getSerialDevice().trim());
             if (c.getBaudRate() == null || c.getBaudRate() < 1 || c.getBaudRate() > 4000000)

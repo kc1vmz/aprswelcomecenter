@@ -140,7 +140,7 @@ async function confirmCommunicationChange(event) {
 }
 
 function changeCommunicationType() {
-    const defaults = {APRS_IS: '14580', KISS_TCP: '8001'};
+    const defaults = {APRS_IS: '14580', KISS_TCP: '8001', TNC2_TCP: '8001'};
     const port = communicationForm.elements.port;
     const type = communicationForm.elements.type.value;
     if (defaults[type] && (!port.value || port.value === defaults[previousCommunicationType])) port.value = defaults[type];

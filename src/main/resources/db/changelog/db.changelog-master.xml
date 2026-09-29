@@ -81,4 +81,7 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
             );
         </sql>
     </changeSet>
+    <changeSet id="011-communication-instances" author="aprswc" dbms="h2">
+        <sqlFile path="011-communication-instances.sql" relativeToChangelogFile="true"/>
+    </changeSet>
 </databaseChangeLog>

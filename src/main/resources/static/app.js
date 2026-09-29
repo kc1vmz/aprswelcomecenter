@@ -2493,6 +2493,7 @@ document.querySelector("#close-delete-dialog").addEventListener("click", closeDe
 document.querySelector("#cancel-delete").addEventListener("click", closeDeleteDialog);
 document.querySelector("#delete-form").addEventListener("submit", confirmDelete);
 document.querySelector("#close-regions-dialog").addEventListener("click", closeRegionsDialog);
+document.querySelector("#close-regions-footer").addEventListener("click", closeRegionsDialog);
 document.querySelector("#new-region").addEventListener("click", openCreateRegionDialog);
 document.querySelector("#regions-list").addEventListener("click", handleRegionAction);
 document.querySelector("#region-type").addEventListener("change", updateGeometryFields);

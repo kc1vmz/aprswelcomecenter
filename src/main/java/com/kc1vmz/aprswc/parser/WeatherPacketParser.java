@@ -478,7 +478,7 @@ public class WeatherPacketParser {
                         break;
                 }
             } catch (Exception e) {
-                objectLog.warn(String.format("Error parsing weather data - %s", weatherData_bytes), e);
+                objectLog.warn(String.format("Error parsing weather data - %s", weatherData), e);
                 break;
             }
         }

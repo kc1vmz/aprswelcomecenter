@@ -22,6 +22,7 @@ import com.kc1vmz.aprswc.object.*;
 import com.kc1vmz.aprswc.processor.StationPacketQueue;
 import com.kc1vmz.aprswc.processor.aprs.is.*;
 import com.kc1vmz.aprswc.processor.aprs.kiss.*;
+import com.kc1vmz.aprswc.processor.aprs.tnc2.*;
 import jakarta.annotation.PreDestroy;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -87,15 +88,23 @@ public class CommunicationInstanceManager {
         for (var c : desired.values()) {
             if (!"ACTIVE".equals(c.getState()) || workers.containsKey(c.getId())) continue;
             // A failed stop must retain exclusive ownership of the serial device.
-            if ("KISS_SERIAL".equals(c.getType())
+            if (("KISS_SERIAL".equals(c.getType()) || "TNC2_SERIAL".equals(c.getType()))
                     && c.getSerialDevice() != null
                     && workers.values().stream()
-                            .anyMatch(w -> "KISS_SERIAL".equals(w.config.type())
-                                    && c.getSerialDevice().equalsIgnoreCase(w.config.serialDevice()))) continue;
+                            .anyMatch(w ->
+                                    ("KISS_SERIAL".equals(w.config.type()) || "TNC2_SERIAL".equals(w.config.type()))
+                                            && c.getSerialDevice().equalsIgnoreCase(w.config.serialDevice()))) continue;
             var config = CommunicationConfig.from(c);
-            ManagedPacketListener worker = "APRS_IS".equals(c.getType())
-                    ? new PacketListenerInternetServer(config, packets, utility)
-                    : new PacketListenerKISS(config, packets);
+            ManagedPacketListener worker = null;
+            if ("APRS_IS".equals(c.getType())) {
+                worker = new PacketListenerInternetServer(config, packets, utility);
+            } else if ("TNC2_TCP".equals(c.getType())) {
+                worker = new PacketListenerTNC2(config, packets);
+            } else if ("TNC2_SERIAL".equals(c.getType())) {
+                worker = new PacketListenerTNC2(config, packets);
+            } else {
+                worker = new PacketListenerKISS(config, packets);
+            }
             workers.put(c.getId(), worker);
             worker.start();
         }

@@ -37,7 +37,8 @@ public class PacketParser {
         try {
             int indexCallsignSep = content.indexOf(">");
             if (indexCallsignSep == -1) {
-                logger.error("Exception finding callsign termination");
+                // could be junk, could be LoRa RXT information
+                logger.debug("Exception finding callsign termination: " + content);
                 return ret;
             }
             String callsign = content.substring(0, indexCallsignSep);

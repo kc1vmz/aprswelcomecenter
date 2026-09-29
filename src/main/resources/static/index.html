@@ -595,6 +595,9 @@
             <p id="regions-map-message" class="map-message" role="status" aria-live="polite"></p>
             <p id="regions-message" class="form-message" role="status" aria-live="polite"></p>
             <div id="regions-list" class="cards"></div>
+            <div class="form-actions">
+                <button type="button" id="close-regions-footer" class="secondary">Close</button>
+            </div>
         </div>
     </dialog>
     <dialog id="region-editor-dialog" class="wide-dialog">
@@ -923,18 +926,18 @@
         <form id="communication-form">
             <div class="dialog-heading"><h2>Communication instance</h2><button type="button" id="close-communication" class="icon-button" aria-label="Close">&times;</button></div>
             <div class="form-grid">
-                <label>Type<select name="type"><option value="APRS_IS">APRS-IS</option><option value="KISS_TCP">KISS TCP</option><option value="KISS_SERIAL">KISS Serial</option></select></label>
+                <label>Type<select name="type"><option value="APRS_IS">APRS-IS</option><option value="KISS_TCP">KISS TCP</option><option value="KISS_SERIAL">KISS Serial</option><option value="TNC2_TCP">TNC2 TCP</option><option value="TNC2_SERIAL">TNC2 Serial</option></select></label>
                 <label>State<select name="state"><option value="ACTIVE">Active</option><option value="PAUSED">Paused</option></select></label>
-                <label data-connection-types="APRS_IS KISS_TCP">Host<input name="host" maxlength="255" required></label>
-                <label data-connection-types="APRS_IS KISS_TCP">TCP port<input name="port" type="number" min="1" max="65535" required></label>
+                <label data-connection-types="APRS_IS KISS_TCP TNC2_TCP">Host<input name="host" maxlength="255" required></label>
+                <label data-connection-types="APRS_IS KISS_TCP TNC2_TCP">TCP port<input name="port" type="number" min="1" max="65535" required></label>
                 <label data-connection-types="APRS_IS">Username (callsign)<input name="username" maxlength="10" required></label>
                 <label data-connection-types="APRS_IS">Passcode<input name="passcode" type="password" autocomplete="new-password" maxlength="255"><small>Leave blank when editing to keep the existing passcode.</small></label>
                 <label data-connection-types="APRS_IS">Filter<input name="filter" maxlength="255"></label>
-                <label data-connection-types="KISS_SERIAL">Serial device<input name="serialDevice" placeholder="COM3 or /dev/ttyUSB0" maxlength="255" required></label>
-                <label data-connection-types="KISS_SERIAL">Baud rate<input name="baudRate" type="number" min="1" max="4000000" value="9600" required></label>
-                <label data-connection-types="KISS_SERIAL">Initialization command 1<input name="initCommand1" maxlength="255"></label>
-                <label data-connection-types="KISS_SERIAL">Initialization command 2<input name="initCommand2" maxlength="255"></label>
-                <label data-connection-types="KISS_TCP KISS_SERIAL">Digipeater path<input name="digiPath" maxlength="255" placeholder="WIDE1-1,WIDE2-1"></label>
+                <label data-connection-types="KISS_SERIAL TNC2_SERIAL">Serial device<input name="serialDevice" placeholder="COM3 or /dev/ttyUSB0" maxlength="255" required></label>
+                <label data-connection-types="KISS_SERIAL TNC2_SERIAL">Baud rate<input name="baudRate" type="number" min="1" max="4000000" value="9600" required></label>
+                <label data-connection-types="KISS_SERIAL TNC2_SERIAL">Initialization command 1<input name="initCommand1" maxlength="255"></label>
+                <label data-connection-types="KISS_SERIAL TNC2_SERIAL">Initialization command 2<input name="initCommand2" maxlength="255"></label>
+                <label data-connection-types="KISS_TCP KISS_SERIAL TNC2_TCP TNC2_SERIAL">Digipeater path<input name="digiPath" maxlength="255" placeholder="WIDE1-1,WIDE2-1"></label>
             </div>
             <p id="communication-message" class="form-message" role="status"></p>
             <div class="form-actions"><button type="button" id="cancel-communication" class="secondary">Cancel</button><button type="submit">Save connection</button></div>
@@ -1103,7 +1106,7 @@
     <script src="/station-list.js?v=20260918-2"></script>
     <script src="/poi-map.js?v=20260921-2"></script>
     <script src="/aprs-symbol-picker.js?v=20260925-2"></script>
-    <script src="/app.js?v=20260925-1"></script>
+    <script src="/app.js?v=20260929-1"></script>
     <script src="/region-import.js?v=20260926-1"></script>
     <script src="/points-of-interest.js?v=20260925-1"></script>
     <script src="/center-communications.js?v=20260924-1"></script>
