@@ -35,7 +35,7 @@ if [ "$WC_OS" = "Linux" ]; then
   fi
 
   # default environment variables
-  WC_VERSION=1.0.7
+  WC_VERSION=1.0.8
   WC_INSTALL_DIR=~/aprswelcomecenter
   WC_DB_DIR=~/aprswelcomecenter/db
   WC_TEMP_DIR=~/aprswelcomecenter/tmp

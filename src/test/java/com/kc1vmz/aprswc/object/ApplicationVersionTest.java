@@ -26,11 +26,11 @@ class ApplicationVersionTest {
     @Test
     void constructorAndAccessorsExposeAllFields() {
         ApplicationVersion version =
-                new ApplicationVersion("APRSWelcomeCenter", "1.0.7", "Author", "2026", "https://example.com");
+                new ApplicationVersion("APRSWelcomeCenter", "1.0.8", "Author", "2026", "https://example.com");
 
         assertAll(
                 () -> assertEquals("APRSWelcomeCenter", version.getApplicationName()),
-                () -> assertEquals("1.0.7", version.getVersion()),
+                () -> assertEquals("1.0.8", version.getVersion()),
                 () -> assertEquals("Author", version.getAuthor()),
                 () -> assertEquals("2026", version.getCopyrightYear()),
                 () -> assertEquals("https://example.com", version.getWebsite()));
