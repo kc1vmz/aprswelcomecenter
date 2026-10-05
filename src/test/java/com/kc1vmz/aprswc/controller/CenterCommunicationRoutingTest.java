@@ -58,7 +58,17 @@ class CenterCommunicationRoutingTest {
     private CommunicationInstance connection() {
         return client.post()
                 .uri("/api/v1/communication-instances")
-                .bodyValue(Map.of("type", "KISS_TCP", "state", "PAUSED", "host", "localhost", "port", 8001))
+                .bodyValue(Map.of(
+                        "type",
+                        "KISS_TCP",
+                        "state",
+                        "PAUSED",
+                        "host",
+                        "localhost",
+                        "port",
+                        8001,
+                        "digiPath",
+                        "WIDE1-1"))
                 .exchange()
                 .expectStatus()
                 .isOk()

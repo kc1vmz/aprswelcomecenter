@@ -62,24 +62,32 @@ function renderCommunicationInstances() {
 
 function communicationFieldStates() {
     const type = communicationForm.elements.type.value;
+    document.querySelector('#communication-username-label').textContent =
+        type === 'KENWOOD_SERIAL' ? 'Kenwood MYCALL' : 'Login Callsign';
     communicationForm.querySelectorAll('[data-connection-types]').forEach(label => {
         label.hidden = !label.dataset.connectionTypes.split(' ').includes(type);
-        label.querySelectorAll('input').forEach(input => { input.disabled = label.hidden; });
+        label.querySelectorAll('input,select').forEach(input => { input.disabled = label.hidden; });
     });
+    for (const name of ['filter', 'digiPath']) {
+        const input = communicationForm.elements[name];
+        input.required = !editingCommunication && !input.disabled;
+    }
     communicationForm.elements.passcode.required = type === 'APRS_IS' && (!editingCommunication || editingCommunication.type !== 'APRS_IS');
 }
 
 function openCommunicationDialog(config = null) {
     editingCommunication = config;
     communicationForm.reset();
+    communicationForm.serialPortPicker.prepare(config?.baudRate, config?.serialDevice);
     if (config) for (const control of communicationForm.elements) {
-        if (control.name) control.value = config[control.name] ?? '';
+        if (control.name) control.value = config[control.name] ?? (control.name === 'baudRate' ? '9600' : '');
     }
     else communicationForm.elements.port.value = 14580;
     previousCommunicationType = communicationForm.elements.type.value;
     communicationFieldStates();
     document.querySelector('#communication-message').textContent = '';
     document.querySelector('#communication-dialog').showModal();
+    communicationForm.serialPortPicker.load();
 }
 
 async function communicationFailure(error, target) {
@@ -150,6 +158,14 @@ function changeCommunicationType() {
 
 communicationForm.addEventListener('submit', async event => {
     event.preventDefault();
+    for (const input of communicationForm.querySelectorAll('input, select')) {
+        if (!input.disabled && input.required && !input.value.trim()) {
+            document.querySelector('#communication-message').textContent = 'Complete all required fields. Only initialization commands 1 and 2 are optional when creating a connection.';
+            input.focus();
+            return;
+        }
+    }
+    if (!communicationForm.reportValidity()) return;
     const button = communicationForm.querySelector('[type="submit"]');
     button.disabled = true;
     const value = {version: editingCommunication?.version ?? 0};

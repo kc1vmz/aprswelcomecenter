@@ -44,6 +44,127 @@ class CommunicationInstanceControllerTest {
     }
 
     @Test
+    void creationRequiresAllApplicableFieldsExceptInitializationCommands() {
+        for (String type :
+                new String[] {"APRS_IS", "KISS_TCP", "TNC2_TCP", "KISS_SERIAL", "TNC2_SERIAL", "KENWOOD_SERIAL"}) {
+            var body = new HashMap<String, Object>();
+            body.put("type", type);
+            body.put("state", "PAUSED");
+            if (type.endsWith("SERIAL")) {
+                body.put("serialDevice", "missing-validation-test-port");
+                body.put("baudRate", 9600);
+            } else {
+                body.put("host", "localhost");
+                body.put("port", 8001);
+            }
+            if (type.equals("APRS_IS") || type.equals("KENWOOD_SERIAL")) body.put("username", "N1TEST");
+            if (type.equals("APRS_IS")) {
+                body.put("passcode", "12345");
+                body.put("filter", "m/50");
+            } else body.put("digiPath", "WIDE1-1");
+            for (String field : body.keySet()) {
+                var invalid = new HashMap<>(body);
+                invalid.put(field, field.equals("port") || field.equals("baudRate") ? null : "   ");
+                client.post()
+                        .uri("/api/v1/communication-instances")
+                        .bodyValue(invalid)
+                        .exchange()
+                        .expectStatus()
+                        .isBadRequest();
+            }
+            client.post()
+                    .uri("/api/v1/communication-instances")
+                    .bodyValue(body)
+                    .exchange()
+                    .expectStatus()
+                    .isOk();
+        }
+    }
+
+    @Test
+    void kenwoodPersistsMycallAndRejectsPortConflicts() {
+        var body = new HashMap<String, Object>(Map.of(
+                "type",
+                "KENWOOD_SERIAL",
+                "state",
+                "PAUSED",
+                "serialDevice",
+                "missing-kenwood-test-port",
+                "baudRate",
+                9600,
+                "username",
+                "n1abc-10",
+                "digiPath",
+                "wide1-1",
+                "transmitEnabled",
+                false));
+        var created = client.post()
+                .uri("/api/v1/communication-instances")
+                .bodyValue(body)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(Map.class)
+                .returnResult()
+                .getResponseBody();
+        assertThat(created.get("username")).isEqualTo("N1ABC-10");
+        assertThat(created.get("label").toString()).contains("Kenwood Serial", "N1ABC-10");
+        var saved = repository
+                .findById(UUID.fromString(created.get("id").toString()))
+                .orElseThrow();
+        assertThat(created).doesNotContainKey("transmitEnabled");
+        assertThat(saved.getDigiPath()).isEqualTo("WIDE1-1");
+        client.get()
+                .uri("/api/v1/communication-instances/serialPorts")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.ports")
+                .isArray();
+        body.put("state", "ACTIVE");
+        client.post()
+                .uri("/api/v1/communication-instances")
+                .bodyValue(body)
+                .exchange()
+                .expectStatus()
+                .isOk();
+        for (String type : List.of("KENWOOD_SERIAL", "KISS_SERIAL", "TNC2_SERIAL")) {
+            body.put("type", type);
+            client.post()
+                    .uri("/api/v1/communication-instances")
+                    .bodyValue(body)
+                    .exchange()
+                    .expectStatus()
+                    .isEqualTo(409);
+        }
+        body.put("type", "KENWOOD_SERIAL");
+        body.put("serialDevice", "another-missing-kenwood-port");
+        client.post()
+                .uri("/api/v1/communication-instances")
+                .bodyValue(body)
+                .exchange()
+                .expectStatus()
+                .isOk();
+        body.put("state", "PAUSED");
+        body.put("username", "TOOLONGCALL");
+        client.post()
+                .uri("/api/v1/communication-instances")
+                .bodyValue(body)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+        body.put("username", "N1ABC");
+        body.put("initCommand1", "RESET");
+        client.post()
+                .uri("/api/v1/communication-instances")
+                .bodyValue(body)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+    }
+
+    @Test
     void crudProtectsSecretsVersionsAndPreservesPasscode() {
         var body = new HashMap<String, Object>(Map.of(
                 "type",
@@ -57,7 +178,9 @@ class CommunicationInstanceControllerTest {
                 "username",
                 "N1TEST",
                 "passcode",
-                "12345"));
+                "12345",
+                "filter",
+                "m/25"));
         var created = client.post()
                 .uri("/api/v1/communication-instances")
                 .bodyValue(body)
@@ -113,7 +236,16 @@ class CommunicationInstanceControllerTest {
     @Test
     void validatesTypesAndAllowsPausedSerialDuplicatesButRejectsActiveConflict() {
         var body = new HashMap<String, Object>(Map.of(
-                "type", "KISS_SERIAL", "state", "PAUSED", "serialDevice", "nonexistent-test-device", "baudRate", 9600));
+                "type",
+                "KISS_SERIAL",
+                "state",
+                "PAUSED",
+                "serialDevice",
+                "nonexistent-test-device",
+                "baudRate",
+                9600,
+                "digiPath",
+                "WIDE1-1"));
         for (int i = 0; i < 2; i++)
             client.post()
                     .uri("/api/v1/communication-instances")

@@ -18,6 +18,7 @@
 package com.kc1vmz.aprswc.controller;
 
 import com.kc1vmz.aprswc.communication.CommunicationInstanceService;
+import com.kc1vmz.aprswc.communication.SerialPorts;
 import com.kc1vmz.aprswc.object.CommunicationInstance;
 import java.util.*;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,17 @@ public class CommunicationInstanceController {
     @GetMapping
     public Mono<List<CommunicationInstanceService.View>> all() {
         return Mono.fromCallable(service::list).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @GetMapping("/serialPorts")
+    public Mono<SerialPorts.Result> serialPorts() {
+        return Mono.fromCallable(() -> SerialPorts.discover(service.list().stream()
+                        .map(CommunicationInstanceService.View::configuration)
+                        .filter(c -> c.getType().endsWith("_SERIAL"))
+                        .map(c -> new SerialPorts.Assignment(
+                                c.getSerialDevice(), c.getLabel(), "ACTIVE".equals(c.getState())))
+                        .toList()))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @PostMapping

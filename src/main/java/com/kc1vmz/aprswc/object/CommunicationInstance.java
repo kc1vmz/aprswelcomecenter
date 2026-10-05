@@ -164,6 +164,7 @@ public class CommunicationInstance {
         return switch (type) {
             case "APRS_IS" -> "APRS-IS: " + host + ":" + port + " (" + username + ")";
             case "KISS_TCP" -> "KISS TCP: " + host + ":" + port;
+            case "KENWOOD_SERIAL" -> "Kenwood Serial: " + serialDevice + " (" + baudRate + ", " + username + ")";
             case "TNC2_SERIAL" -> "TNC2_SERIAL: " + serialDevice + " (" + baudRate + ")";
             case "TNC2_TCP" -> "TNC2_TCP: " + host + ":" + port;
             default -> "KISS Serial: " + serialDevice + " (" + baudRate + ")";

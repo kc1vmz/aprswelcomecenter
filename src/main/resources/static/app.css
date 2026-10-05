@@ -895,3 +895,5 @@ legend {
 .region-import-table th, .region-import-table td { padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--line); }
 #region-import-details { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 12rem; overflow: auto; }
 .region-input-mode { flex-wrap: wrap; }
+
+.message-character-count { display: block; margin-top: 0.25rem; color: var(--muted); font-weight: normal; }

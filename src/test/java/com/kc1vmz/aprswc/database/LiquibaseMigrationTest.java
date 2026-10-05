@@ -117,7 +117,7 @@ class LiquibaseMigrationTest {
         migrate(ds);
         try (Connection c = ds.getConnection()) {
             assertThat(scalar(c, "select status from welcome_centers")).isEqualTo("CLOSED");
-            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("12");
+            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("14");
             assertThat(scalar(c, "select communication_mode from welcome_centers"))
                     .isEqualTo("SELECTED");
         }
@@ -154,6 +154,11 @@ class LiquibaseMigrationTest {
                         .isEqualTo("PAUSED");
                 assertThat(scalar(c, "select passcode from communication_instances where type='APRS_IS'"))
                         .isEqualTo("123");
+                assertThat(
+                                scalar(
+                                        c,
+                                        "select count(*) from information_schema.columns where table_name='COMMUNICATION_INSTANCES' and column_name='TRANSMIT_ENABLED'"))
+                        .isEqualTo("0");
                 assertThat(scalar(c, "select map_tile_url from application_settings"))
                         .isEqualTo("tiles");
                 assertThat(

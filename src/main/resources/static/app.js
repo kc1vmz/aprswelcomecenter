@@ -377,6 +377,7 @@ function openSendWelcomeCenterMessageDialog() {
     if (!center) return;
     const form = document.querySelector("#send-welcome-center-message-form");
     form.reset();
+    updateMessageCharacterCount(form);
     form.elements.callsignFrom.value = center.callsign || "";
     document.querySelector("#send-welcome-center-message-message").textContent = "";
     document.querySelector("#send-welcome-center-message-dialog").showModal();
@@ -665,6 +666,7 @@ function openSendStationMessageDialog() {
     if (!activeStationCallsign) return;
     const form = document.querySelector("#send-station-message-form");
     form.reset();
+    updateMessageCharacterCount(form);
     form.elements.callsignTo.value = activeStationCallsign;
     document.querySelector("#send-station-message-message").textContent = "";
     document.querySelector("#send-station-message-dialog").showModal();
@@ -2581,3 +2583,14 @@ document.querySelector("#center-status-dialog").addEventListener("cancel", event
     if (centerStatusSaving) event.preventDefault();
     else pendingCenterStatus = null;
 });
+
+function updateMessageCharacterCount(form) {
+    const count = form.elements.content.value.length;
+    form.querySelector(".message-character-count").textContent =
+        `${count} ${count === 1 ? "character" : "characters"} entered`;
+}
+
+for (const id of ["send-welcome-center-message-form", "send-station-message-form"]) {
+    const form = document.getElementById(id);
+    form.elements.content.addEventListener("input", () => updateMessageCharacterCount(form));
+}

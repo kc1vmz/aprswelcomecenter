@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
+import org.slf4j.LoggerFactory;
 
 /** Owns the reader, bounded writer queue and cancellable transport for a single configuration. */
 public class ManagedPacketListener {
@@ -109,7 +110,7 @@ public class ManagedPacketListener {
                 try {
                     if (!pending.permitted().getAsBoolean()) continue;
                 } catch (RuntimeException failure) {
-                    org.slf4j.LoggerFactory.getLogger(getClass())
+                    LoggerFactory.getLogger(getClass())
                             .warn("Dropping message whose send eligibility could not be checked for {}", config.id());
                     continue;
                 }
@@ -129,7 +130,7 @@ public class ManagedPacketListener {
                 try {
                     pending.onSent().run();
                 } catch (RuntimeException failure) {
-                    org.slf4j.LoggerFactory.getLogger(getClass())
+                    LoggerFactory.getLogger(getClass())
                             .error("Failed to record completed send for {}", config.id(), failure);
                 }
             } catch (InterruptedException ignored) {

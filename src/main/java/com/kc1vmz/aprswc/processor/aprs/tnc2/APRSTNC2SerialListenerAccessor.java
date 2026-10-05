@@ -86,7 +86,7 @@ public class APRSTNC2SerialListenerAccessor implements CommunicationTransport {
         }
 
         return new StationPacket(
-                UUID.randomUUID(), config.id().toString(), null, LocalDateTime.now(), new String(readBuffer), null);
+                UUID.randomUUID(), config.id().toString(), null, LocalDateTime.now(), new String(packet), null);
     }
 
     private synchronized void write(byte[] bytes) throws IOException {

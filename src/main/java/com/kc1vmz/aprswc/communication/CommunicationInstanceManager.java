@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -66,7 +67,7 @@ public class CommunicationInstanceManager {
                     try {
                         reconcile();
                     } catch (RuntimeException e) {
-                        org.slf4j.LoggerFactory.getLogger(getClass()).error("Communication reconciliation failed", e);
+                        LoggerFactory.getLogger(getClass()).error("Communication reconciliation failed", e);
                     }
                 },
                 1,
@@ -88,12 +89,12 @@ public class CommunicationInstanceManager {
         for (var c : desired.values()) {
             if (!"ACTIVE".equals(c.getState()) || workers.containsKey(c.getId())) continue;
             // A failed stop must retain exclusive ownership of the serial device.
-            if (("KISS_SERIAL".equals(c.getType()) || "TNC2_SERIAL".equals(c.getType()))
+            if (c.getType().endsWith("_SERIAL")
                     && c.getSerialDevice() != null
                     && workers.values().stream()
-                            .anyMatch(w ->
-                                    ("KISS_SERIAL".equals(w.config.type()) || "TNC2_SERIAL".equals(w.config.type()))
-                                            && c.getSerialDevice().equalsIgnoreCase(w.config.serialDevice()))) continue;
+                            .anyMatch(w -> w.config.type().endsWith("_SERIAL")
+                                    && SerialDeviceIdentity.identity(c.getSerialDevice())
+                                            .equals(SerialDeviceIdentity.identity(w.config.serialDevice())))) continue;
             var config = CommunicationConfig.from(c);
             ManagedPacketListener worker = null;
             if ("APRS_IS".equals(c.getType())) {
@@ -102,6 +103,8 @@ public class CommunicationInstanceManager {
                 worker = new PacketListenerTNC2(config, packets);
             } else if ("TNC2_SERIAL".equals(c.getType())) {
                 worker = new PacketListenerTNC2(config, packets);
+            } else if ("KENWOOD_SERIAL".equals(c.getType())) {
+                worker = new ManagedPacketListener(config, packets, () -> new KenwoodSerialTransport(config));
             } else {
                 worker = new PacketListenerKISS(config, packets);
             }

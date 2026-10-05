@@ -84,4 +84,10 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
     <changeSet id="012-communication-instances" author="aprswc" dbms="h2">
         <sqlFile path="012-communication-instances.sql" relativeToChangelogFile="true"/>
     </changeSet>
+    <changeSet id="013-kenwood-serial" author="aprswc" dbms="h2">
+        <sqlFile path="013-kenwood-serial.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+    <changeSet id="014-remove-transmit-enabled" author="aprswc" dbms="h2">
+        <sqlFile path="014-remove-transmit-enabled.sql" relativeToChangelogFile="true"/>
+    </changeSet>
 </databaseChangeLog>

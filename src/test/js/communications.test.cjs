@@ -6,7 +6,7 @@ const source = fs.readFileSync(require('node:path').join(__dirname, '../../main/
 function setup(status = 200) {
     const elements = {};
     const calls = [];
-    function element() { return {textContent: '', showModal() {}, close() {}, focus() {}, addEventListener() {}, replaceChildren() {}, append() {}, elements: {type: {addEventListener() {}}}}; }
+    function element() { return {listeners: {}, textContent: '', showModal() {}, close() {}, focus() {}, addEventListener(event, callback) { this.listeners[event] = callback; }, replaceChildren() {}, append() {}, elements: {type: {addEventListener() {}}}}; }
     const context = vm.createContext({
         document: {querySelector: selector => elements[selector] ||= element(), createElement: element},
         fetch: async (url, options) => {
@@ -72,6 +72,8 @@ test('KISS TCP defaults to 8001, including after serial selection, and preserves
     const form = ui.elements['#communication-form'];
     form.querySelectorAll = () => [];
     form.elements.passcode = {};
+    form.elements.filter = {};
+    form.elements.digiPath = {};
     form.elements.port = {value: '14580'};
     form.elements.type.value = 'KISS_SERIAL';
     ui.context.changeCommunicationType();
@@ -85,4 +87,16 @@ test('KISS TCP defaults to 8001, including after serial selection, and preserves
     form.elements.type.value = 'KISS_TCP';
     ui.context.changeCommunicationType();
     assert.equal(form.elements.port.value, '9000');
+});
+
+test('blank or whitespace-only required fields block creation before a request', async () => {
+    const ui = setup();
+    const form = ui.elements['#communication-form'];
+    let focused = false;
+    const field = {required: true, disabled: false, value: '   ', focus() { focused = true; }};
+    form.querySelectorAll = () => [field];
+    await form.listeners.submit({preventDefault() {}});
+    assert.equal(ui.calls.length, 0);
+    assert.equal(focused, true);
+    assert.match(ui.elements['#communication-message'].textContent, /required fields/);
 });

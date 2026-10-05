@@ -21,6 +21,7 @@ import com.kc1vmz.aprswc.database.CommunicationInstanceRepository;
 import com.kc1vmz.aprswc.object.CommunicationInstance;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -37,7 +38,7 @@ public class CommunicationInstanceService {
     private CenterCommunicationRouting routing;
 
     @Autowired
-    private org.springframework.context.ApplicationEventPublisher events;
+    private ApplicationEventPublisher events;
 
     public CommunicationInstanceService(
             CommunicationInstanceRepository repository,
@@ -59,7 +60,9 @@ public class CommunicationInstanceService {
     }
 
     private List<String> warnings(CommunicationInstance c, List<CommunicationInstance> all) {
-        if (("KISS_SERIAL".equals(c.getType())) || ("TNC2_SERIAL".equals(c.getType()))) {
+        if (("KISS_SERIAL".equals(c.getType()))
+                || ("TNC2_SERIAL".equals(c.getType()))
+                || "KENWOOD_SERIAL".equals(c.getType())) {
             return List.of();
         }
 
@@ -86,14 +89,19 @@ public class CommunicationInstanceService {
                 value.setId(id);
                 if (value.getPasscode() == null || value.getPasscode().isBlank()) value.setPasscode(old.getPasscode());
             }
+            if (id == null) {
+                if ("APRS_IS".equals(value.getType())) required(value.getFilter(), "Filter");
+                else required(value.getDigiPath(), "Digipeater path");
+            }
             validate(value);
             if ("ACTIVE".equals(value.getState())
-                    && ("KISS_SERIAL".equals(value.getType()) || "TNC2_SERIAL".equals(value.getType()))
+                    && value.getType().endsWith("_SERIAL")
                     && repository.findAll().stream()
                             .anyMatch(c -> !c.getId().equals(value.getId())
                                     && "ACTIVE".equals(c.getState())
-                                    && ("KISS_SERIAL".equals(c.getType()) || "TNC2_SERIAL".equals(c.getType()))
-                                    && value.getSerialDevice().equalsIgnoreCase(c.getSerialDevice())))
+                                    && c.getType().endsWith("_SERIAL")
+                                    && SerialDeviceIdentity.identity(value.getSerialDevice())
+                                            .equals(SerialDeviceIdentity.identity(c.getSerialDevice()))))
                 throw error(HttpStatus.CONFLICT, "Another ACTIVE instance already owns this serial device.");
             return repository.saveAndFlush(value);
         });
@@ -127,7 +135,30 @@ public class CommunicationInstanceService {
     }
 
     private static void validate(CommunicationInstance c) {
-        if (!Set.of("APRS_IS", "KISS_TCP", "KISS_SERIAL", "TNC2_TCP", "TNC2_SERIAL")
+        if ("KENWOOD_SERIAL".equals(c.getType())) {
+            required(c.getUsername(), "Kenwood MYCALL");
+            c.setUsername(c.getUsername().trim().toUpperCase(Locale.ROOT));
+            try {
+                KenwoodSession.validateAddress(c.getUsername());
+                if (c.getDigiPath() != null && !c.getDigiPath().isBlank()) {
+                    String[] path = c.getDigiPath().toUpperCase(Locale.ROOT).split(",", -1);
+                    if (path.length > 8) throw new IllegalArgumentException();
+                    for (int i = 0; i < path.length; i++) {
+                        path[i] = path[i].trim();
+                        KenwoodSession.validateAddress(path[i]);
+                    }
+                    c.setDigiPath(String.join(",", path));
+                }
+            } catch (IllegalArgumentException invalid) {
+                throw error(HttpStatus.BAD_REQUEST, "Invalid Kenwood MYCALL or digipeater path");
+            }
+            if ((c.getInitCommand1() != null && !c.getInitCommand1().isBlank())
+                    || (c.getInitCommand2() != null && !c.getInitCommand2().isBlank()))
+                throw error(
+                        HttpStatus.BAD_REQUEST,
+                        "Kenwood initialization is automatic; leave initialization commands blank");
+        }
+        if (!Set.of("APRS_IS", "KISS_TCP", "KISS_SERIAL", "TNC2_TCP", "TNC2_SERIAL", "KENWOOD_SERIAL")
                 .contains(Objects.toString(c.getType(), "")))
             throw error(HttpStatus.BAD_REQUEST, "Invalid communication type");
         if (!Set.of("ACTIVE", "PAUSED").contains(Objects.toString(c.getState(), "")))
@@ -146,7 +177,9 @@ public class CommunicationInstanceService {
                 throw error(
                         HttpStatus.BAD_REQUEST,
                         "Configuration fields must contain at most 255 printable ASCII characters");
-        if (("KISS_SERIAL".equals(c.getType())) || ("TNC2_SERIAL".equals(c.getType()))) {
+        if (("KISS_SERIAL".equals(c.getType()))
+                || ("TNC2_SERIAL".equals(c.getType()))
+                || "KENWOOD_SERIAL".equals(c.getType())) {
             required(c.getSerialDevice(), "Serial device");
             c.setSerialDevice(c.getSerialDevice().trim());
             if (c.getBaudRate() == null || c.getBaudRate() < 1 || c.getBaudRate() > 4000000)
@@ -171,7 +204,7 @@ public class CommunicationInstanceService {
                 throw error(HttpStatus.BAD_REQUEST, "Invalid APRS-IS username or passcode");
             c.setDigiPath(null);
         } else {
-            c.setUsername(null);
+            if (!"KENWOOD_SERIAL".equals(c.getType())) c.setUsername(null);
             c.setPasscode(null);
             c.setFilter(null);
         }
