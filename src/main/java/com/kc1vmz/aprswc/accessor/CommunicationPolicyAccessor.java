@@ -17,12 +17,20 @@
  */
 package com.kc1vmz.aprswc.accessor;
 
+import com.kc1vmz.aprswc.database.CommunicationCategoryRepository;
 import com.kc1vmz.aprswc.database.CommunicationPolicyRepository;
+import com.kc1vmz.aprswc.database.WelcomeCenterRepository;
 import com.kc1vmz.aprswc.object.CommunicationPolicy;
+import com.kc1vmz.aprswc.processor.PolicySchedule;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,8 +38,27 @@ import reactor.core.scheduler.Schedulers;
 
 @Service
 public class CommunicationPolicyAccessor {
-    @Autowired
-    private CommunicationPolicyRepository repository;
+    private final CommunicationPolicyRepository repository;
+    private final ContainmentDeletionService deletions;
+    private final CommunicationCategoryRepository categories;
+    private final WelcomeCenterRepository centers;
+    private final JdbcTemplate jdbc;
+    private final TransactionTemplate transaction;
+
+    public CommunicationPolicyAccessor(
+            CommunicationPolicyRepository repository,
+            ContainmentDeletionService deletions,
+            CommunicationCategoryRepository categories,
+            WelcomeCenterRepository centers,
+            JdbcTemplate jdbc,
+            PlatformTransactionManager transactions) {
+        this.repository = repository;
+        this.deletions = deletions;
+        this.categories = categories;
+        this.centers = centers;
+        this.jdbc = jdbc;
+        this.transaction = new TransactionTemplate(transactions);
+    }
 
     public Flux<CommunicationPolicy> findAll() {
         return Mono.fromCallable(repository::findAll)
@@ -53,21 +80,62 @@ public class CommunicationPolicyAccessor {
     }
 
     public Mono<CommunicationPolicy> create(CommunicationPolicy value) {
-        value.setId(null);
-        return Mono.fromCallable(() -> repository.save(value)).subscribeOn(Schedulers.boundedElastic());
+        return save(null, value);
     }
 
     public Mono<CommunicationPolicy> replace(UUID id, CommunicationPolicy value) {
-        return findById(id)
-                .then(Mono.fromCallable(() -> {
-                            value.setId(id);
-                            return repository.save(value);
-                        })
-                        .subscribeOn(Schedulers.boundedElastic()));
+        return save(id, value);
     }
 
-    @Autowired
-    private ContainmentDeletionService deletions;
+    private Mono<CommunicationPolicy> save(UUID id, CommunicationPolicy value) {
+        return Mono.fromCallable(() -> transaction.execute(tx -> {
+                    jdbc.queryForObject("select id from aprs_object_name_lock where id=1 for update", Integer.class);
+                    CommunicationPolicy old = id == null
+                            ? null
+                            : repository
+                                    .findById(id)
+                                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                    if (old != null && old.getVersion() != value.getVersion())
+                        throw new ResponseStatusException(
+                                HttpStatus.CONFLICT, "Policy changed. Close and reopen the editor.");
+                    if (value.getWelcomeCenter() == null
+                            || value.getWelcomeCenter().getId() == null
+                            || value.getCategory() == null
+                            || value.getCategory().getId() == null)
+                        throw new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST, "Welcome Center and category are required");
+                    if (old != null
+                            && !Objects.equals(
+                                    old.getWelcomeCenter().getId(),
+                                    value.getWelcomeCenter().getId()))
+                        throw new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST, "Cannot move a policy to another Welcome Center");
+                    value.setWelcomeCenter(
+                            centers.findById(value.getWelcomeCenter().getId())
+                                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+                    value.setCategory(categories
+                            .findById(value.getCategory().getId())
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+                    if (PolicySchedule.automated(value) && value.getCategory().isAutoGeneratedText())
+                        throw new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST, "Choose a category with explicit message text");
+                    Instant now = Instant.now();
+                    PolicySchedule.validate(value, old, now);
+                    boolean reset = old == null || !PolicySchedule.sameSchedule(old, value);
+                    value.setId(id);
+                    if (id == null) value.setVersion(0);
+                    var saved = repository.saveAndFlush(value);
+                    if (reset) {
+                        Instant next = PolicySchedule.next(saved, now);
+                        jdbc.update(
+                                "update communication_policies set next_run_at=? where id=?",
+                                next == null ? null : Timestamp.from(next),
+                                saved.getId());
+                    }
+                    return saved;
+                }))
+                .subscribeOn(Schedulers.boundedElastic());
+    }
 
     public Mono<Void> delete(UUID id) {
         return Mono.fromRunnable(() -> deletions.deletePolicy(id))

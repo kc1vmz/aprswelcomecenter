@@ -78,6 +78,34 @@ class PacketCallsignAccessorTest {
     private WelcomeCenterAccessor welcomeCenterAccessor;
 
     @Test
+    void noArchivePacketStillQueuesAndUpdatesActivityWithoutRawHistory() {
+        StationPacket packet =
+                new StationPacket(null, "route", "KC1VMZ-4", null, "KC1VMZ-4>APRS,TCPIP*:>Testing !x!", null);
+        StepVerifier.create(stationPacketAccessor.create(packet))
+                .expectNext(packet)
+                .verifyComplete();
+        verify(stationPacketQueue).offer(packet);
+        StepVerifier.create(stationPacketAccessor.save(packet))
+                .expectNext(packet)
+                .verifyComplete();
+        verify(stationRepository).recordActivity(packet.getCallsign(), packet.getReceivedTime());
+        verify(stationPacketRepository, never()).save(packet);
+    }
+
+    @Test
+    void uppercaseAndHeaderMarkersDoNotSuppressRawHistory() {
+        for (String command : List.of("KC1VMZ>APRS:>Testing !X!", "KC1VMZ>APRS,!x!:>Testing")) {
+            StationPacket packet = new StationPacket(null, "route", "KC1VMZ", null, command, null);
+            when(stationPacketRepository.save(packet)).thenReturn(packet);
+            StepVerifier.create(stationPacketAccessor.save(packet))
+                    .expectNext(packet)
+                    .verifyComplete();
+            verify(stationPacketRepository).save(packet);
+            verify(stationRepository).recordActivity(packet.getCallsign(), packet.getReceivedTime());
+        }
+    }
+
+    @Test
     void findsWelcomeCenterCallsigns() {
         WelcomeCenter center = new WelcomeCenter(
                 UUID.randomUUID(),

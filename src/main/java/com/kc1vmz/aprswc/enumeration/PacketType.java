@@ -19,6 +19,7 @@ package com.kc1vmz.aprswc.enumeration;
 
 public enum PacketType {
     UNKNOWN,
+    STATUS,
     MESSAGE,
     MICE,
     LOCATION,

@@ -60,7 +60,7 @@ class SelectedCommunicationProcessingTest {
         var allowed = UUID.randomUUID();
         var denied = UUID.randomUUID();
         var center = center(allowed);
-        var processor = new StationPacketProcessor();
+        var processor = new StationPacketProcessor(mock(PolicyAutomationProcessor.class));
         var centers = mock(WelcomeCenterAccessor.class);
         var messages = mock(StationMessageQueue.class);
         var commands = mock(StationCommandQueue.class);
@@ -97,7 +97,7 @@ class SelectedCommunicationProcessingTest {
         var allowed = UUID.randomUUID();
         var denied = UUID.randomUUID();
         var center = center(allowed);
-        var packets = new StationPacketProcessor();
+        var packets = new StationPacketProcessor(mock(PolicyAutomationProcessor.class));
         var policies = mock(CommunicationPolicyAccessor.class);
         var events = mock(CommunicationEventQueue.class);
         ReflectionTestUtils.setField(packets, "communicationPolicyAccessor", policies);

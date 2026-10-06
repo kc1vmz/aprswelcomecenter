@@ -45,7 +45,9 @@ public class PacketParser {
             packet.setCallsign(callsign);
             content = content.substring(indexCallsignSep + 1); // skip over callsign>
             // destination
-            int indexDestSep = content.indexOf(",");
+            int colon = content.indexOf(":");
+            int comma = content.indexOf(",");
+            int indexDestSep = comma >= 0 && comma < colon ? comma : colon;
             if (indexDestSep == -1) {
                 logger.error("Exception finding destination termination");
                 return ret;
@@ -70,8 +72,13 @@ public class PacketParser {
             return ret;
         }
 
+        if (content.isEmpty()) return PacketType.UNKNOWN;
+
         // look at first character
         switch (content.charAt(0)) {
+            case '>':
+                ret = PacketType.STATUS;
+                break;
             case '*':
             case '#':
             case '_':

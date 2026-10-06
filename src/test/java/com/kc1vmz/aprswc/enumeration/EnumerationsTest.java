@@ -35,7 +35,12 @@ class EnumerationsTest {
 
         assertArrayEquals(
                 new PacketType[] {
-                    PacketType.UNKNOWN, PacketType.MESSAGE, PacketType.MICE, PacketType.LOCATION, PacketType.WEATHER
+                    PacketType.UNKNOWN,
+                    PacketType.STATUS,
+                    PacketType.MESSAGE,
+                    PacketType.MICE,
+                    PacketType.LOCATION,
+                    PacketType.WEATHER
                 },
                 PacketType.values());
     }

@@ -18,12 +18,12 @@
 package com.kc1vmz.aprswc.accessor;
 
 import com.kc1vmz.aprswc.database.StationPacketRepository;
+import com.kc1vmz.aprswc.database.StationRepository;
 import com.kc1vmz.aprswc.database.WelcomeCenterRepository;
 import com.kc1vmz.aprswc.object.StationPacket;
 import com.kc1vmz.aprswc.processor.StationPacketQueue;
 import java.util.Comparator;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,17 +33,28 @@ import reactor.core.scheduler.Schedulers;
 
 @Service
 public class StationPacketAccessor {
-    @Autowired
-    private StationPacketRepository repository;
+    private final StationPacketRepository repository;
+    private final StationRepository stations;
+    private final StationPacketQueue queue;
+    private final WelcomeCenterRepository welcomeCenterRepository;
 
-    @Autowired
-    private com.kc1vmz.aprswc.database.StationRepository stations;
+    public StationPacketAccessor(
+            StationPacketRepository repository,
+            StationRepository stations,
+            StationPacketQueue queue,
+            WelcomeCenterRepository welcomeCenterRepository) {
+        this.repository = repository;
+        this.stations = stations;
+        this.queue = queue;
+        this.welcomeCenterRepository = welcomeCenterRepository;
+    }
 
-    @Autowired
-    private StationPacketQueue queue;
-
-    @Autowired
-    private WelcomeCenterRepository welcomeCenterRepository;
+    private StationPacket saveRawHistory(StationPacket value) {
+        String command = value.getCommand();
+        int bodyStart = command == null ? -1 : command.indexOf(':');
+        if (bodyStart >= 0 && command.substring(bodyStart + 1).contains("!x!")) return value;
+        return repository.save(value);
+    }
 
     public boolean isWelcomeCenterCallsign(String callsign) {
         if (callsign == null) {
@@ -94,14 +105,14 @@ public class StationPacketAccessor {
 
     public Mono<StationPacket> create(StationPacket value) {
         value.setId(null);
-        return Mono.fromCallable(() -> repository.save(value))
+        return Mono.fromCallable(() -> saveRawHistory(value))
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnNext(queue::offer);
     }
 
     public Mono<StationPacket> save(StationPacket value) {
         return Mono.fromCallable(() -> {
-                    var saved = repository.save(value);
+                    var saved = saveRawHistory(value);
                     if (saved.getCallsign() != null && saved.getReceivedTime() != null)
                         stations.recordActivity(saved.getCallsign(), saved.getReceivedTime());
                     return saved;
@@ -113,7 +124,7 @@ public class StationPacketAccessor {
         return findById(id)
                 .then(Mono.fromCallable(() -> {
                             value.setId(id);
-                            return repository.save(value);
+                            return saveRawHistory(value);
                         })
                         .subscribeOn(Schedulers.boundedElastic()));
     }

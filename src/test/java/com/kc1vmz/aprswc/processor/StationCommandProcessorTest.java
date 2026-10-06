@@ -24,9 +24,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.kc1vmz.aprswc.accessor.CommunicationPolicyAccessor;
 import com.kc1vmz.aprswc.accessor.IgnoreStationAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterWeatherReportAccessor;
+import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
+import com.kc1vmz.aprswc.enumeration.MessageType;
+import com.kc1vmz.aprswc.object.CommunicationCategory;
+import com.kc1vmz.aprswc.object.CommunicationPolicy;
 import com.kc1vmz.aprswc.object.IgnoreStation;
 import com.kc1vmz.aprswc.object.StationCommand;
 import com.kc1vmz.aprswc.object.StationMessage;
@@ -42,6 +47,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -59,8 +65,35 @@ class StationCommandProcessorTest {
     @Mock
     private IgnoreStationAccessor ignoreStationAccessor;
 
+    @Mock
+    private CommunicationPolicyAccessor communicationPolicyAccessor;
+
     @InjectMocks
     private StationCommandProcessor processor;
+
+    @Test
+    void requestsExcludeScheduledAndShriekPolicies() {
+        var center = welcomeCenter();
+        var category = new CommunicationCategory(UUID.randomUUID(), "EVENTS", "", false, false);
+        var regular = new CommunicationPolicy(
+                null, category, center, "Info", null, null, MessageType.MESSAGE, CommunicationEventType.ON_REQUEST);
+        var scheduled = new CommunicationPolicy(
+                null,
+                category,
+                center,
+                "Bulletin",
+                null,
+                null,
+                MessageType.BULLETIN,
+                CommunicationEventType.SCHEDULED_ONCE);
+        var shriek = new CommunicationPolicy(
+                null, category, center, "Shriek", null, null, MessageType.MESSAGE, CommunicationEventType.SHRIEK_HEARD);
+        when(communicationPolicyAccessor.findByWelcomeCenterId(center.getId()))
+                .thenReturn(Flux.just(regular, scheduled, shriek));
+        List<CommunicationPolicy> result =
+                ReflectionTestUtils.invokeMethod(processor, "getCommunicationPolicies", center, "EVENTS");
+        assertEquals(List.of(regular), result);
+    }
 
     @Test
     void recognizesKnownCommands() {

@@ -20,5 +20,8 @@ package com.kc1vmz.aprswc.enumeration;
 public enum CommunicationEventType {
     ENTER_REGION,
     EXIT_REGION,
+    SCHEDULED_ONCE,
+    SCHEDULED_RECURRING,
+    SHRIEK_HEARD,
     ON_REQUEST
 }

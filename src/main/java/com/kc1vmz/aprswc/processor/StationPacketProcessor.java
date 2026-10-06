@@ -61,53 +61,98 @@ import org.springframework.stereotype.Component;
 public class StationPacketProcessor {
     private static final Logger objectLog = LoggerFactory.getLogger("ProcessorObjectLog");
 
-    @Autowired
-    private StationPacketQueue queue;
+    private final PolicyAutomationProcessor automation;
+
+    public StationPacketProcessor(PolicyAutomationProcessor automation) {
+        this(
+                automation,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+    }
 
     @Autowired
-    private StationPacketAccessor stationPacketAccessor;
+    public StationPacketProcessor(
+            PolicyAutomationProcessor automation,
+            StationPacketQueue queue,
+            StationPacketAccessor stationPacketAccessor,
+            IgnoreStationAccessor ignoreStationAccessor,
+            StationAccessor stationAccessor,
+            PacketParser packetParser,
+            StationCommandProcessor stationCommandProcessor,
+            StationCommandQueue stationCommandQueue,
+            WelcomeCenterAccessor welcomeCenterAccessor,
+            CommunicationPolicyAccessor communicationPolicyAccessor,
+            CommunicationEventQueue communicationEventQueue,
+            WeatherPacketParser weatherPacketParser,
+            MicEPacketParser micEPacketParser,
+            LocationPacketParser locationPacketParser,
+            GeoFenceUtils geoFenceUtils,
+            StationMessageQueue stationMessageQueue,
+            WelcomeCenterWeatherReportAccessor welcomeCenterWeatherReportAccessor) {
+        this.automation = automation;
+        this.queue = queue;
+        this.stationPacketAccessor = stationPacketAccessor;
+        this.ignoreStationAccessor = ignoreStationAccessor;
+        this.stationAccessor = stationAccessor;
+        this.packetParser = packetParser;
+        this.stationCommandProcessor = stationCommandProcessor;
+        this.stationCommandQueue = stationCommandQueue;
+        this.welcomeCenterAccessor = welcomeCenterAccessor;
+        this.communicationPolicyAccessor = communicationPolicyAccessor;
+        this.communicationEventQueue = communicationEventQueue;
+        this.weatherPacketParser = weatherPacketParser;
+        this.micEPacketParser = micEPacketParser;
+        this.locationPacketParser = locationPacketParser;
+        this.geoFenceUtils = geoFenceUtils;
+        this.stationMessageQueue = stationMessageQueue;
+        this.welcomeCenterWeatherReportAccessor = welcomeCenterWeatherReportAccessor;
+    }
 
-    @Autowired
-    private IgnoreStationAccessor ignoreStationAccessor;
+    private final StationPacketQueue queue;
 
-    @Autowired
-    private StationAccessor stationAccessor;
+    private final StationPacketAccessor stationPacketAccessor;
 
-    @Autowired
-    private PacketParser packetParser;
+    private final IgnoreStationAccessor ignoreStationAccessor;
 
-    @Autowired
-    private StationCommandProcessor stationCommandProcessor;
+    private final StationAccessor stationAccessor;
 
-    @Autowired
-    private StationCommandQueue stationCommandQueue;
+    private final PacketParser packetParser;
 
-    @Autowired
-    private WelcomeCenterAccessor welcomeCenterAccessor;
+    private final StationCommandProcessor stationCommandProcessor;
 
-    @Autowired
-    private CommunicationPolicyAccessor communicationPolicyAccessor;
+    private final StationCommandQueue stationCommandQueue;
 
-    @Autowired
-    private CommunicationEventQueue communicationEventQueue;
+    private final WelcomeCenterAccessor welcomeCenterAccessor;
 
-    @Autowired
-    private WeatherPacketParser weatherPacketParser;
+    private final CommunicationPolicyAccessor communicationPolicyAccessor;
 
-    @Autowired
-    private MicEPacketParser micEPacketParser;
+    private final CommunicationEventQueue communicationEventQueue;
 
-    @Autowired
-    private LocationPacketParser locationPacketParser;
+    private final WeatherPacketParser weatherPacketParser;
 
-    @Autowired
-    private GeoFenceUtils geoFenceUtils;
+    private final MicEPacketParser micEPacketParser;
 
-    @Autowired
-    private StationMessageQueue stationMessageQueue;
+    private final LocationPacketParser locationPacketParser;
 
-    @Autowired
-    private WelcomeCenterWeatherReportAccessor welcomeCenterWeatherReportAccessor;
+    private final GeoFenceUtils geoFenceUtils;
+
+    private final StationMessageQueue stationMessageQueue;
+
+    private final WelcomeCenterWeatherReportAccessor welcomeCenterWeatherReportAccessor;
 
     private final ExecutorService worker =
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "StationPacketProcessor"));
@@ -166,6 +211,9 @@ public class StationPacketProcessor {
         }
 
         switch (packetType) {
+            case PacketType.STATUS:
+                automation.statusHeard(packet, station);
+                break;
             case PacketType.MESSAGE:
                 processMessagePacket(packet, station);
                 break;
@@ -221,6 +269,7 @@ public class StationPacketProcessor {
                     weatherReport.getReportTime());
         }
         processStationPosition(station, stationPosition, packet.getPacketProcessorId());
+        if (stationPosition != null) automation.positionCommentHeard(packet, station);
     }
 
     private void triggerEvents(

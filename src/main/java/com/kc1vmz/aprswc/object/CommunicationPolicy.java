@@ -17,15 +17,49 @@
  */
 package com.kc1vmz.aprswc.object;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
 import jakarta.persistence.*;
+import java.time.Instant;
 import java.time.LocalTime;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "communication_policies")
 public class CommunicationPolicy {
+    @Version
+    private long version;
+
+    @Embedded
+    private PolicyAutomation automation;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Column(insertable = false, updatable = false)
+    private Instant nextRunAt;
+
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long value) {
+        version = value;
+    }
+
+    public PolicyAutomation getAutomation() {
+        return automation;
+    }
+
+    public void setAutomation(PolicyAutomation value) {
+        automation = value;
+    }
+
+    public Instant getNextRunAt() {
+        return nextRunAt;
+    }
+
     @Id
     private UUID id;
 
@@ -44,6 +78,7 @@ public class CommunicationPolicy {
     private MessageType messageType;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "communication_event_type")
     private CommunicationEventType communicationEventType;
     /** Required only by JPA. */
@@ -58,6 +93,35 @@ public class CommunicationPolicy {
             LocalTime endTime,
             MessageType messageType,
             CommunicationEventType communicationEventType) {
+        this(
+                id,
+                category,
+                welcomeCenter,
+                messageText,
+                startTime,
+                endTime,
+                messageType,
+                communicationEventType,
+                0,
+                null,
+                null);
+    }
+
+    public CommunicationPolicy(
+            UUID id,
+            CommunicationCategory category,
+            WelcomeCenter welcomeCenter,
+            String messageText,
+            LocalTime startTime,
+            LocalTime endTime,
+            MessageType messageType,
+            CommunicationEventType communicationEventType,
+            long version,
+            PolicyAutomation automation,
+            Instant nextRunAt) {
+        this.version = version;
+        this.automation = automation;
+        this.nextRunAt = nextRunAt;
         this.id = id;
         this.category = category;
         this.welcomeCenter = welcomeCenter;

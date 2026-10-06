@@ -144,6 +144,14 @@ public class CommunicationInstanceManager {
         sendBulletin(null, from, to, content, () -> true);
     }
 
+    public List<String> connectedRoutes(UUID centerId) {
+        return workers.entrySet().stream()
+                .filter(entry -> "CONNECTED".equals(entry.getValue().health()))
+                .map(entry -> entry.getKey().toString())
+                .filter(id -> routing.permits(centerId, id))
+                .toList();
+    }
+
     public boolean isEligible(UUID centerId, String instanceId) {
         return routing.permits(centerId, instanceId);
     }

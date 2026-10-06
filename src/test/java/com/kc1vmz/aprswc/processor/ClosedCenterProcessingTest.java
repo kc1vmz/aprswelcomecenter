@@ -64,7 +64,7 @@ class ClosedCenterProcessingTest {
 
     @Test
     void closedCentersDoNotGenerateEnterOrExitEvents() {
-        var processor = new StationPacketProcessor();
+        var processor = new StationPacketProcessor(mock(PolicyAutomationProcessor.class));
         var policies = mock(CommunicationPolicyAccessor.class);
         var queue = mock(CommunicationEventQueue.class);
         ReflectionTestUtils.setField(processor, "communicationPolicyAccessor", policies);
@@ -109,7 +109,7 @@ class ClosedCenterProcessingTest {
 
     @Test
     void closedCenterIgnoresInboundMessagesWithoutAckOrReject() {
-        var processor = new StationPacketProcessor();
+        var processor = new StationPacketProcessor(mock(PolicyAutomationProcessor.class));
         var centers = mock(WelcomeCenterAccessor.class);
         var messages = mock(StationMessageQueue.class);
         var commands = mock(StationCommandQueue.class);

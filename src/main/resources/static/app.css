@@ -897,3 +897,21 @@ legend {
 .region-input-mode { flex-wrap: wrap; }
 
 .message-character-count { display: block; margin-top: 0.25rem; color: var(--muted); font-weight: normal; }
+
+#policy-automation-fields[hidden],
+#policy-automation-fields [data-policy-trigger][hidden],
+#policy-time-zone-field[hidden],
+#policy-time-field[hidden],
+#policy-minute-field[hidden] { display: none; }
+#policy-form .form-grid { opacity: 1; }
+#policy-automation-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.75rem 1rem;
+}
+#policy-automation-fields > div,
+#policy-automation-fields > p,
+#policy-automation-fields > [data-policy-trigger="SHRIEK_HEARD"] { grid-column: 1 / -1; }
+#policy-automation-fields > label { min-width: 0; }
+#policy-automation-fields input,
+#policy-automation-fields select { min-width: 0; width: 100%; }

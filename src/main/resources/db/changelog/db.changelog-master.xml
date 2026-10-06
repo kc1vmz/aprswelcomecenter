@@ -90,4 +90,7 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
     <changeSet id="014-remove-transmit-enabled" author="aprswc" dbms="h2">
         <sqlFile path="014-remove-transmit-enabled.sql" relativeToChangelogFile="true"/>
     </changeSet>
+    <changeSet id="015-policy-automation" author="aprswc" dbms="h2">
+        <sqlFile path="015-policy-automation.sql" relativeToChangelogFile="true"/>
+    </changeSet>
 </databaseChangeLog>

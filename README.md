@@ -98,15 +98,24 @@ Press the Configuration button in the top right corner (gear icon) to configure 
 
 #### Communication instances
 
-Use **Add connection** to configure an APRS-IS, KISS TCP, or KISS Serial connection. You can run multiple connections of each type. Each connection has its own settings and UUID; its displayed label is derived from the endpoint or serial device.
+Use **Add connection** to configure an APRS-IS, KISS TCP, KISS Serial or Kenwood Serial connection. You can run multiple connections of each type. Each connection has its own settings and UUID; its displayed label is derived from the endpoint or serial device.
 
 New connections default to **Active**. **Pause** disconnects a connection; **Resume** starts it again. Saving an edit stops the previous worker before starting its replacement. Deleting a connection stops it and preserves received packet history. Changes take effect after saving, without restarting the application. Stale edits and deletes are rejected; refresh and review the current configuration before trying again.
 
 The list shows the desired state and current connection health separately. Active connections retry connection failures with a delay. Use **Refresh status** to update the health display. Two active serial connections cannot share a device; duplicate TCP endpoints produce a warning. An empty passcode while editing retains the existing passcode. Passcodes are not returned by the API or displayed in the list.
 
-Each KISS connection has its own digipeater path and each serial connection has its own baud rate and optional initialization commands. Map preferences remain application-wide.
+Each KISS connection has its own digipeater path and each serial connection has its own baud rate and optional initialization commands.
 
 Directed messages use their explicit communication instance, or the destination station's most recently received packet when no instance is specified. Unavailable routes and full outgoing queues drop messages. Object beacons and bulletins go to all active, connected instances. A sent timestamp means the transport write completed; it does not imply an APRS acknowledgement.
+
+
+##### Kenwood Serial limitations
+
+The Kenwood native serial implementation can hear packets from any station, but will only transmit packets as a single station - the MYCALL setting in the Communication Instance setup dialog.  
+
+While beaconing objects works correctly, any messages or bulletins would be sourced from the MYCALL callsign, not one of the welcome center or points of interest callsigns.  This can lead to confusion unless the MYCALL is set to the Welcome Center callsign, and the application only supports a single welcome center. Otherwise messages sent by a welcome center callsign will always look like it came from the MYCALL callsign.
+
+
 
 #### Packet and position retention
 
@@ -118,8 +127,8 @@ Set **Retain packets and positions for (days)** to a whole number greater than z
 
 **Retain messages for (days)** defaults to 10. Messages expire based on sent time, or creation time when unsent. Both settings require positive whole numbers. A dedicated worker runs after startup and every 24 hours, reading the current configuration each run. Existing stations use available packet/position history for their initial activity timestamp; those without history, and unsent messages without an age, start aging from the upgrade.
 
-#### Map tile URL
 
+#### Map tile URL
 
 
 By default, map tile information is retrieved from the specified URL.  If you wish to use another OSM-compliant tile server, specify the full tile URL pattern here.
@@ -203,6 +212,10 @@ The set of communication policies in effect for the welcome center are listed he
 Each comunication policy establishes what information is provided to an APRS device in a welcome center region, whether on entry or exit to the region.
 
 Different types of information can be provided automatically.
+
+Messages and bulletins can be sent according to policies you set, based on station request, entering and exiting a welcome center region, scheduled, or shriek codes found in status or position packets.
+
+
 
 
 
@@ -304,6 +317,19 @@ Any station knowing the callsign of a Welcome Center can send it messages for mo
 
 Usually the Welcome Center Communication Plan will have a welcome message sent to a station entering the Welcome Center's region, so the station would then know the callsign.
 
+
+### Shriek-initiated commands
+
+
+
+Any station whose position or status packet includes a "shriek" - a short code surrounded by exclamation points - can have a message sent to it once a day.
+
+
+### Scheduled bulletins
+
+
+
+A communication policy can be created to send a bulletin on "BLN1" on an hourly or daily basis, or once on a specific date and time.
 
 
 #### Help
@@ -460,8 +486,6 @@ Vertices retain decimal-degree precision. Straight edges and containment use the
 The region API accepts an ordered `vertices` array for `POLYGON`, with numeric `latitude` and `longitude` properties. Do not repeat the first vertex at the end. The server validates the complete boundary and returns a validation message for invalid input. Liquibase migration 011 adds the ordered vertex table without converting existing regions.
 
 
-
-
 ### Importing a shapefile boundary
 
 In Create Region or View / Edit Region, select **Import Coordinates** and choose either a ZIP or a folder containing the shapefile companion files. Include matching `.shp`, `.shx`, `.dbf`, and `.prj` files; `.cpg` is recommended for attribute encoding. Nested folders are supported, and matching basenames in different folders remain separate layers.
@@ -473,3 +497,9 @@ The importer reads ordinary 2D Polygon shapefiles and dBASE III text/numeric att
 Uploads are held temporarily in memory, never extracted to user-supplied filesystem paths. Close the import dialog to release them; otherwise they expire after 15 minutes (cleanup runs each minute), or disappear when the application stops. Limits are 64 MiB uploaded, 128 MiB expanded ZIP data, 256 files/ZIP entries, 32 layers, 20,000 records and 500,000 attribute cells per layer. Two uploads may process concurrently and four completed imports may remain open. Parsing has a 30-second processing budget, and uploads have a two-minute timeout. No new database tables or region constructor changes are required for importing.
 
 Common Shapefiles for the United States of America can be found at https://www.census.gov/cgi-bin/geo/shapefiles/index.php
+
+
+
+### Raw packet history suppression
+
+Packets containing exact lowercase `!x!` in the packet body are processed normally but excluded from raw packet history and packet CSV exports. Last-heard updates continue. Positions, weather reports, messages, and other derived records are still retained.

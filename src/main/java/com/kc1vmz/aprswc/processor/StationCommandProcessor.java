@@ -213,6 +213,7 @@ public class StationCommandProcessor {
         }
         return communicationPolicyAccessor
                 .findByWelcomeCenterId(welcomeCenter.getId())
+                .filter(policy -> !PolicySchedule.automated(policy))
                 .filter(policy -> policy.getCategory() != null)
                 .filter(policy -> policy.getCategory().getName() != null)
                 .filter(policy -> policy.getCategory().getName().equalsIgnoreCase(name))

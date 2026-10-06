@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg?v=20260918-1" type="image/svg+xml">
     <script src="/theme.js?v=20260918-2"></script>
     <link rel="stylesheet" href="/webjars/leaflet/1.9.4/leaflet.css">
-    <link rel="stylesheet" href="/app.css?v=20261005-1">
+    <link rel="stylesheet" href="/app.css?v=20261005-7">
 </head>
 <body>
     <header>
@@ -776,9 +776,23 @@
                         <option value="ENTER_REGION">Enter region</option>
                         <option value="EXIT_REGION">Exit region</option>
                         <option value="ON_REQUEST">On request</option>
+                        <option value="SCHEDULED_ONCE">Scheduled (One-time)</option>
+                        <option value="SCHEDULED_RECURRING">Scheduled (Recurring)</option>
+                        <option value="SHRIEK_HEARD">When shriek heard</option>
                     </select>
                 </label>
-                <label class="full-width">Message text<textarea name="messageText" rows="5"></textarea></label>
+                <div id="policy-automation-fields" class="full-width" hidden>
+                    <label data-policy-trigger="SCHEDULED_ONCE">Send at<input name="scheduledAt" type="datetime-local"></label>
+                    <div data-policy-trigger="SCHEDULED_RECURRING"><input type="hidden" name="recurrence" value="HOURLY"><div class="kiss-mode-selector" role="group" aria-label="Repeat"><button type="button" class="secondary" data-policy-recurrence="HOURLY">Hourly</button><button type="button" class="secondary" data-policy-recurrence="DAILY">Daily</button></div></div>
+                    <label id="policy-time-field">Time<input name="scheduleTime" type="time" step="60" value="08:00"></label>
+                    <label id="policy-minute-field">Minute of each hour<input name="scheduleMinute" type="number" min="0" max="59" value="0"></label>
+                    <label data-policy-trigger="SHRIEK_HEARD">Shriek code<input name="shriekCode" maxlength="12" placeholder="!WC1!"></label>
+                    <label id="policy-time-zone-field">Time zone<select name="timeZone" id="policy-time-zones"></select></label>
+                    <p id="policy-delivery-description"></p>
+                </div>
+                <label class="full-width">Message text<textarea name="messageText" rows="5" aria-describedby="policy-message-character-count"></textarea>
+                    <small id="policy-message-character-count" class="message-character-count">0 characters entered</small></label>
+                <p id="policy-execution-status" class="full-width form-message" role="status"></p>
             </div>
             <p id="policy-form-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
@@ -1109,7 +1123,8 @@
     <script src="/station-list.js?v=20260918-2"></script>
     <script src="/poi-map.js?v=20260921-2"></script>
     <script src="/aprs-symbol-picker.js?v=20260925-2"></script>
-    <script src="/app.js?v=20261005-1"></script>
+    <script src="/policy-automation.js?v=20261005-6"></script>
+    <script src="/app.js?v=20261005-5"></script>
     <script src="/region-import.js?v=20260926-1"></script>
     <script src="/points-of-interest.js?v=20260925-1"></script>
     <script src="/center-communications.js?v=20260924-1"></script>

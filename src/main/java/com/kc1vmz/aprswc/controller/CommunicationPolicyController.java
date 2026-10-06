@@ -19,11 +19,14 @@ package com.kc1vmz.aprswc.controller;
 
 import com.kc1vmz.aprswc.accessor.CommunicationPolicyAccessor;
 import com.kc1vmz.aprswc.object.CommunicationPolicy;
+import com.kc1vmz.aprswc.processor.PolicyAutomationProcessor;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,14 +35,33 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @RestController
 @RequestMapping("/api/v1/communication-policies")
 public class CommunicationPolicyController {
-    @Autowired
-    private CommunicationPolicyAccessor accessor;
+    private final CommunicationPolicyAccessor accessor;
+    private final PolicyAutomationProcessor automation;
+
+    public CommunicationPolicyController(CommunicationPolicyAccessor accessor, PolicyAutomationProcessor automation) {
+        this.accessor = accessor;
+        this.automation = automation;
+    }
+
+    @GetMapping("/{id}/executions")
+    public Mono<List<Map<String, Object>>> executions(@PathVariable UUID id) {
+        return accessor.findById(id).flatMap(policy -> Mono.fromCallable(() -> automation.executions(id))
+                .subscribeOn(Schedulers.boundedElastic()));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> invalid(ResponseStatusException error) {
+        return ResponseEntity.status(error.getStatusCode())
+                .body(Map.of("message", error.getReason() == null ? "Policy request failed" : error.getReason()));
+    }
 
     @GetMapping
     public Flux<CommunicationPolicy> all(@RequestParam(required = false) UUID welcomeCenterId) {
