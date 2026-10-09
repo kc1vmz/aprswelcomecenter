@@ -28,6 +28,7 @@ import com.kc1vmz.aprswc.accessor.CommunicationPolicyAccessor;
 import com.kc1vmz.aprswc.accessor.IgnoreStationAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterWeatherReportAccessor;
+import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
 import com.kc1vmz.aprswc.object.CommunicationCategory;
@@ -46,6 +47,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Flux;
@@ -53,6 +55,9 @@ import reactor.core.publisher.Mono;
 
 @ExtendWith(MockitoExtension.class)
 class StationCommandProcessorTest {
+    @Spy
+    private PolicyContentService content = new PolicyContentService(null, null);
+
     @Mock
     private StationMessageQueue stationMessageQueue;
 

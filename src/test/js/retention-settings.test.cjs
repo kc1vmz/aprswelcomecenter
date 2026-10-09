@@ -5,6 +5,7 @@ const vm = require('node:vm');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../../main/resources/static/app.js'), 'utf8');
 const code = source.slice(source.indexOf('function requestSettingsConfirmation('), source.indexOf('async function loadIgnoredStations('));
 function setup(values) {
+    values = {tinyTopicsServerUrl: "http://www.tiny-topics.com:8088", ...values};
     const elements = {};
     const form = {elements: Object.fromEntries(Object.entries(values).map(([key, value]) => [key, {value: String(value), focus() {}}]))};
     const context = vm.createContext({pendingSettings: null, document: {querySelector: selector => elements[selector] ||= {
@@ -17,7 +18,7 @@ function setup(values) {
 test('saves independent packet, station, and message retention periods', () => {
     const ui = setup({mapTileUrl: '', packetRetentionDays: 1, stationRetentionDays: 10, messageRetentionDays: 20});
     assert.deepEqual(JSON.parse(JSON.stringify(ui.context.pendingSettings)), {
-        packetRetentionDays: 1, stationRetentionDays: 10, messageRetentionDays: 20, mapTileUrl: null
+        packetRetentionDays: 1, stationRetentionDays: 10, messageRetentionDays: 20, mapTileUrl: null, tinyTopicsServerUrl: "http://www.tiny-topics.com:8088"
     });
     assert.equal(ui.elements['#confirm-settings-dialog'].open, true);
 });

@@ -93,4 +93,13 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
     <changeSet id="015-policy-automation" author="aprswc" dbms="h2">
         <sqlFile path="015-policy-automation.sql" relativeToChangelogFile="true"/>
     </changeSet>
+    <changeSet id="016-tiny-topics-server-url" author="aprswc" dbms="h2">
+        <sql>
+            ALTER TABLE application_settings ADD COLUMN tiny_topics_server_url VARCHAR(2048) DEFAULT 'http://www.tiny-topics.com:8088' NOT NULL;
+            INSERT INTO application_settings (id) SELECT RANDOM_UUID() WHERE NOT EXISTS (SELECT 1 FROM application_settings);
+        </sql>
+    </changeSet>
+    <changeSet id="017-policy-content" author="aprswc" dbms="h2">
+        <sqlFile path="017-policy-content.sql" relativeToChangelogFile="true"/>
+    </changeSet>
 </databaseChangeLog>

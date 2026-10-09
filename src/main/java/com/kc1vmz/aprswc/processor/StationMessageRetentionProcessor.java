@@ -75,7 +75,9 @@ public class StationMessageRetentionProcessor {
     void cleanup() {
         ApplicationSettings config;
         try {
-            config = settings.findAll().stream().findFirst().orElse(new ApplicationSettings(null, null));
+            config = settings.findAll().stream()
+                    .findFirst()
+                    .orElse(new ApplicationSettings(null, null, ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL));
         } catch (RuntimeException e) {
             log.error("Cannot read retention settings; next daily run will retry", e);
             return;

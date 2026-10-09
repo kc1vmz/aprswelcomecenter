@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg?v=20260918-1" type="image/svg+xml">
     <script src="/theme.js?v=20260918-2"></script>
     <link rel="stylesheet" href="/webjars/leaflet/1.9.4/leaflet.css">
-    <link rel="stylesheet" href="/app.css?v=20261005-7">
+    <link rel="stylesheet" href="/app.css?v=20261008-2">
 </head>
 <body>
     <header>
@@ -18,8 +18,8 @@
         </div>
         <div class="header-actions">
             <button id="new-center">New Welcome Center</button>
-            <button id="open-packets" class="secondary gear-button" aria-label="Station packets"
-                    title="Station packets">
+            <button id="open-communication-settings" class="secondary gear-button" aria-label="Communication Settings"
+                    title="Communication Settings">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M11 14.8V22h2v-7.2a3 3 0 1 0-2 0ZM12 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/>
                     <path d="M7.8 16.2a6 6 0 0 1 0-8.4L6.4 6.4a8 8 0 0 0 0 11.2l1.4-1.4Zm8.4 0 1.4 1.4a8 8 0 0 0
@@ -510,7 +510,7 @@
                 <button type="button" id="close-station-ignored" class="icon-button" aria-label="Close">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>To stop ignoring this station, open Application Settings and remove it from the ignored stations list.</p>
+                <p>To stop ignoring this station, open Communication Settings and remove it from the ignored stations list.</p>
             </div>
             <div class="form-actions">
                 <button type="button" id="dismiss-station-ignored">OK</button>
@@ -790,8 +790,18 @@
                     <label id="policy-time-zone-field">Time zone<select name="timeZone" id="policy-time-zones"></select></label>
                     <p id="policy-delivery-description"></p>
                 </div>
-                <label class="full-width">Message text<textarea name="messageText" rows="5" aria-describedby="policy-message-character-count"></textarea>
+                <div class="full-width kiss-mode-selector" role="group" aria-label="Content source">
+                    <button type="button" class="secondary" data-policy-content="TEXT" aria-pressed="true">Text</button>
+                    <button type="button" class="secondary" data-policy-content="TINYTOPICS" aria-pressed="false">TinyTopics</button>
+                </div>
+                <div id="policy-topic-fields" class="full-width" hidden>
+                    <label>Topic<select id="policy-topic" disabled><option value="">No topics available</option></select></label>
+                    <p id="policy-topic-message" class="form-message" role="status"></p>
+                    <div id="policy-topic-parameters" class="form-grid"></div>
+                </div>
+                <label id="policy-text-field" class="full-width">Message text<textarea name="messageText" rows="1" aria-describedby="policy-message-character-count"></textarea>
                     <small id="policy-message-character-count" class="message-character-count">0 characters entered</small></label>
+                <div id="policy-content-history" class="full-width"></div>
                 <p id="policy-execution-status" class="full-width form-message" role="status"></p>
             </div>
             <p id="policy-form-message" class="form-message" role="status" aria-live="polite"></p>
@@ -967,13 +977,6 @@
                 <button type="button" id="close-settings" class="icon-button" aria-label="Close">×</button>
             </div>
             <fieldset>
-                <legend>Communication methods</legend>
-                <button type="button" id="add-communication" class="secondary">Add connection</button>
-                <button type="button" id="refresh-communications" class="secondary">Refresh status</button>
-                <div id="communication-list" aria-live="polite"></div>
-                <p id="communication-list-message" class="form-message" role="status"></p>
-            </fieldset>
-            <fieldset>
                 <legend>Information Retention</legend>
                 <div class="form-grid">
                     <label>Retain packets and positions for (days)<input name="packetRetentionDays" type="number" min="1" max="2147483647" step="1" value="1" required></label>
@@ -987,6 +990,29 @@
                     placeholder="https://tile.openstreetmap.org/{z}/{x}/{y}.png"></label>
             </fieldset>
             <fieldset>
+                <legend>Content Settings</legend>
+                <label>TinyTopics server URL<input name="tinyTopicsServerUrl" type="url" maxlength="2048" value="http://www.tiny-topics.com:8088" required></label>
+            </fieldset>
+            <p id="settings-message" class="form-message" role="status" aria-live="polite"></p>
+            <div class="form-actions">
+                <button type="button" id="cancel-settings" class="secondary">Cancel</button>
+                <button type="submit">Save Settings</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="communication-settings-dialog" aria-labelledby="communication-settings-title">
+        <div class="dialog-content">
+            <div class="dialog-heading">
+                <div><h2 id="communication-settings-title">Communication Settings</h2><p>Manage connections, stations, and packets.</p></div>
+            </div>
+            <fieldset>
+                <legend>Communication methods</legend>
+                <button type="button" id="add-communication" class="secondary">Add connection</button>
+                <button type="button" id="refresh-communications" class="secondary">Refresh status</button>
+                <div id="communication-list" aria-live="polite"></div>
+                <p id="communication-list-message" class="form-message" role="status"></p>
+            </fieldset>
+            <fieldset>
                 <legend>Stations</legend>
                 <div class="settings-summary">
                     <span><strong id="stations-count">0</strong> total stations</span>
@@ -997,12 +1023,11 @@
                     <button type="button" id="manage-ignored-stations" class="secondary">Manage</button>
                 </div>
             </fieldset>
-            <p id="settings-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-settings" class="secondary">Cancel</button>
-                <button type="submit">Save Settings</button>
+                <button type="button" id="open-packets" class="secondary">Packet List</button>
+                <button type="button" id="close-communication-settings">Close</button>
             </div>
-        </form>
+        </div>
     </dialog>
     <dialog id="delete-all-stations-dialog">
         <form id="delete-all-stations-form">
@@ -1055,11 +1080,11 @@
     <dialog id="confirm-settings-dialog">
         <form id="confirm-settings-form">
             <div class="dialog-heading">
-                <div><h2>Save Application Settings?</h2><p>Confirm the connectivity configuration changes.</p></div>
+                <div><h2>Save Application Settings?</h2><p>Confirm the retention, map, and content settings.</p></div>
                 <button type="button" id="close-confirm-settings" class="icon-button" aria-label="Close">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Save the application settings? Communication instance changes are saved separately.</p>
+                <p>Save the application settings?</p>
                 <p>Changes may take up to 30 seconds to reflect in the application.</p>
                 <strong>Apply these changes?</strong>
             </div>
@@ -1123,8 +1148,9 @@
     <script src="/station-list.js?v=20260918-2"></script>
     <script src="/poi-map.js?v=20260921-2"></script>
     <script src="/aprs-symbol-picker.js?v=20260925-2"></script>
-    <script src="/policy-automation.js?v=20261005-6"></script>
-    <script src="/app.js?v=20261005-5"></script>
+    <script src="/policy-content.js?v=20261008-1"></script>
+    <script src="/policy-automation.js?v=20261008-1"></script>
+    <script src="/app.js?v=20261008-3"></script>
     <script src="/region-import.js?v=20260926-1"></script>
     <script src="/points-of-interest.js?v=20260925-1"></script>
     <script src="/center-communications.js?v=20260924-1"></script>

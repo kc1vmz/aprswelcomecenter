@@ -101,7 +101,7 @@ if [ "$WC_OS" = "Linux" ]; then
   if [[ "$WC_INSTALL_SERVICES" =~ ^[Yy]$ ]]; then
     if [[ "$WC_UPGRADE" =~ ^[Nn]$ ]]; then
       echo '[Unit]' | sudo tee -a /etc/systemd/system/aprs-welcome-center.service >  /dev/null
-      echo 'Description=Net Central Server' | sudo tee -a /etc/systemd/system/aprs-welcome-center.service >  /dev/null
+      echo 'Description=APRS Welcome Center' | sudo tee -a /etc/systemd/system/aprs-welcome-center.service >  /dev/null
       echo '[Service]' | sudo tee -a /etc/systemd/system/aprs-welcome-center.service >  /dev/null
       echo 'User='$LOGNAME | sudo tee -a /etc/systemd/system/aprs-welcome-center.service >  /dev/null
       echo 'WorkingDirectory='$WC_INSTALL_DIR | sudo tee -a /etc/systemd/system/aprs-welcome-center.service >  /dev/null

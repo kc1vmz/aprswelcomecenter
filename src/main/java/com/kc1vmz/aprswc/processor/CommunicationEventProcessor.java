@@ -20,6 +20,7 @@ package com.kc1vmz.aprswc.processor;
 import com.kc1vmz.aprswc.accessor.CommunicationPolicyAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.communication.CommunicationScope;
+import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
 import com.kc1vmz.aprswc.object.CommunicationEvent;
@@ -32,27 +33,37 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CommunicationEventProcessor {
     private static final Logger log = LoggerFactory.getLogger(CommunicationEventProcessor.class);
 
-    @Autowired
-    private CommunicationEventQueue queue;
+    private final CommunicationEventQueue queue;
 
-    @Autowired
-    private CommunicationPolicyAccessor communicationPolicyAccessor;
+    private final CommunicationPolicyAccessor communicationPolicyAccessor;
 
-    @Autowired
-    private StationMessageQueue stationMessageQueue;
+    private final StationMessageQueue stationMessageQueue;
 
-    @Autowired
-    private WelcomeCenterAccessor welcomeCenterAccessor;
+    private final WelcomeCenterAccessor welcomeCenterAccessor;
 
     private final ExecutorService worker =
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "CommunicationEventProcessor"));
+
+    private final PolicyContentService content;
+
+    public CommunicationEventProcessor(
+            CommunicationEventQueue queue,
+            CommunicationPolicyAccessor communicationPolicyAccessor,
+            StationMessageQueue stationMessageQueue,
+            WelcomeCenterAccessor welcomeCenterAccessor,
+            PolicyContentService content) {
+        this.queue = queue;
+        this.communicationPolicyAccessor = communicationPolicyAccessor;
+        this.stationMessageQueue = stationMessageQueue;
+        this.welcomeCenterAccessor = welcomeCenterAccessor;
+        this.content = content;
+    }
 
     @PostConstruct
     void start() {
@@ -97,7 +108,7 @@ public class CommunicationEventProcessor {
                     center.getCallsign(),
                     center,
                     null,
-                    policy.getMessageText(),
+                    content.resolve(policy),
                     null,
                     MessageType.MESSAGE);
             stationMessage.setPacketProcessorId(event.getPacketProcessorId());

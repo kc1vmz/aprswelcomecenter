@@ -53,6 +53,35 @@ class LiquibaseMigrationTest {
     }
 
     @Test
+    void tinyTopicsDefaultIsPersistedAndEditsSurviveMigration() throws Exception {
+        for (boolean existingSettings : new boolean[] {false, true}) {
+            var ds = database();
+            try (var c = ds.getConnection();
+                    var statement = c.createStatement()) {
+                legacy(c);
+                if (existingSettings)
+                    statement.execute(
+                            "insert into application_settings(id,using_internet_server,usingkiss) values(random_uuid(),false,false)");
+            }
+            migrate(ds);
+            try (var c = ds.getConnection();
+                    var statement = c.createStatement()) {
+                assertThat(scalar(c, "select count(*) from application_settings"))
+                        .isEqualTo("1");
+                assertThat(scalar(c, "select tiny_topics_server_url from application_settings"))
+                        .isEqualTo("http://www.tiny-topics.com:8088");
+                statement.execute(
+                        "update application_settings set tiny_topics_server_url='https://topics.example.test'");
+            }
+            migrate(ds);
+            try (var c = ds.getConnection()) {
+                assertThat(scalar(c, "select tiny_topics_server_url from application_settings"))
+                        .isEqualTo("https://topics.example.test");
+            }
+        }
+    }
+
+    @Test
     void poiMigrationIsRepeatablePreservesChildrenAndEnforcesContainment() throws Exception {
         var ds = database();
         try (var c = ds.getConnection()) {
@@ -117,7 +146,7 @@ class LiquibaseMigrationTest {
         migrate(ds);
         try (Connection c = ds.getConnection()) {
             assertThat(scalar(c, "select status from welcome_centers")).isEqualTo("CLOSED");
-            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("15");
+            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("17");
             assertThat(scalar(c, "select communication_mode from welcome_centers"))
                     .isEqualTo("SELECTED");
         }

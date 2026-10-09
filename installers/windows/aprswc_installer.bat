@@ -80,6 +80,7 @@ echo Starting installation
 echo Creating directories
 mkdir %WC_INSTALL_DIR%
 mkdir %WC_TEMP_DIR%
+mkdir %WC_DB_DIR%
 
 cd %WC_INSTALL_DIR%
 

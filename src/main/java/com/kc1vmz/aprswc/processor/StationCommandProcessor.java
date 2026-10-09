@@ -22,6 +22,7 @@ import com.kc1vmz.aprswc.accessor.IgnoreStationAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterWeatherReportAccessor;
 import com.kc1vmz.aprswc.communication.CommunicationScope;
+import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.enumeration.MessageType;
 import com.kc1vmz.aprswc.object.CommunicationPolicy;
 import com.kc1vmz.aprswc.object.StationCommand;
@@ -40,7 +41,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -73,26 +73,39 @@ public class StationCommandProcessor {
             WARNINGS_COMMAND,
             HELP_COMMAND);
 
-    @Autowired
-    private StationCommandQueue queue;
+    private final StationCommandQueue queue;
 
-    @Autowired
-    private StationMessageQueue stationMessageQueue;
+    private final StationMessageQueue stationMessageQueue;
 
-    @Autowired
-    private WelcomeCenterWeatherReportAccessor welcomeCenterWeatherReportAccessor;
+    private final WelcomeCenterWeatherReportAccessor welcomeCenterWeatherReportAccessor;
 
-    @Autowired
-    private WelcomeCenterAccessor welcomeCenterAccessor;
+    private final WelcomeCenterAccessor welcomeCenterAccessor;
 
-    @Autowired
-    private IgnoreStationAccessor ignoreStationAccessor;
+    private final IgnoreStationAccessor ignoreStationAccessor;
 
-    @Autowired
-    private CommunicationPolicyAccessor communicationPolicyAccessor;
+    private final CommunicationPolicyAccessor communicationPolicyAccessor;
 
     private final ExecutorService worker =
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "StationCommandProcessor"));
+
+    private final PolicyContentService content;
+
+    public StationCommandProcessor(
+            StationCommandQueue queue,
+            StationMessageQueue stationMessageQueue,
+            WelcomeCenterWeatherReportAccessor welcomeCenterWeatherReportAccessor,
+            WelcomeCenterAccessor welcomeCenterAccessor,
+            IgnoreStationAccessor ignoreStationAccessor,
+            CommunicationPolicyAccessor communicationPolicyAccessor,
+            PolicyContentService content) {
+        this.queue = queue;
+        this.stationMessageQueue = stationMessageQueue;
+        this.welcomeCenterWeatherReportAccessor = welcomeCenterWeatherReportAccessor;
+        this.welcomeCenterAccessor = welcomeCenterAccessor;
+        this.ignoreStationAccessor = ignoreStationAccessor;
+        this.communicationPolicyAccessor = communicationPolicyAccessor;
+        this.content = content;
+    }
 
     @PostConstruct
     void start() {
@@ -193,7 +206,7 @@ public class StationCommandProcessor {
             communicationPolicies.add(policy);
         }
         for (CommunicationPolicy communicationPolicy : communicationPolicies) {
-            String messageText = communicationPolicy.getMessageText();
+            String messageText = content.resolve(communicationPolicy);
             StationMessage stationMessage = new StationMessage(
                     UUID.randomUUID(),
                     command.getCallsign(),

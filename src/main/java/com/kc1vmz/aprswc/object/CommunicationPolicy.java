@@ -20,9 +20,12 @@ package com.kc1vmz.aprswc.object;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
+import com.kc1vmz.aprswc.enumeration.PolicyContentSource;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -72,6 +75,44 @@ public class CommunicationPolicy {
     @Column(length = 4000)
     private String messageText;
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 16)
+    private PolicyContentSource contentSource = PolicyContentSource.TEXT;
+
+    @Column(length = 40)
+    private String topicId;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "policy_topic_parameters", joinColumns = @JoinColumn(name = "policy_id"))
+    @MapKeyColumn(name = "parameter_name", length = 255)
+    @Column(name = "parameter_value", nullable = false, length = 4000)
+    private Map<String, String> topicParameters = new LinkedHashMap<>();
+
+    public PolicyContentSource getContentSource() {
+        return contentSource;
+    }
+
+    public void setContentSource(PolicyContentSource value) {
+        contentSource = value;
+    }
+
+    public String getTopicId() {
+        return topicId;
+    }
+
+    public void setTopicId(String value) {
+        topicId = value;
+    }
+
+    public Map<String, String> getTopicParameters() {
+        return topicParameters;
+    }
+
+    public void setTopicParameters(Map<String, String> value) {
+        topicParameters = value;
+    }
+
     private LocalTime startTime, endTime;
 
     @Enumerated(EnumType.STRING)
@@ -119,6 +160,41 @@ public class CommunicationPolicy {
             long version,
             PolicyAutomation automation,
             Instant nextRunAt) {
+        this(
+                id,
+                category,
+                welcomeCenter,
+                messageText,
+                startTime,
+                endTime,
+                messageType,
+                communicationEventType,
+                version,
+                automation,
+                nextRunAt,
+                PolicyContentSource.TEXT,
+                null,
+                Map.of());
+    }
+
+    public CommunicationPolicy(
+            UUID id,
+            CommunicationCategory category,
+            WelcomeCenter welcomeCenter,
+            String messageText,
+            LocalTime startTime,
+            LocalTime endTime,
+            MessageType messageType,
+            CommunicationEventType communicationEventType,
+            long version,
+            PolicyAutomation automation,
+            Instant nextRunAt,
+            PolicyContentSource contentSource,
+            String topicId,
+            Map<String, String> topicParameters) {
+        this.contentSource = contentSource;
+        this.topicId = topicId;
+        this.topicParameters = new LinkedHashMap<>(topicParameters);
         this.version = version;
         this.automation = automation;
         this.nextRunAt = nextRunAt;

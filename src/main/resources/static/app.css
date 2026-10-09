@@ -730,6 +730,7 @@ legend {
 .form-message.success { color: var(--accent); }
 .form-message.error { color: var(--error); }
 .form-actions { justify-content: flex-end; }
+#communication-settings-dialog .form-actions { margin-top: 1rem; }
 .form-actions .details-delete { margin-right: auto; }
 
 .confirmation-panel {
@@ -899,6 +900,8 @@ legend {
 .message-character-count { display: block; margin-top: 0.25rem; color: var(--muted); font-weight: normal; }
 
 #policy-automation-fields[hidden],
+#policy-text-field[hidden],
+#policy-topic-fields[hidden],
 #policy-automation-fields [data-policy-trigger][hidden],
 #policy-time-zone-field[hidden],
 #policy-time-field[hidden],

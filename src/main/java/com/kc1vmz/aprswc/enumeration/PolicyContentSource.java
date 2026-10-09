@@ -15,22 +15,9 @@
  *
  * http://www.kc1vmz.com
  */
-package com.kc1vmz.aprswc.object;
+package com.kc1vmz.aprswc.enumeration;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.UUID;
-import org.junit.jupiter.api.Test;
-
-class ApplicationSettingsTest {
-    @Test
-    void storesMapPreference() {
-        var id = UUID.randomUUID();
-        var settings = new ApplicationSettings(
-                id, "https://tiles/{z}/{x}/{y}", ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL);
-        assertEquals(id, settings.getId());
-        assertEquals("https://tiles/{z}/{x}/{y}", settings.getMapTileUrl());
-        settings.setMapTileUrl(null);
-        assertNull(settings.getMapTileUrl());
-    }
+public enum PolicyContentSource {
+    TEXT,
+    TINYTOPICS
 }

@@ -19,6 +19,7 @@ package com.kc1vmz.aprswc.processor;
 
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
+import com.kc1vmz.aprswc.enumeration.PolicyContentSource;
 import com.kc1vmz.aprswc.object.CommunicationPolicy;
 import com.kc1vmz.aprswc.object.PolicyAutomation;
 import java.time.DateTimeException;
@@ -63,10 +64,11 @@ public final class PolicySchedule {
             throw invalid("Choose a valid time zone");
         }
         String text = p.getMessageText();
-        if (text == null
-                || text.isBlank()
-                || text.length() > 64
-                || text.chars().anyMatch(c -> c < 32 || c > 126 || c == '{'))
+        if (p.getContentSource() != PolicyContentSource.TINYTOPICS
+                && (text == null
+                        || text.isBlank()
+                        || text.length() > 64
+                        || text.chars().anyMatch(c -> c < 32 || c > 126 || c == '{')))
             throw invalid("Message must contain 1-64 printable ASCII characters without an opening brace");
         if (p.getCommunicationEventType() == CommunicationEventType.SHRIEK_HEARD) {
             String code = a.getShriekCode();

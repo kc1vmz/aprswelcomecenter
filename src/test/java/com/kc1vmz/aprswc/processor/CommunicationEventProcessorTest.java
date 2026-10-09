@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kc1vmz.aprswc.accessor.CommunicationPolicyAccessor;
+import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.object.CommunicationEvent;
 import com.kc1vmz.aprswc.object.CommunicationPolicy;
@@ -37,6 +38,9 @@ import reactor.core.publisher.Mono;
 
 @ExtendWith(MockitoExtension.class)
 class CommunicationEventProcessorTest {
+    @Spy
+    private PolicyContentService content = new PolicyContentService(null, null);
+
     @Mock
     private CommunicationPolicyAccessor communicationPolicyAccessor;
 

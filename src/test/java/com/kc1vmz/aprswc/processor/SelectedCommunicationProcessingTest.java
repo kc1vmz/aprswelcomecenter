@@ -22,6 +22,7 @@ import static org.mockito.Mockito.*;
 
 import com.kc1vmz.aprswc.accessor.*;
 import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
+import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.enumeration.*;
 import com.kc1vmz.aprswc.object.*;
 import java.time.LocalDateTime;
@@ -108,7 +109,8 @@ class SelectedCommunicationProcessingTest {
         var centers = mock(WelcomeCenterAccessor.class);
         when(centers.findOpenById(center.getId())).thenReturn(Mono.just(center));
         var messages = mock(StationMessageQueue.class);
-        var commands = new StationCommandProcessor();
+        var commands =
+                new StationCommandProcessor(null, null, null, null, null, null, new PolicyContentService(null, null));
         var ignores = mock(IgnoreStationAccessor.class);
         ReflectionTestUtils.setField(commands, "welcomeCenterAccessor", centers);
         ReflectionTestUtils.setField(commands, "stationMessageQueue", messages);
@@ -118,7 +120,8 @@ class SelectedCommunicationProcessingTest {
             command.setPacketProcessorId(denied.toString());
             commands.processCommand(command);
         }
-        var eventProcessor = new CommunicationEventProcessor();
+        var eventProcessor =
+                new CommunicationEventProcessor(null, null, null, null, new PolicyContentService(null, null));
         ReflectionTestUtils.setField(eventProcessor, "welcomeCenterAccessor", centers);
         ReflectionTestUtils.setField(eventProcessor, "stationMessageQueue", messages);
         var policy = new CommunicationPolicy(

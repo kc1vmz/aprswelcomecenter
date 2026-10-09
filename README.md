@@ -50,7 +50,7 @@ The header contains multiple buttons:
 
 - New Welcome Center
 
-- Packet list (radio beacon icon)
+- Communication Settings (radio beacon icon)
 
 - Applicaton Configuration (gear icon)
 
@@ -75,36 +75,24 @@ You will be asked for information specific to the Welcome Center.  The callsign 
 Once created, you may specify regions and communication plans.  You may also see the weather reports it has collected from weather stations in its regions, the stations within its regions, and the messages sent by the welcome center.
 
 
-
-### Packet list
-
-
-
-Pressing this button will show a list of packets heard by APRS Welcome Center application.
-
-You can delete all of the heard packets from this dialog.
-
-
-
-### Application Configuration
-
+### Communications Configuration
 
 
 APRS Welcome Center must be configured to access APRS-related information, whether it be via radio with KISS, or via internet from an APRS-IS server.
 
-Press the Configuration button in the top right corner (gear icon) to configure your APRS information access.
+Press the Communication Configuration button in the top right corner (radio antenna icon) to configure your APRS information access.
 
 
 
 #### Communication instances
 
-Use **Add connection** to configure an APRS-IS, KISS TCP, KISS Serial or Kenwood Serial connection. You can run multiple connections of each type. Each connection has its own settings and UUID; its displayed label is derived from the endpoint or serial device.
+Use **Add connection** to configure an APRS-IS, KISS TCP, KISS Serial, TNC2 TCP, TNC2 Serial or Kenwood Serial connection. You can run multiple connections of each type. Each connection has its own settings; its displayed label is derived from the endpoint or serial device.
 
-New connections default to **Active**. **Pause** disconnects a connection; **Resume** starts it again. Saving an edit stops the previous worker before starting its replacement. Deleting a connection stops it and preserves received packet history. Changes take effect after saving, without restarting the application. Stale edits and deletes are rejected; refresh and review the current configuration before trying again.
+New connections default to **Active**. **Pause** disconnects a connection; **Resume** starts it again. Saving an edit stops the previous worker before starting its replacement. Deleting a connection stops it and preserves received packet history. Changes take effect after saving, without restarting the application. 
 
 The list shows the desired state and current connection health separately. Active connections retry connection failures with a delay. Use **Refresh status** to update the health display. Two active serial connections cannot share a device; duplicate TCP endpoints produce a warning. An empty passcode while editing retains the existing passcode. Passcodes are not returned by the API or displayed in the list.
 
-Each KISS connection has its own digipeater path and each serial connection has its own baud rate and optional initialization commands.
+Each KISS and TNC2 connection has its own digipeater path and each serial connection has its own baud rate and optional initialization commands.
 
 Directed messages use their explicit communication instance, or the destination station's most recently received packet when no instance is specified. Unavailable routes and full outgoing queues drop messages. Object beacons and bulletins go to all active, connected instances. A sent timestamp means the transport write completed; it does not imply an APRS acknowledgement.
 
@@ -115,6 +103,33 @@ The Kenwood native serial implementation can hear packets from any station, but 
 
 While beaconing objects works correctly, any messages or bulletins would be sourced from the MYCALL callsign, not one of the welcome center or points of interest callsigns.  This can lead to confusion unless the MYCALL is set to the Welcome Center callsign, and the application only supports a single welcome center. Otherwise messages sent by a welcome center callsign will always look like it came from the MYCALL callsign.
 
+
+#### Packet list
+
+
+Pressing this button will show a list of packets heard by APRS Welcome Center application.
+
+You can delete all of the heard packets from this dialog.
+
+
+
+#### Stations
+
+
+The Application Configuration also allow you to delete all heard stations. To delete all heard stations, press the "Delete Stations" button.
+
+
+#### Ignored Stations
+
+
+The Application Configuration also allow you to ignore packets from stations by callsign.  Those callsigns can also opt-out of messages and will show up in the list of ignored stations.
+
+
+
+### Application Configuration
+
+
+There are several application-side settings that can be configured
 
 
 #### Packet and position retention
@@ -134,25 +149,13 @@ Set **Retain packets and positions for (days)** to a whole number greater than z
 By default, map tile information is retrieved from the specified URL.  If you wish to use another OSM-compliant tile server, specify the full tile URL pattern here.
 
 
-
-### Addditional configuration options
-
+#### TinyTopics URL
 
 
-#### Stations
+TinyTopics is an internet-based content provider capable of providing tiny content for messaging.  Whether fun or informative, this information can be sent in messages and bulletins generated by the welcome center's communication plan.
 
 
-
-The Application Configuration also allow you to delete all heard stations. To delete all heard stations, press the "Delete Stations" button.
-
-
-
-#### Ignored Stations
-
-
-
-The Application Configuration also allow you to ignore packets from stations by callsign.  Those callsigns can also opt-out of messages and will show up in the list of ignored stations.
-
+By default, TinyTopics information is retrieved from the specified URL.  If you wish to use another TinyTopics-compliant tile server, specify the full TinyTopics URL pattern here.
 
 
 
@@ -215,12 +218,84 @@ Different types of information can be provided automatically.
 
 Messages and bulletins can be sent according to policies you set, based on station request, entering and exiting a welcome center region, scheduled, or shriek codes found in status or position packets.
 
+#### TinyTopics content
 
+Policies can use **Text** or **TinyTopics** content. Configure the TinyTopics server URL in Application Settings, then select a topic and enter its optional parameter values in the policy editor. Blank parameters are saved but omitted from requests so TinyTopics can apply its defaults. Automatically generated categories retain their existing behavior and disable these content controls.
+
+If the topic server is unavailable, the selector displays **No topics available** and existing topic IDs and parameter values remain intact. Topics removed from the server and parameters no longer declared are identified in the editor; clearing an obsolete parameter value omits it from requests.
+
+
+There are several topics available by default with TinyTopics and they are listed below.
+
+
+##### NWS Alerts
+
+Receive a condensed briefing of local alerts from the National Weather Service in USA.
+
+This topic requires three parameters:
+
+x   - longitude
+
+y   - latitude
+
+wfo - identifier of the weather forcast office to be queried.  See https://api.weather.gov for latest values.
+
+Known wfo values:
+
+AKQ, ALY, BGM, BOX, BTV, BUF, CAE, CAR, CHS, CLE, CTP, GSP, GYX, ILM, ILN, LWX, MHX, OKX, PBZ, PHI, RAH, RLX, RNK, ABQ, AMA, BMX, BRO, CRP, EPZ, EWX, FFC, FWD, HGX, HUN, JAN, JAX, KEY, LCH, LIX, LUB, LZK, MAF, MEG, MFL, MLB, MOB, MRX, OHX, OUN, SHV, SJT, SJU, TAE, TBW, TSA, ABR, APX, ARX, BIS, BOU, CYS, DDC, DLH, DMX, DTX, DVN, EAX, FGF, FSD, GID, GJT, GLD, GRB, GRR, ICT, ILX, IND, IWX, JKL, LBF, LMK, LOT, LSX, MKX, MPX, MQT, OAX, PAH, PUB, RIW, SGF, TOP, UNR, BOI, BYZ, EKA, FGZ, GGW, HNX, LKN, LOX, MFR, MSO, MTR, OTX, PDT, PIH, PQR, PSR, REV, SEW, SGX, SLC, STO, TFX, TWC, VEF, AER, AFC, AFG, AJK, ALU, GUM, HPA, HFO, PPG, PQE, PQW, STU, NH1, NH2, ONA, ONP
+
+
+##### NWS Forecasts
+
+Receive a condensed briefing of local weather forecasts from the National Weather Service in USA.
+
+This topic requires three parameters:
+
+x   - longitude
+
+y   - latitude
+
+wfo - identifier of the weather forcast office to be queried.  See https://api.weather.gov for latest values.
+
+Known wfo values:
+
+AKQ, ALY, BGM, BOX, BTV, BUF, CAE, CAR, CHS, CLE, CTP, GSP, GYX, ILM, ILN, LWX, MHX, OKX, PBZ, PHI, RAH, RLX, RNK, ABQ, AMA, BMX, BRO, CRP, EPZ, EWX, FFC, FWD, HGX, HUN, JAN, JAX, KEY, LCH, LIX, LUB, LZK, MAF, MEG, MFL, MLB, MOB, MRX, OHX, OUN, SHV, SJT, SJU, TAE, TBW, TSA, ABR, APX, ARX, BIS, BOU, CYS, DDC, DLH, DMX, DTX, DVN, EAX, FGF, FSD, GID, GJT, GLD, GRB, GRR, ICT, ILX, IND, IWX, JKL, LBF, LMK, LOT, LSX, MKX, MPX, MQT, OAX, PAH, PUB, RIW, SGF, TOP, UNR, BOI, BYZ, EKA, FGZ, GGW, HNX, LKN, LOX, MFR, MSO, MTR, OTX, PDT, PIH, PQR, PSR, REV, SEW, SGX, SLC, STO, TFX, TWC, VEF, AER, AFC, AFG, AJK, ALU, GUM, HPA, HFO, PPG, PQE, PQW, STU, NH1, NH2, ONA, ONP
+
+
+
+##### Sunrise-Sunset
+
+Receive the times for sunrise and sunset at a specific location.
+
+This topic requires two parameters:
+
+x   - longitude
+
+y   - latitude
+
+
+
+##### Magic-8-Ball
+
+Not sure what the future holds?  Ask the Magic 8 Ball for classic responses.
+
+This topic has no additional parameters.
+
+
+##### Fortune
+
+Get your fortune cookie without the MSG!
+
+This topic has no additional parameters.
+
+
+##### Additional content
+
+Each TinyTopic server can add its own content and make it available to all users.
 
 
 
 ### Weather
-
 
 
 APRS weather station reports in the welcome station areas are collected and averaged, and then made available to stations.
@@ -230,7 +305,6 @@ APRS weather station reports in the welcome station areas are collected and aver
 ### Stations
 
 
-
 The set of stations found within the regions of a welcome center are listed or mapped here.
 
 
@@ -238,15 +312,11 @@ The set of stations found within the regions of a welcome center are listed or m
 ### Messages
 
 
-
 The set of messages sent by a welcome center to APRS devices are found here.
 
 
 
-
-
 ## Stations
-
 
 
 The list of heard stations are shown in a column to the right in the main UI page.
@@ -471,9 +541,10 @@ java -jar aprs-welcome-center-1.0.2.jar
 Open `http://localhost:8080`. By default, the database is created below `./data`.
 
 
+## Miscellaneous Topics
 
 
-## Polygon regions
+### Polygon regions
 
 Choose **Polygon** in the region editor, then **Draw Polygon**. Click each vertex on the map and click the orange starting marker (or **Finish boundary**) to close the boundary. Closing the boundary does not save it; use **Create Region** or **Save Changes** to persist it.
 
@@ -486,7 +557,7 @@ Vertices retain decimal-degree precision. Straight edges and containment use the
 The region API accepts an ordered `vertices` array for `POLYGON`, with numeric `latitude` and `longitude` properties. Do not repeat the first vertex at the end. The server validates the complete boundary and returns a validation message for invalid input. Liquibase migration 011 adds the ordered vertex table without converting existing regions.
 
 
-### Importing a shapefile boundary
+#### Importing a shapefile boundary
 
 In Create Region or View / Edit Region, select **Import Coordinates** and choose either a ZIP or a folder containing the shapefile companion files. Include matching `.shp`, `.shx`, `.dbf`, and `.prj` files; `.cpg` is recommended for attribute encoding. Nested folders are supported, and matching basenames in different folders remain separate layers.
 
@@ -503,3 +574,10 @@ Common Shapefiles for the United States of America can be found at https://www.c
 ### Raw packet history suppression
 
 Packets containing exact lowercase `!x!` in the packet body are processed normally but excluded from raw packet history and packet CSV exports. Last-heard updates continue. Positions, weather reports, messages, and other derived records are still retained.
+
+
+### Automatic station ignore
+
+Packets containing exact uppercase `!WCI!` in the packet body are ignored by all welcome centers.
+
+

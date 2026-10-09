@@ -19,6 +19,7 @@ package com.kc1vmz.aprswc.processor;
 
 import com.kc1vmz.aprswc.accessor.IgnoreStationAccessor;
 import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
+import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.database.CommunicationPolicyRepository;
 import com.kc1vmz.aprswc.database.StationMessageRepository;
 import com.kc1vmz.aprswc.database.StationPositionRepository;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -58,6 +60,7 @@ public class PolicyAutomationProcessor {
     private final IgnoreStationAccessor ignoreStations;
     private final GeoFenceUtils fences;
     private final CommunicationInstanceManager communications;
+    private final PolicyContentService content;
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transaction;
     private volatile Instant startedAt;
@@ -70,7 +73,9 @@ public class PolicyAutomationProcessor {
             GeoFenceUtils fences,
             CommunicationInstanceManager communications,
             JdbcTemplate jdbc,
-            PlatformTransactionManager transactions) {
+            PlatformTransactionManager transactions,
+            PolicyContentService content) {
+        this.content = content;
         this.policies = policies;
         this.positions = positions;
         this.messages = messages;
@@ -137,7 +142,9 @@ public class PolicyAutomationProcessor {
                     recordSkipped(p, "B:" + dueAt, dueAt, now);
                     continue;
                 }
-                for (String route : routes) dispatch(p, "B:" + dueAt + ":" + route, route, "BLN1", null, dueAt, now);
+                String resolved = content.resolve(p, "B:" + dueAt);
+                for (String route : routes)
+                    dispatch(p, "B:" + dueAt + ":" + route, route, "BLN1", null, dueAt, now, () -> resolved);
             } catch (RuntimeException error) {
                 LOG.error("Scheduled policy {} failed", id, error);
             }
@@ -178,7 +185,15 @@ public class PolicyAutomationProcessor {
                         || !inside(p, station.getId())) continue;
                 String key = "S:" + callsign + ":"
                         + now.atZone(ZoneId.of(a.getTimeZone())).toLocalDate();
-                dispatch(p, key, packet.getPacketProcessorId(), callsign, station.getId(), now, now);
+                dispatch(
+                        p,
+                        key,
+                        packet.getPacketProcessorId(),
+                        callsign,
+                        station.getId(),
+                        now,
+                        now,
+                        () -> content.resolve(p, key));
             } catch (RuntimeException error) {
                 LOG.error("Shriek policy {} failed", p.getId(), error);
             }
@@ -229,14 +244,22 @@ public class PolicyAutomationProcessor {
     }
 
     private void dispatch(
-            CommunicationPolicy p, String key, String route, String to, UUID stationId, Instant due, Instant now) {
+            CommunicationPolicy p,
+            String key,
+            String route,
+            String to,
+            UUID stationId,
+            Instant due,
+            Instant now,
+            Supplier<String> resolve) {
         UUID token = claim(p, key, route, stationId == null ? null : to, due, now);
         if (token == null) return;
+        String resolved = resolve.get();
         boolean queued = communications.sendMessage(
                 route,
                 p.getWelcomeCenter().getCallsign(),
                 to,
-                p.getMessageText(),
+                resolved,
                 () -> permitted(p, key, token, route, stationId),
                 () -> transaction.executeWithoutResult(tx -> {
                     Instant sent = Instant.now();
@@ -253,7 +276,7 @@ public class PolicyAutomationProcessor {
                                 p.getWelcomeCenter().getCallsign(),
                                 p.getWelcomeCenter(),
                                 LocalDateTime.ofInstant(sent, ZoneId.systemDefault()),
-                                p.getMessageText(),
+                                resolved,
                                 route,
                                 stationId == null ? MessageType.BULLETIN : MessageType.MESSAGE));
                     }

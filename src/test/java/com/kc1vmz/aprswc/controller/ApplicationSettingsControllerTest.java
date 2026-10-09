@@ -42,7 +42,8 @@ class ApplicationSettingsControllerTest {
 
     @Test
     void createsAndReadsSettings() {
-        ApplicationSettings settings = new ApplicationSettings(null, "https://tiles.example.test/{z}/{x}/{y}.png");
+        ApplicationSettings settings = new ApplicationSettings(
+                null, "https://tiles.example.test/{z}/{x}/{y}.png", ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL);
         settings.setPacketRetentionDays(14);
 
         client.post()
@@ -70,7 +71,8 @@ class ApplicationSettingsControllerTest {
 
     @Test
     void validatesAllRetentionSettingsOnCreateAndUpdate() {
-        var saved = repository.saveAndFlush(new ApplicationSettings(null, null));
+        var saved = repository.saveAndFlush(
+                new ApplicationSettings(null, null, ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL));
         for (String field : new String[] {"packetRetentionDays", "stationRetentionDays", "messageRetentionDays"}) {
             for (String value : new String[] {"0", "-1", "null"}) {
                 String body = "{\"" + field + "\":" + value + "}";
@@ -104,6 +106,35 @@ class ApplicationSettingsControllerTest {
                 .isEqualTo(14)
                 .jsonPath("$.messageRetentionDays")
                 .isEqualTo(21);
+    }
+
+    @Test
+    void persistsTinyTopicsUrlChanges() {
+        var saved = repository.saveAndFlush(
+                new ApplicationSettings(null, null, ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL));
+        client.get()
+                .uri("/api/v1/application-settings/" + saved.getId())
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.tinyTopicsServerUrl")
+                .isEqualTo(ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL);
+        saved.setTinyTopicsServerUrl("https://topics.example.test:8088");
+        client.put()
+                .uri("/api/v1/application-settings/" + saved.getId())
+                .bodyValue(saved)
+                .exchange()
+                .expectStatus()
+                .isOk();
+        client.get()
+                .uri("/api/v1/application-settings/" + saved.getId())
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.tinyTopicsServerUrl")
+                .isEqualTo("https://topics.example.test:8088");
     }
 
     @Test

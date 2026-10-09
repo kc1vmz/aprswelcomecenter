@@ -28,6 +28,7 @@ const policyAutomation = (() => {
         fields.timeZone.required = automated() && type !== 'SHRIEK_HEARD';
         fields.messageText.maxLength = automated() ? 64 : 4000;
         fields.messageText.required = automated();
+        globalThis.policyContent?.update();
         document.querySelector('#policy-delivery-description').textContent = type === 'SHRIEK_HEARD'
             ? 'Exact, case-sensitive match in a station status or position-report comment once a day while in Welcome Center regions.'
             : 'Send as a BLN1 bulletin on eligible connections. Missed occurrences are skipped. Closed Welcome Centers do not send.';

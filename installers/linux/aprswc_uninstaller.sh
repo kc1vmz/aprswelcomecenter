@@ -30,7 +30,7 @@ if [ "$WC_OS" = "Linux" ]; then
 
   if [ -n "${APRSWC_INSTALL_DIR+x}" ]; then
     echo Deleting APRS Welcome Center application
-    sudo rm aprs-welcome-center.jar
+    sudo rm aprs-welcome-center*.jar
     echo Not deleting ${APRSWC_INSTALL_DIR} - delete independently.
   else
     echo APRS Welcome Center installation directory unknown - delete independently.

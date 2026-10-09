@@ -35,7 +35,7 @@ class PacketRetentionProcessorTest {
         var positions = mock(StationPositionRepository.class);
         var clock = Clock.fixed(Instant.parse("2026-09-20T12:34:56Z"), ZoneOffset.UTC);
         var processor = new PacketRetentionProcessor(settings, packets, positions, clock);
-        var config = new ApplicationSettings(null, null);
+        var config = new ApplicationSettings(null, null, ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL);
         config.setPacketRetentionDays(7);
         when(settings.findAll()).thenReturn(List.of(config));
         doThrow(new IllegalStateException("Test database failure"))
@@ -66,7 +66,7 @@ class PacketRetentionProcessorTest {
                         LocalDateTime.now(clock).minusDays(ApplicationSettings.DEFAULT_PACKET_RETENTION_DAYS));
         verify(positions).deleteCreatedBefore(LocalDateTime.now(clock).minusDays(1));
         clearInvocations(packets, positions);
-        var config = new ApplicationSettings(null, null);
+        var config = new ApplicationSettings(null, null, ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL);
         when(settings.findAll()).thenReturn(List.of(config));
         for (Integer invalid : new Integer[] {0, -1, null}) {
             config.setPacketRetentionDays(invalid);

@@ -24,6 +24,8 @@ import static org.mockito.Mockito.*;
 import com.kc1vmz.aprswc.accessor.CommunicationPolicyAccessor;
 import com.kc1vmz.aprswc.accessor.IgnoreStationAccessor;
 import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
+import com.kc1vmz.aprswc.content.PolicyContentService;
+import com.kc1vmz.aprswc.content.TinyTopicsClient;
 import com.kc1vmz.aprswc.database.*;
 import com.kc1vmz.aprswc.enumeration.*;
 import com.kc1vmz.aprswc.object.*;
@@ -82,6 +84,12 @@ class PolicyAutomationTest {
 
     @MockitoBean
     CommunicationInstanceManager communications;
+
+    @MockitoBean
+    TinyTopicsClient tinyTopics;
+
+    @Autowired
+    PolicyContentService content;
 
     private WelcomeCenter center;
     private CommunicationCategory category;
@@ -160,6 +168,68 @@ class PolicyAutomationTest {
 
     private StationPacket status(Station station, String text) {
         return new StationPacket(null, route, station.getCallsign(), null, ">" + text, null);
+    }
+
+    @Test
+    void tinyTopicsPersistsParametersAndSharesContentAcrossRoutesAndRetries() {
+        var p = policy(CommunicationEventType.SCHEDULED_ONCE);
+        p.setContentSource(PolicyContentSource.TINYTOPICS);
+        p.setTopicId("forecast");
+        p.setTopicParameters(Map.of("x", "-72.97", "y", "43.61"));
+        p.setMessageText(null);
+        p = accessor.replace(p.getId(), p).block();
+        assertThat(policies.findById(p.getId()).orElseThrow().getTopicParameters())
+                .containsEntry("x", "-72.97");
+        when(tinyTopics.resolve("forecast", p.getTopicParameters()))
+                .thenReturn(new TinyTopicsClient.Result("CONTENT", 200, null, "Sunny today"));
+        when(communications.connectedRoutes(any())).thenReturn(List.of(route, "second-route"));
+        when(communications.sendMessage(any(), any(), any(), any(), any(), any()))
+                .thenAnswer(call -> {
+                    assertThat(call.getArgument(3, String.class)).isEqualTo("Sunny today");
+                    assertThat(call.getArgument(4, BooleanSupplier.class).getAsBoolean())
+                            .isTrue();
+                    call.getArgument(5, Runnable.class).run();
+                    return true;
+                });
+        Instant now = Instant.now().plusSeconds(1).truncatedTo(ChronoUnit.MILLIS);
+        due(p, now);
+        processor.tick(now);
+        verify(tinyTopics, times(1)).resolve("forecast", p.getTopicParameters());
+        assertThat(content.resolve(p, "B:" + now)).isEqualTo("Sunny today");
+        verify(tinyTopics, times(1)).resolve("forecast", p.getTopicParameters());
+        assertThat(content.history(p.getId())).hasSize(1);
+        assertThat(processor.executions(p.getId())).hasSize(2).allSatisfy(row -> assertThat(row.get("OUTCOME"))
+                .isEqualTo("TRANSMITTED"));
+    }
+
+    @Test
+    void tinyTopicsFailureHistorySurvivesSuccessfulFallbackTransmission() {
+        var p = policy(CommunicationEventType.SCHEDULED_ONCE);
+        p.setContentSource(PolicyContentSource.TINYTOPICS);
+        p.setTopicId("forecast");
+        p.setMessageText(null);
+        p = accessor.replace(p.getId(), p).block();
+        when(tinyTopics.resolve(eq("forecast"), any()))
+                .thenReturn(
+                        new TinyTopicsClient.Result("ERROR", 502, "Upstream unavailable", TinyTopicsClient.FALLBACK));
+        when(communications.sendMessage(any(), any(), any(), any(), any(), any()))
+                .thenAnswer(call -> {
+                    assertThat(call.getArgument(3, String.class)).isEqualTo(TinyTopicsClient.FALLBACK);
+                    assertThat(call.getArgument(4, BooleanSupplier.class).getAsBoolean())
+                            .isTrue();
+                    call.getArgument(5, Runnable.class).run();
+                    return true;
+                });
+        Instant now = Instant.now().plusSeconds(1).truncatedTo(ChronoUnit.MILLIS);
+        due(p, now);
+        processor.tick(now);
+        assertThat(outcome(p)).isEqualTo("TRANSMITTED");
+        assertThat(content.history(p.getId()).getFirst())
+                .containsEntry("CONTENT_STATUS", "ERROR")
+                .containsEntry("HTTP_STATUS", 502)
+                .containsEntry("ERROR_MESSAGE", "Upstream unavailable");
+        policies.deleteById(p.getId());
+        assertThat(content.history(p.getId())).isEmpty();
     }
 
     @Test

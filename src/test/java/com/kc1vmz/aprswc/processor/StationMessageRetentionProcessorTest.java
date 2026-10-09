@@ -41,7 +41,7 @@ class StationMessageRetentionProcessorTest {
         processor.cleanup();
         verify(stations).findExpiredIds(LocalDateTime.now(clock).minusDays(10));
         verify(messages).deleteExpiredBefore(LocalDateTime.now(clock).minusDays(10));
-        var config = new ApplicationSettings(null, null);
+        var config = new ApplicationSettings(null, null, ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL);
         config.setStationRetentionDays(5);
         config.setMessageRetentionDays(20);
         when(settings.findAll()).thenReturn(List.of(config));

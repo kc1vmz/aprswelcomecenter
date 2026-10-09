@@ -19,12 +19,16 @@ package com.kc1vmz.aprswc.object;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 @Entity
 @Table(name = "application_settings")
 public class ApplicationSettings {
+    public static final String DEFAULT_TINY_TOPICS_SERVER_URL = "http://www.tiny-topics.com:8088";
+
     public static final int DEFAULT_PACKET_RETENTION_DAYS = 1;
 
     public static final int DEFAULT_STATION_RETENTION_DAYS = 10;
@@ -61,6 +65,19 @@ public class ApplicationSettings {
 
     private String mapTileUrl;
 
+    @NotBlank
+    @Size(max = 2048)
+    @Column(nullable = false, length = 2048)
+    private String tinyTopicsServerUrl = DEFAULT_TINY_TOPICS_SERVER_URL;
+
+    public String getTinyTopicsServerUrl() {
+        return tinyTopicsServerUrl;
+    }
+
+    public void setTinyTopicsServerUrl(String value) {
+        tinyTopicsServerUrl = value;
+    }
+
     @NotNull
     @Min(1)
     @Column(nullable = false)
@@ -76,9 +93,10 @@ public class ApplicationSettings {
 
     protected ApplicationSettings() {}
 
-    public ApplicationSettings(UUID id, String mapTileUrl) {
+    public ApplicationSettings(UUID id, String mapTileUrl, String tinyTopicsServerUrl) {
         this.id = id;
         this.mapTileUrl = mapTileUrl;
+        this.tinyTopicsServerUrl = tinyTopicsServerUrl;
     }
 
     @PrePersist

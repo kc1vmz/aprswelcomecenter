@@ -18,6 +18,7 @@
 package com.kc1vmz.aprswc.controller;
 
 import com.kc1vmz.aprswc.accessor.CommunicationPolicyAccessor;
+import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.object.CommunicationPolicy;
 import com.kc1vmz.aprswc.processor.PolicyAutomationProcessor;
 import java.util.List;
@@ -45,10 +46,19 @@ import reactor.core.scheduler.Schedulers;
 public class CommunicationPolicyController {
     private final CommunicationPolicyAccessor accessor;
     private final PolicyAutomationProcessor automation;
+    private final PolicyContentService content;
 
-    public CommunicationPolicyController(CommunicationPolicyAccessor accessor, PolicyAutomationProcessor automation) {
+    public CommunicationPolicyController(
+            CommunicationPolicyAccessor accessor, PolicyAutomationProcessor automation, PolicyContentService content) {
+        this.content = content;
         this.accessor = accessor;
         this.automation = automation;
+    }
+
+    @GetMapping("/{id}/content-results")
+    public Mono<List<Map<String, Object>>> contentResults(@PathVariable UUID id) {
+        return accessor.findById(id).flatMap(policy -> Mono.fromCallable(() -> content.history(id))
+                .subscribeOn(Schedulers.boundedElastic()));
     }
 
     @GetMapping("/{id}/executions")
