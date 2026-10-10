@@ -19,6 +19,7 @@ package com.kc1vmz.aprswc.processor;
 
 import com.kc1vmz.aprswc.accessor.IgnoreStationAccessor;
 import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
+import com.kc1vmz.aprswc.communication.MessageIdentifierService;
 import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.database.CommunicationPolicyRepository;
 import com.kc1vmz.aprswc.database.StationMessageRepository;
@@ -61,6 +62,7 @@ public class PolicyAutomationProcessor {
     private final GeoFenceUtils fences;
     private final CommunicationInstanceManager communications;
     private final PolicyContentService content;
+    private final MessageIdentifierService identifiers;
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transaction;
     private volatile Instant startedAt;
@@ -74,7 +76,9 @@ public class PolicyAutomationProcessor {
             CommunicationInstanceManager communications,
             JdbcTemplate jdbc,
             PlatformTransactionManager transactions,
-            PolicyContentService content) {
+            PolicyContentService content,
+            MessageIdentifierService identifiers) {
+        this.identifiers = identifiers;
         this.content = content;
         this.policies = policies;
         this.positions = positions;
@@ -255,11 +259,21 @@ public class PolicyAutomationProcessor {
         UUID token = claim(p, key, route, stationId == null ? null : to, due, now);
         if (token == null) return;
         String resolved = resolve.get();
+        StationMessage outgoing = new StationMessage(
+                null,
+                to,
+                p.getWelcomeCenter().getCallsign(),
+                p.getWelcomeCenter(),
+                null,
+                resolved,
+                route,
+                stationId == null ? MessageType.BULLETIN : MessageType.MESSAGE);
+        identifiers.prepare(outgoing);
         boolean queued = communications.sendMessage(
                 route,
                 p.getWelcomeCenter().getCallsign(),
                 to,
-                resolved,
+                MessageIdentifierService.wireContent(outgoing),
                 () -> permitted(p, key, token, route, stationId),
                 () -> transaction.executeWithoutResult(tx -> {
                     Instant sent = Instant.now();
@@ -270,15 +284,8 @@ public class PolicyAutomationProcessor {
                             key,
                             token);
                     if (recorded == 1) {
-                        messages.save(new StationMessage(
-                                null,
-                                to,
-                                p.getWelcomeCenter().getCallsign(),
-                                p.getWelcomeCenter(),
-                                LocalDateTime.ofInstant(sent, ZoneId.systemDefault()),
-                                resolved,
-                                route,
-                                stationId == null ? MessageType.BULLETIN : MessageType.MESSAGE));
+                        outgoing.setSentTime(LocalDateTime.ofInstant(sent, ZoneId.systemDefault()));
+                        messages.save(outgoing);
                     }
                 }));
         if (!queued)

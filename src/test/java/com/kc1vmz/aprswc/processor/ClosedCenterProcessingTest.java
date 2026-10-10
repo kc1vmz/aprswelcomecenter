@@ -20,6 +20,7 @@ package com.kc1vmz.aprswc.processor;
 import static org.mockito.Mockito.*;
 
 import com.kc1vmz.aprswc.accessor.*;
+import com.kc1vmz.aprswc.communication.MessageIdentifierService;
 import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.enumeration.*;
 import com.kc1vmz.aprswc.object.*;
@@ -146,7 +147,8 @@ class ClosedCenterProcessingTest {
 
     @Test
     void outgoingAutomaticMessagesAreDiscardedIfCenterClosedSinceQueueing() {
-        var processor = new StationMessageProcessor();
+        var processor =
+                new StationMessageProcessor(null, null, null, null, null, null, mock(MessageIdentifierService.class));
         var centers = mock(WelcomeCenterAccessor.class);
         var settings = mock(com.kc1vmz.aprswc.communication.CommunicationInstanceManager.class);
         var messages = mock(StationMessageAccessor.class);

@@ -17,6 +17,8 @@
  */
 package com.kc1vmz.aprswc.object;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kc1vmz.aprswc.enumeration.MessageType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -26,10 +28,10 @@ import java.util.UUID;
 @Table(name = "station_messages")
 public class StationMessage {
     @Transient
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JsonIgnore
     private boolean requiresOpenCenter;
 
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JsonIgnore
     public boolean isRequiresOpenCenter() {
         return requiresOpenCenter;
     }
@@ -53,8 +55,7 @@ public class StationMessage {
     private LocalDateTime sentTime;
 
     @Column(nullable = false, updatable = false)
-    @com.fasterxml.jackson.annotation.JsonProperty(
-            access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime createdTime;
 
     public LocalDateTime getCreatedTime() {
@@ -65,6 +66,18 @@ public class StationMessage {
     private String content;
 
     private String packetProcessorId;
+
+    @Column(length = 5)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String messageIdentifier;
+
+    public String getMessageIdentifier() {
+        return messageIdentifier;
+    }
+
+    public void setMessageIdentifier(String value) {
+        messageIdentifier = value;
+    }
 
     @Enumerated(EnumType.STRING)
     private MessageType messageType = MessageType.MESSAGE;
@@ -81,6 +94,22 @@ public class StationMessage {
             String content,
             String packetProcessorId,
             MessageType messageType) {
+        this(id, callsignTo, callsignFrom, welcomeCenter, sentTime, content, packetProcessorId, messageType, null);
+    }
+
+    public StationMessage(
+            UUID id,
+            String callsignTo,
+            String callsignFrom,
+            WelcomeCenter welcomeCenter,
+            LocalDateTime sentTime,
+            String content,
+            String packetProcessorId,
+            MessageType messageType,
+            String messageIdentifier) {
+        this.messageIdentifier = messageIdentifier;
+        this.requiresOpenCenter = false;
+        this.createdTime = null; // Assigned by JPA at insertion.
         this.id = id;
         this.callsignTo = callsignTo;
         this.callsignFrom = callsignFrom;

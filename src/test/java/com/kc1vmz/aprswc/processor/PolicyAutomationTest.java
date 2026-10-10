@@ -283,6 +283,7 @@ class PolicyAutomationTest {
         assertThat(logged.getFirst().getPacketProcessorId()).isEqualTo(route);
         assertThat(logged.getFirst().getContent()).isEqualTo("Welcome");
         assertThat(logged.getFirst().getMessageType()).isEqualTo(MessageType.BULLETIN);
+        assertThat(logged.getFirst().getMessageIdentifier()).isNull();
         assertThat(logged.getFirst().getSentTime()).isNotNull();
         assertThat(outcome(p)).isEqualTo("TRANSMITTED");
         processor.tick(now.plusSeconds(1));
@@ -353,6 +354,7 @@ class PolicyAutomationTest {
         assertThat(logged).hasSize(1);
         assertThat(logged.getFirst().getCallsignTo()).isEqualTo(station.getCallsign());
         assertThat(logged.getFirst().getMessageType()).isEqualTo(MessageType.MESSAGE);
+        assertThat(logged.getFirst().getMessageIdentifier()).matches("[0-9A-Z]{5}");
         assertThat(logged.getFirst().getSentTime()).isNotNull();
         p.setMessageText("Edited");
         accessor.replace(p.getId(), p).block();

@@ -348,7 +348,7 @@ async function openWelcomeCenterMessagesDialog(centerId) {
                 <time>${stationMessage.sentTime ? formatReceivedTime(stationMessage.sentTime) : "Not yet sent"}</time>
                 <div><strong>${escapeHtml(stationMessage.callsignFrom || "—")}</strong></div>
                 <div><strong>${escapeHtml(stationMessage.callsignTo || "All stations")}</strong></div>
-                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong></div>
+                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong>${stationMessage.messageIdentifier ? `<small class="message-character-count">Message ID: ${escapeHtml(stationMessage.messageIdentifier)}</small>` : ""}</div>
             </article>`).join("") : '<p class="empty-associations">No messages for this Welcome Center.</p>';
         document.querySelector("#welcome-center-message-count").textContent = `(${messages.length})`;
         deleteButton.disabled = messages.length === 0;
@@ -593,7 +593,7 @@ async function openStationMessagesDialog() {
             <article class="station-message-item">
                 <time>${stationMessage.sentTime ? formatReceivedTime(stationMessage.sentTime) : "Not yet sent"}</time>
                 <div><strong>${escapeHtml(stationMessage.callsignFrom || "—")}</strong></div>
-                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong></div>
+                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong>${stationMessage.messageIdentifier ? `<small class="message-character-count">Message ID: ${escapeHtml(stationMessage.messageIdentifier)}</small>` : ""}</div>
             </article>`).join("") : '<p class="empty-associations">No messages for this station.</p>';
         document.querySelector("#station-message-count").textContent = `(${messages.length})`;
         deleteButton.disabled = messages.length === 0;

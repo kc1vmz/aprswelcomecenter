@@ -22,6 +22,7 @@ import com.kc1vmz.aprswc.accessor.StationMessageAccessor;
 import com.kc1vmz.aprswc.accessor.StationPacketAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
+import com.kc1vmz.aprswc.communication.MessageIdentifierService;
 import com.kc1vmz.aprswc.enumeration.MessageType;
 import com.kc1vmz.aprswc.object.Station;
 import com.kc1vmz.aprswc.object.StationMessage;
@@ -38,33 +39,38 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class StationMessageProcessor {
     private static final Logger log = LoggerFactory.getLogger(StationMessageProcessor.class);
 
-    @Autowired
-    private StationMessageQueue queue;
+    private final StationMessageQueue queue;
+    private final WelcomeCenterAccessor welcomeCenterAccessor;
+    private final StationAccessor stationAccessor;
+    private final StationMessageAccessor stationMessageAccessor;
+    private final StationPacketAccessor stationPacketAccessor;
+    private final CommunicationInstanceManager communications;
+    private final MessageIdentifierService identifiers;
+    private final ExecutorService worker;
 
-    @Autowired
-    private WelcomeCenterAccessor welcomeCenterAccessor;
-
-    @Autowired
-    private StationAccessor stationAccessor;
-
-    @Autowired
-    private StationMessageAccessor stationMessageAccessor;
-
-    @Autowired
-    private StationPacketAccessor stationPacketAccessor;
-
-    @Autowired
-    private CommunicationInstanceManager communications;
-
-    private final ExecutorService worker =
-            Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "StationMessageProcessor"));
+    public StationMessageProcessor(
+            StationMessageQueue queue,
+            WelcomeCenterAccessor welcomeCenterAccessor,
+            StationAccessor stationAccessor,
+            StationMessageAccessor stationMessageAccessor,
+            StationPacketAccessor stationPacketAccessor,
+            CommunicationInstanceManager communications,
+            MessageIdentifierService identifiers) {
+        this.queue = queue;
+        this.welcomeCenterAccessor = welcomeCenterAccessor;
+        this.stationAccessor = stationAccessor;
+        this.stationMessageAccessor = stationMessageAccessor;
+        this.stationPacketAccessor = stationPacketAccessor;
+        this.communications = communications;
+        this.identifiers = identifiers;
+        this.worker = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "StationMessageProcessor"));
+    }
 
     @PostConstruct
     void start() {
@@ -129,7 +135,7 @@ public class StationMessageProcessor {
                         : message.getWelcomeCenter().getId(),
                 message.getCallsignFrom(),
                 message.getCallsignTo(),
-                message.getContent(),
+                MessageIdentifierService.wireContent(message),
                 () -> centerIsOpenIfRequired(message));
     }
 
@@ -180,11 +186,12 @@ public class StationMessageProcessor {
         if (message.getPacketProcessorId() == null
                 || message.getPacketProcessorId().isBlank())
             message.setPacketProcessorId(determinePacketProcessor(message, routingCenterId));
+        identifiers.prepare(message);
         boolean queued = communications.sendMessage(
                 message.getPacketProcessorId(),
                 message.getCallsignFrom(),
                 message.getCallsignTo(),
-                message.getContent(),
+                MessageIdentifierService.wireContent(message),
                 () -> centerIsOpenIfRequired(message)
                         && (routingCenterId == null
                                 || communications.isEligible(routingCenterId, message.getPacketProcessorId())),

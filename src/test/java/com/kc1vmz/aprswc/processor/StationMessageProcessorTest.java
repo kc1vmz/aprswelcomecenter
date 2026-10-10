@@ -33,6 +33,7 @@ import com.kc1vmz.aprswc.accessor.StationMessageAccessor;
 import com.kc1vmz.aprswc.accessor.StationPacketAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
+import com.kc1vmz.aprswc.communication.MessageIdentifierService;
 import com.kc1vmz.aprswc.object.Station;
 import com.kc1vmz.aprswc.object.StationMessage;
 import com.kc1vmz.aprswc.object.StationPacket;
@@ -65,6 +66,9 @@ class StationMessageProcessorTest {
 
     @Mock
     private CommunicationInstanceManager communications;
+
+    @Mock
+    private MessageIdentifierService identifiers;
 
     @InjectMocks
     private StationMessageProcessor processor;
