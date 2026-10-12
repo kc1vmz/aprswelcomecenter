@@ -87,13 +87,13 @@ public class PacketParser {
             case '@':
             case '/':
             case '=':
-            case '`':
             case '$':
             case '!':
                 ret = PacketType.LOCATION;
                 break;
             case 0x1c:
             case 0x1d:
+            case '`':
             case '\'':
                 ret = PacketType.MICE;
                 break;

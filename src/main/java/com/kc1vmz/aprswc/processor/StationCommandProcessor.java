@@ -216,6 +216,7 @@ public class StationCommandProcessor {
                     messageText,
                     null,
                     MessageType.MESSAGE);
+            stationMessage.setOriginPolicy(communicationPolicy.getId(), communicationPolicy.getVersion());
             queueReply(command, stationMessage);
         }
     }

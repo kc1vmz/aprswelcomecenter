@@ -977,6 +977,13 @@
                 <button type="button" id="close-settings" class="icon-button" aria-label="Close">×</button>
             </div>
             <fieldset>
+                <legend>Message delivery</legend>
+                <div class="form-grid">
+                    <label>Maximum retries<input name="messageMaxRetries" type="number" min="0" max="2147483647" step="1" value="3" required></label>
+                    <label>Retry interval (seconds)<input name="messageRetryIntervalSeconds" type="number" min="1" max="2147483647" step="1" value="60" required></label>
+                </div>
+            </fieldset>
+            <fieldset>
                 <legend>Information Retention</legend>
                 <div class="form-grid">
                     <label>Retain packets and positions for (days)<input name="packetRetentionDays" type="number" min="1" max="2147483647" step="1" value="1" required></label>
@@ -1150,7 +1157,7 @@
     <script src="/aprs-symbol-picker.js?v=20260925-2"></script>
     <script src="/policy-content.js?v=20261008-1"></script>
     <script src="/policy-automation.js?v=20261008-1"></script>
-    <script src="/app.js?v=20261010-1"></script>
+    <script src="/app.js?v=20261011-1"></script>
     <script src="/region-import.js?v=20260926-1"></script>
     <script src="/points-of-interest.js?v=20260925-1"></script>
     <script src="/center-communications.js?v=20260924-1"></script>

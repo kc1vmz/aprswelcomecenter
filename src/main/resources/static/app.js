@@ -343,12 +343,14 @@ async function openWelcomeCenterMessagesDialog(centerId) {
     try {
         const messages = await requestJson(
             `/api/v1/station-messages?welcomeCenterId=${encodeURIComponent(centerId)}`);
+        const deliveryRows = await requestJson("/api/v1/message-deliveries");
+        const deliveries = new Map(deliveryRows.map(row => [row.ID, row]));
         list.innerHTML = messages.length ? messages.map(stationMessage => `
             <article class="station-message-item welcome-center-message-item">
                 <time>${stationMessage.sentTime ? formatReceivedTime(stationMessage.sentTime) : "Not yet sent"}</time>
                 <div><strong>${escapeHtml(stationMessage.callsignFrom || "—")}</strong></div>
                 <div><strong>${escapeHtml(stationMessage.callsignTo || "All stations")}</strong></div>
-                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong>${stationMessage.messageIdentifier ? `<small class="message-character-count">Message ID: ${escapeHtml(stationMessage.messageIdentifier)}</small>` : ""}</div>
+                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong>${stationMessage.messageIdentifier ? `<small class="message-character-count">Message ID: ${escapeHtml(stationMessage.messageIdentifier)}${formatMessageDelivery(deliveries.get(stationMessage.id))}</small>` : ""}</div>
             </article>`).join("") : '<p class="empty-associations">No messages for this Welcome Center.</p>';
         document.querySelector("#welcome-center-message-count").textContent = `(${messages.length})`;
         deleteButton.disabled = messages.length === 0;
@@ -589,11 +591,13 @@ async function openStationMessagesDialog() {
     try {
         const messages = await requestJson(
             `/api/v1/station-messages?callsignTo=${encodeURIComponent(callsign)}`);
+        const deliveryRows = await requestJson("/api/v1/message-deliveries");
+        const deliveries = new Map(deliveryRows.map(row => [row.ID, row]));
         list.innerHTML = messages.length ? messages.map(stationMessage => `
             <article class="station-message-item">
                 <time>${stationMessage.sentTime ? formatReceivedTime(stationMessage.sentTime) : "Not yet sent"}</time>
                 <div><strong>${escapeHtml(stationMessage.callsignFrom || "—")}</strong></div>
-                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong>${stationMessage.messageIdentifier ? `<small class="message-character-count">Message ID: ${escapeHtml(stationMessage.messageIdentifier)}</small>` : ""}</div>
+                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong>${stationMessage.messageIdentifier ? `<small class="message-character-count">Message ID: ${escapeHtml(stationMessage.messageIdentifier)}${formatMessageDelivery(deliveries.get(stationMessage.id))}</small>` : ""}</div>
             </article>`).join("") : '<p class="empty-associations">No messages for this station.</p>';
         document.querySelector("#station-message-count").textContent = `(${messages.length})`;
         deleteButton.disabled = messages.length === 0;
@@ -2236,6 +2240,16 @@ function requestSettingsConfirmation(event) {
         }
         retention[name] = days;
     }
+    for (const [name, minimum] of [["messageMaxRetries", 0], ["messageRetryIntervalSeconds", 1]]) {
+        const value = Number(valueOf(name));
+        if (!valueOf(name) || !Number.isInteger(value) || value < minimum || value > 2147483647) {
+            const message = document.querySelector("#settings-message");
+            message.className = "form-message error";
+            message.textContent = "Retries must be a nonnegative whole number; retry interval must be a positive whole number of seconds.";
+            form.elements[name].focus();
+            return;
+        }
+    }
     const configuredMapTileUrl = valueOf("mapTileUrl");
     if (configuredMapTileUrl && (!/^https?:\/\//i.test(configuredMapTileUrl)
             || !["{z}", "{x}", "{y}"].every(token => configuredMapTileUrl.includes(token)))) {
@@ -2247,6 +2261,8 @@ function requestSettingsConfirmation(event) {
     }
     pendingSettings = {
         ...retention,
+        messageMaxRetries: Number(valueOf("messageMaxRetries")),
+        messageRetryIntervalSeconds: Number(valueOf("messageRetryIntervalSeconds")),
         mapTileUrl: configuredMapTileUrl || null,
         tinyTopicsServerUrl: valueOf("tinyTopicsServerUrl")
     };
@@ -2626,4 +2642,12 @@ function updateMessageCharacterCount(form) {
 for (const id of ["send-welcome-center-message-form", "send-station-message-form", "policy-form"]) {
     const form = document.getElementById(id);
     (form.elements.content || form.elements.messageText).addEventListener("input", () => updateMessageCharacterCount(form));
+}
+
+function formatMessageDelivery(delivery) {
+    if (!delivery) return "";
+    const labels = {PENDING: "Pending", AWAITING_ACK: "Awaiting ACK", ACKNOWLEDGED: "Acknowledged", REJECTED: "Rejected", EXHAUSTED: "Exhausted", CANCELLED: "Cancelled"};
+    const last = delivery.LAST_SENT ? `; last sent ${formatReceivedTime(delivery.LAST_SENT)}` : "";
+    const completed = delivery.COMPLETED_AT ? `; updated ${formatReceivedTime(delivery.COMPLETED_AT)}` : "";
+    return escapeHtml(` - ${labels[delivery.STATE] || delivery.STATE}; ${delivery.ATTEMPTS} attempts${last}${completed}`);
 }

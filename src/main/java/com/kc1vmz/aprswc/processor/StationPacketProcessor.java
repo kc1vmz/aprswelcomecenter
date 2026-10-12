@@ -24,6 +24,7 @@ import com.kc1vmz.aprswc.accessor.StationPacketAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterWeatherReportAccessor;
 import com.kc1vmz.aprswc.communication.CommunicationScope;
+import com.kc1vmz.aprswc.communication.MessageDeliveryService;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.DistanceUnit;
 import com.kc1vmz.aprswc.enumeration.MessageType;
@@ -62,10 +63,12 @@ public class StationPacketProcessor {
     private static final Logger objectLog = LoggerFactory.getLogger("ProcessorObjectLog");
 
     private final PolicyAutomationProcessor automation;
+    private final MessageDeliveryService deliveries;
 
     public StationPacketProcessor(PolicyAutomationProcessor automation) {
         this(
                 automation,
+                null,
                 null,
                 null,
                 null,
@@ -102,7 +105,9 @@ public class StationPacketProcessor {
             LocationPacketParser locationPacketParser,
             GeoFenceUtils geoFenceUtils,
             StationMessageQueue stationMessageQueue,
-            WelcomeCenterWeatherReportAccessor welcomeCenterWeatherReportAccessor) {
+            WelcomeCenterWeatherReportAccessor welcomeCenterWeatherReportAccessor,
+            MessageDeliveryService deliveries) {
+        this.deliveries = deliveries;
         this.automation = automation;
         this.queue = queue;
         this.stationPacketAccessor = stationPacketAccessor;
@@ -472,6 +477,8 @@ public class StationPacketProcessor {
 
     private void processMessagePacket(StationPacket packet, Station station) {
         determineCallsignTo(packet);
+        if (deliveries != null
+                && deliveries.acknowledge(packet.getCallsign(), packet.getCallsignTo(), packet.getCommand())) return;
         var center =
                 welcomeCenterAccessor.findOpenByCallsign(packet.getCallsignTo()).block();
         if (center == null || !CommunicationScope.of(center).allows(packet.getPacketProcessorId())) {
@@ -480,7 +487,7 @@ public class StationPacketProcessor {
         }
         // handle ack and rej
         if (isAckOrRej(packet)) {
-            // ignore packet - we are not retrying
+            // Unmatched protocol response; do not interpret as an application command.
             return;
         }
         if (isWelcomeCenterCommand(packet)) {
@@ -502,7 +509,7 @@ public class StationPacketProcessor {
                     null,
                     "rej" + ackId,
                     packet.getPacketProcessorId(),
-                    com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
+                    MessageType.MESSAGE);
             stationMessage.setRequiresOpenCenter(true);
             stationMessageQueue.offer(stationMessage);
         }

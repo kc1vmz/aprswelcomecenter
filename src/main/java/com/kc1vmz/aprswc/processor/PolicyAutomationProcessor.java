@@ -110,7 +110,7 @@ public class PolicyAutomationProcessor {
 
     public void tick(Instant now) {
         jdbc.update(
-                "update policy_executions set outcome='FAILED' where outcome in ('CLAIMED','WRITING') and expires_at < ?",
+                "update policy_executions set outcome='FAILED' where outcome in ('CLAIMED','WRITING') and expires_at < ? and not exists (select 1 from message_deliveries d where d.policy_id=policy_executions.policy_id and d.occurrence_key=policy_executions.occurrence_key and d.claim_token=policy_executions.claim_token and d.state in ('PENDING','AWAITING_ACK'))",
                 Timestamp.from(now));
         List<UUID> due = jdbc.query(
                 "select id from communication_policies where next_run_at <= ?",
@@ -268,7 +268,7 @@ public class PolicyAutomationProcessor {
                 resolved,
                 route,
                 stationId == null ? MessageType.BULLETIN : MessageType.MESSAGE);
-        identifiers.prepare(outgoing);
+        identifiers.prepare(outgoing, p.getId(), p.getVersion(), key, token);
         boolean queued = communications.sendMessage(
                 route,
                 p.getWelcomeCenter().getCallsign(),

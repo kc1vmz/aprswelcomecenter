@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../../main/resources/static/app.js'), 'utf8');
 const code = source.slice(source.indexOf('function requestSettingsConfirmation('), source.indexOf('async function loadIgnoredStations('));
 function setup(values) {
-    values = {tinyTopicsServerUrl: "http://www.tiny-topics.com:8088", ...values};
+    values = {messageMaxRetries: 3, messageRetryIntervalSeconds: 60, tinyTopicsServerUrl: "http://www.tiny-topics.com:8088", ...values};
     const elements = {};
     const form = {elements: Object.fromEntries(Object.entries(values).map(([key, value]) => [key, {value: String(value), focus() {}}]))};
     const context = vm.createContext({pendingSettings: null, document: {querySelector: selector => elements[selector] ||= {
@@ -18,7 +18,7 @@ function setup(values) {
 test('saves independent packet, station, and message retention periods', () => {
     const ui = setup({mapTileUrl: '', packetRetentionDays: 1, stationRetentionDays: 10, messageRetentionDays: 20});
     assert.deepEqual(JSON.parse(JSON.stringify(ui.context.pendingSettings)), {
-        packetRetentionDays: 1, stationRetentionDays: 10, messageRetentionDays: 20, mapTileUrl: null, tinyTopicsServerUrl: "http://www.tiny-topics.com:8088"
+        messageMaxRetries: 3, messageRetryIntervalSeconds: 60, packetRetentionDays: 1, stationRetentionDays: 10, messageRetentionDays: 20, mapTileUrl: null, tinyTopicsServerUrl: "http://www.tiny-topics.com:8088"
     });
     assert.equal(ui.elements['#confirm-settings-dialog'].open, true);
 });
@@ -29,5 +29,13 @@ test('rejects invalid station or message retention before confirmation', () => {
             assert.equal(ui.context.pendingSettings, null);
             assert.match(ui.elements['#settings-message'].textContent, /greater than zero/);
         }
+    }
+});
+
+test('retry settings accept zero retries and reject invalid values', () => {
+    const values = {mapTileUrl: '', packetRetentionDays: 1, stationRetentionDays: 10, messageRetentionDays: 10};
+    assert.equal(setup({...values, messageMaxRetries: 0}).context.pendingSettings.messageMaxRetries, 0);
+    for (const [field, invalid] of [['messageMaxRetries', -1], ['messageMaxRetries', 1.5], ['messageRetryIntervalSeconds', 0], ['messageRetryIntervalSeconds', '']]) {
+        assert.equal(setup({...values, [field]: invalid}).context.pendingSettings, null);
     }
 });

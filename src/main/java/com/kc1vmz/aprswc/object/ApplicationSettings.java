@@ -60,6 +60,32 @@ public class ApplicationSettings {
         messageRetentionDays = value;
     }
 
+    @NotNull
+    @Min(0)
+    @Column(nullable = false)
+    private Integer messageMaxRetries = 3;
+
+    @NotNull
+    @Min(1)
+    @Column(nullable = false)
+    private Integer messageRetryIntervalSeconds = 60;
+
+    public Integer getMessageMaxRetries() {
+        return messageMaxRetries;
+    }
+
+    public void setMessageMaxRetries(Integer value) {
+        messageMaxRetries = value;
+    }
+
+    public Integer getMessageRetryIntervalSeconds() {
+        return messageRetryIntervalSeconds;
+    }
+
+    public void setMessageRetryIntervalSeconds(Integer value) {
+        messageRetryIntervalSeconds = value;
+    }
+
     @Id
     private UUID id;
 
@@ -94,6 +120,31 @@ public class ApplicationSettings {
     protected ApplicationSettings() {}
 
     public ApplicationSettings(UUID id, String mapTileUrl, String tinyTopicsServerUrl) {
+        this(
+                id,
+                mapTileUrl,
+                tinyTopicsServerUrl,
+                DEFAULT_PACKET_RETENTION_DAYS,
+                DEFAULT_STATION_RETENTION_DAYS,
+                DEFAULT_MESSAGE_RETENTION_DAYS,
+                3,
+                60);
+    }
+
+    public ApplicationSettings(
+            UUID id,
+            String mapTileUrl,
+            String tinyTopicsServerUrl,
+            Integer packetRetentionDays,
+            Integer stationRetentionDays,
+            Integer messageRetentionDays,
+            Integer messageMaxRetries,
+            Integer messageRetryIntervalSeconds) {
+        this.packetRetentionDays = packetRetentionDays;
+        this.stationRetentionDays = stationRetentionDays;
+        this.messageRetentionDays = messageRetentionDays;
+        this.messageMaxRetries = messageMaxRetries;
+        this.messageRetryIntervalSeconds = messageRetryIntervalSeconds;
         this.id = id;
         this.mapTileUrl = mapTileUrl;
         this.tinyTopicsServerUrl = tinyTopicsServerUrl;

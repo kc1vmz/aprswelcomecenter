@@ -105,4 +105,7 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
     <changeSet id="018-message-identifiers" author="aprswc" dbms="h2">
         <sqlFile path="018-message-identifiers.sql" relativeToChangelogFile="true"/>
     </changeSet>
+    <changeSet id="019-message-delivery" author="aprswc" dbms="h2">
+        <sqlFile path="019-message-delivery.sql" relativeToChangelogFile="true"/>
+    </changeSet>
 </databaseChangeLog>

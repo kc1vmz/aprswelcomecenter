@@ -111,6 +111,7 @@ public class CommunicationEventProcessor {
                     content.resolve(policy),
                     null,
                     MessageType.MESSAGE);
+            stationMessage.setOriginPolicy(policy.getId(), policy.getVersion());
             stationMessage.setPacketProcessorId(event.getPacketProcessorId());
             stationMessage.setRequiresOpenCenter(true);
             stationMessageQueue.offer(stationMessage);

@@ -36,11 +36,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CommunicationInstanceManager {
-    @Autowired
-    private CenterCommunicationRouting routing;
+    private final CenterCommunicationRouting routing;
 
     public record Health(String status, String lastError, LocalDateTime lastPacketTime) {}
 
+    private final MessageDeliveryService deliveries;
     private final CommunicationInstanceRepository repository;
     private final StationPacketQueue packets;
     private final APRSUtilityAccessor utility;
@@ -51,6 +51,18 @@ public class CommunicationInstanceManager {
 
     public CommunicationInstanceManager(
             CommunicationInstanceRepository repository, StationPacketQueue packets, APRSUtilityAccessor utility) {
+        this(repository, packets, utility, null, null);
+    }
+
+    @Autowired
+    public CommunicationInstanceManager(
+            CommunicationInstanceRepository repository,
+            StationPacketQueue packets,
+            APRSUtilityAccessor utility,
+            MessageDeliveryService deliveries,
+            CenterCommunicationRouting routing) {
+        this.routing = routing;
+        this.deliveries = deliveries;
         this.repository = repository;
         this.packets = packets;
         this.utility = utility;
@@ -125,6 +137,12 @@ public class CommunicationInstanceManager {
     }
 
     public boolean sendMessage(
+            String id, String from, String to, String content, BooleanSupplier permitted, Runnable onSent) {
+        if (deliveries != null) return deliveries.send(id, from, to, content, permitted, onSent);
+        return sendUntracked(id, from, to, content, permitted, onSent);
+    }
+
+    public boolean sendUntracked(
             String id, String from, String to, String content, BooleanSupplier permitted, Runnable onSent) {
         if (id == null) return false;
         try {

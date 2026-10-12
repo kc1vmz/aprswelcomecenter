@@ -40,6 +40,27 @@ public class StationMessage {
         requiresOpenCenter = value;
     }
 
+    @Transient
+    @JsonIgnore
+    private UUID originPolicyId;
+
+    @Transient
+    @JsonIgnore
+    private Long originPolicyVersion;
+
+    public UUID getOriginPolicyId() {
+        return originPolicyId;
+    }
+
+    public Long getOriginPolicyVersion() {
+        return originPolicyVersion;
+    }
+
+    public void setOriginPolicy(UUID id, Long version) {
+        originPolicyId = id;
+        originPolicyVersion = version;
+    }
+
     @Id
     private UUID id;
 
@@ -107,6 +128,34 @@ public class StationMessage {
             String packetProcessorId,
             MessageType messageType,
             String messageIdentifier) {
+        this(
+                id,
+                callsignTo,
+                callsignFrom,
+                welcomeCenter,
+                sentTime,
+                content,
+                packetProcessorId,
+                messageType,
+                messageIdentifier,
+                null,
+                null);
+    }
+
+    public StationMessage(
+            UUID id,
+            String callsignTo,
+            String callsignFrom,
+            WelcomeCenter welcomeCenter,
+            LocalDateTime sentTime,
+            String content,
+            String packetProcessorId,
+            MessageType messageType,
+            String messageIdentifier,
+            UUID originPolicyId,
+            Long originPolicyVersion) {
+        this.originPolicyId = originPolicyId;
+        this.originPolicyVersion = originPolicyVersion;
         this.messageIdentifier = messageIdentifier;
         this.requiresOpenCenter = false;
         this.createdTime = null; // Assigned by JPA at insertion.

@@ -273,7 +273,7 @@ class PolicyAutomationTest {
                 .isNull();
         assertThat(guards.getFirst().getAsBoolean()).isTrue();
         assertThat(messages.findAllByWelcomeCenterIdOrderBySentTimeDesc(center.getId()))
-                .isEmpty();
+                .allMatch(message -> message.getSentTime() == null);
         callbacks.getFirst().run();
         callbacks.getFirst().run(); // A duplicate completion callback must not duplicate the log.
         var logged = messages.findAllByWelcomeCenterIdOrderBySentTimeDesc(center.getId());
@@ -348,7 +348,7 @@ class PolicyAutomationTest {
         processor.statusHeard(status(station, "hello !WC1!"), station);
         assertThat(callbacks).hasSize(1);
         assertThat(messages.findAllByWelcomeCenterIdOrderBySentTimeDesc(center.getId()))
-                .isEmpty();
+                .allMatch(message -> message.getSentTime() == null);
         callbacks.getFirst().run();
         var logged = messages.findAllByWelcomeCenterIdOrderBySentTimeDesc(center.getId());
         assertThat(logged).hasSize(1);
