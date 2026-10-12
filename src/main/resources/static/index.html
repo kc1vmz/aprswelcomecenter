@@ -263,6 +263,19 @@
             <div id="welcome-center-messages" class="station-message-list"></div>
         </div>
     </dialog>
+    <dialog id="welcome-center-closed-message-dialog" aria-labelledby="welcome-center-closed-message-title">
+        <form method="dialog">
+            <div class="dialog-heading">
+                <h2 id="welcome-center-closed-message-title">Welcome Center Closed</h2>
+                <button type="submit" class="icon-button" aria-label="Close">×</button>
+            </div>
+            <p>Messages can only be sent when the welcome center is open.</p>
+            <div class="form-actions">
+                <button type="submit" autofocus>Close</button>
+            </div>
+        </form>
+    </dialog>
+
     <dialog id="send-welcome-center-message-dialog">
         <form id="send-welcome-center-message-form">
             <div class="dialog-heading">
@@ -331,6 +344,7 @@
                 <p id="station-location-message" class="map-message" role="status" aria-live="polite"></p>
             </section>
             <section class="station-detail-section station-detail-actions">
+                <button type="button" id="view-station-packets" class="secondary" disabled>Packets</button>
                 <button type="button" id="view-station-messages" class="secondary" disabled>Messages</button>
                 <button type="button" id="view-station-positions" class="secondary" disabled>Positions</button>
                 <button type="button" id="view-station-weather" class="secondary" disabled>Weather</button>
@@ -880,17 +894,21 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>Station Packets</h2>
-                    <p>Latest APRS packets heard.</p>
+                    <h2 id="packets-title">Station Packets</h2>
+                    <p>Received and sent APRS packets.</p>
                 </div>
                 <button type="button" id="close-packets" class="icon-button" aria-label="Close">×</button>
             </div>
             <div class="toolbar">
-                <button type="button" id="refresh-packets" class="secondary">Refresh</button>
+                <button type="button" id="refresh-packets" class="secondary" disabled>Refresh</button>
                 <button type="button" id="download-station-packets" class="secondary">Download CSV</button>
                 <button type="button" id="delete-all-packets" class="danger">Delete All Packets</button>
             </div>
-            <p id="packets-message" class="form-message" role="status" aria-live="polite"></p>
+            <p id="packets-logging-status" class="form-message" role="status" aria-live="polite"></p>
+            <div class="packet-list-heading">
+                <p id="packets-message" class="form-message" role="status" aria-live="polite"></p>
+                <label>Direction <select id="packet-direction-filter"><option value="ALL">All</option><option value="RX">Received</option><option value="TX">Sent</option></select></label>
+            </div>
             <div id="packets-list" class="packet-list"></div>
         </div>
     </dialog>
@@ -1030,8 +1048,13 @@
                     <button type="button" id="manage-ignored-stations" class="secondary">Manage</button>
                 </div>
             </fieldset>
-            <div class="form-actions">
+            <fieldset>
+                <legend>Packet Logging</legend>
+                <label class="checkbox-label"><input type="checkbox" id="packet-logging-enabled" disabled> Enable packet logging</label>
+                <p id="packet-logging-message" class="form-message" role="status" aria-live="polite"></p>
                 <button type="button" id="open-packets" class="secondary">Packet List</button>
+            </fieldset>
+            <div class="form-actions">
                 <button type="button" id="close-communication-settings">Close</button>
             </div>
         </div>

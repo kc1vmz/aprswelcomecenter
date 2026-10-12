@@ -21,11 +21,11 @@ import com.kc1vmz.aprswc.accessor.ApplicationSettingsAccessor;
 import com.kc1vmz.aprswc.object.ApplicationSettings;
 import jakarta.validation.Valid;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -38,8 +38,11 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/v1/application-settings")
 public class ApplicationSettingsController {
-    @Autowired
-    private ApplicationSettingsAccessor accessor;
+    private final ApplicationSettingsAccessor accessor;
+
+    public ApplicationSettingsController(ApplicationSettingsAccessor accessor) {
+        this.accessor = accessor;
+    }
 
     @GetMapping
     public Flux<ApplicationSettings> all() {
@@ -60,6 +63,21 @@ public class ApplicationSettingsController {
     @PutMapping("/{id}")
     public Mono<ApplicationSettings> replace(@PathVariable UUID id, @Valid @RequestBody ApplicationSettings value) {
         return accessor.replace(id, value);
+    }
+
+    public record PacketLoggingSetting(boolean enabled) {}
+
+    @GetMapping("/packet-logging")
+    public Mono<PacketLoggingSetting> packetLogging() {
+        return accessor.findAll()
+                .next()
+                .map(value -> new PacketLoggingSetting(value.isPacketLoggingEnabled()))
+                .defaultIfEmpty(new PacketLoggingSetting(false));
+    }
+
+    @PatchMapping("/packet-logging")
+    public Mono<PacketLoggingSetting> packetLogging(@RequestBody PacketLoggingSetting value) {
+        return accessor.setPacketLogging(value.enabled()).thenReturn(value);
     }
 
     @DeleteMapping("/{id}")

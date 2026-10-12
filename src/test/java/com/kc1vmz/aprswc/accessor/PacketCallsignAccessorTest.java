@@ -23,12 +23,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.kc1vmz.aprswc.database.ApplicationSettingsRepository;
 import com.kc1vmz.aprswc.database.IgnoreStationRepository;
 import com.kc1vmz.aprswc.database.StationPacketRepository;
 import com.kc1vmz.aprswc.database.StationPositionRepository;
 import com.kc1vmz.aprswc.database.StationRepository;
 import com.kc1vmz.aprswc.database.WelcomeCenterRepository;
 import com.kc1vmz.aprswc.enumeration.StationState;
+import com.kc1vmz.aprswc.object.ApplicationSettings;
 import com.kc1vmz.aprswc.object.IgnoreStation;
 import com.kc1vmz.aprswc.object.Station;
 import com.kc1vmz.aprswc.object.StationPacket;
@@ -47,6 +49,9 @@ import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 class PacketCallsignAccessorTest {
+    @Mock
+    private ApplicationSettingsRepository settings;
+
     @Mock
     private WelcomeCenterRepository welcomeCenterRepository;
 
@@ -78,7 +83,25 @@ class PacketCallsignAccessorTest {
     private WelcomeCenterAccessor welcomeCenterAccessor;
 
     @Test
+    void disabledLoggingKeepsRoutingAndActivityWithoutRawHistory() {
+        StationPacket packet = new StationPacket(null, "route", "KC1VMZ-4", null, "KC1VMZ-4>APRS:>Hello", null);
+        StepVerifier.create(stationPacketAccessor.create(packet))
+                .expectNext(packet)
+                .verifyComplete();
+        verify(stationPacketQueue).offer(packet);
+        StepVerifier.create(stationPacketAccessor.save(packet))
+                .expectNext(packet)
+                .verifyComplete();
+        verify(stationPacketRepository).recordRoute(packet.getCallsign(), "route", packet.getReceivedTime());
+        verify(stationRepository).recordActivity(packet.getCallsign(), packet.getReceivedTime());
+        verify(stationPacketRepository, never()).save(packet);
+    }
+
+    @Test
     void noArchivePacketStillQueuesAndUpdatesActivityWithoutRawHistory() {
+        var configuration = new ApplicationSettings(null, null, ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL);
+        configuration.setPacketLoggingEnabled(true);
+        when(settings.findAll()).thenReturn(List.of(configuration));
         StationPacket packet =
                 new StationPacket(null, "route", "KC1VMZ-4", null, "KC1VMZ-4>APRS,TCPIP*:>Testing !x!", null);
         StepVerifier.create(stationPacketAccessor.create(packet))
@@ -94,6 +117,9 @@ class PacketCallsignAccessorTest {
 
     @Test
     void uppercaseAndHeaderMarkersDoNotSuppressRawHistory() {
+        var configuration = new ApplicationSettings(null, null, ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL);
+        configuration.setPacketLoggingEnabled(true);
+        when(settings.findAll()).thenReturn(List.of(configuration));
         for (String command : List.of("KC1VMZ>APRS:>Testing !X!", "KC1VMZ>APRS,!x!:>Testing")) {
             StationPacket packet = new StationPacket(null, "route", "KC1VMZ", null, command, null);
             when(stationPacketRepository.save(packet)).thenReturn(packet);
@@ -187,6 +213,9 @@ class PacketCallsignAccessorTest {
 
     @Test
     void savesPacketWithoutRequeueingIt() {
+        var configuration = new ApplicationSettings(null, null, ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL);
+        configuration.setPacketLoggingEnabled(true);
+        when(settings.findAll()).thenReturn(List.of(configuration));
         StationPacket packet =
                 new StationPacket(UUID.randomUUID(), "processor-1", "N1ABC", LocalDateTime.now(), "location", null);
         when(stationPacketRepository.save(packet)).thenReturn(packet);

@@ -43,7 +43,12 @@ public class StationPacket {
     private String welcomeCenterId;
 
     private LocalDateTime receivedTime = LocalDateTime.now();
+
+    @Column(length = 4096)
     private String command;
+
+    @Column(nullable = false, length = 2)
+    private String direction = "RX";
 
     @Lob
     private String header;
@@ -58,6 +63,18 @@ public class StationPacket {
             LocalDateTime receivedTime,
             String command,
             String header) {
+        this(id, packetProcessorId, callsign, receivedTime, command, header, "RX");
+    }
+
+    public StationPacket(
+            UUID id,
+            String packetProcessorId,
+            String callsign,
+            LocalDateTime receivedTime,
+            String command,
+            String header,
+            String direction) {
+        this.direction = direction;
         this.id = id;
         this.packetProcessorId = packetProcessorId;
         this.callsign = callsign;
@@ -67,6 +84,7 @@ public class StationPacket {
     }
 
     public StationPacket(StationPacket obj) {
+        this.direction = obj.direction;
         this.id = obj.id;
         this.packetProcessorId = obj.packetProcessorId;
         this.callsign = obj.callsign;
@@ -81,6 +99,10 @@ public class StationPacket {
     void initialize() {
         if (id == null) id = UUID.randomUUID();
         if (receivedTime == null) receivedTime = LocalDateTime.now();
+    }
+
+    public String getDirection() {
+        return direction;
     }
 
     public UUID getId() {

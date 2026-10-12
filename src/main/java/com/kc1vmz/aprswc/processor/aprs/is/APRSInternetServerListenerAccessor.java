@@ -28,7 +28,7 @@ import java.time.*;
 import java.util.UUID;
 
 /** One accessor owns one connection. Reads never acquire the writer's lock. */
-public class APRSInternetServerListenerAccessor implements CommunicationTransport {
+public class APRSInternetServerListenerAccessor extends PacketLoggingTransport {
     private final CommunicationConfig config;
     private final APRSUtilityAccessor utility;
     private final Socket socket = new Socket();
@@ -60,12 +60,18 @@ public class APRSInternetServerListenerAccessor implements CommunicationTranspor
         writer.flush();
     }
 
+    private void writePacket(String data) throws IOException {
+        write(data);
+        recordTransmitted(ascii(data));
+    }
+
     public void sendMessage(String from, String to, String content) throws IOException {
-        write(String.format("%s>%s,TCPIP*::%-9s:%s\r\n", from, ApplicationToCallConstant.TOCALL_NC2, to, content));
+        writePacket(
+                String.format("%s>%s,TCPIP*::%-9s:%s\r\n", from, ApplicationToCallConstant.TOCALL_NC2, to, content));
     }
 
     public void sendObject(ObjectBeacon b) throws IOException {
-        write(String.format(
+        writePacket(String.format(
                 "%s>%s,TCPIP*:;%s\r\n", b.getCallsignFrom(), ApplicationToCallConstant.TOCALL_NC2, objectData(b)));
     }
 

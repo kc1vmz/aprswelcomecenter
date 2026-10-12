@@ -53,6 +53,51 @@ class LiquibaseMigrationTest {
     }
 
     @Test
+    void loggingDefaultsOffOnUpgradeAndKeepsSavedChoice() throws Exception {
+        var ds = database();
+        try (var c = ds.getConnection();
+                var statement = c.createStatement()) {
+            legacy(c);
+            statement.execute(
+                    "insert into application_settings(id,using_internet_server,usingkiss) values(random_uuid(),false,false)");
+        }
+        migrate(ds);
+        try (var c = ds.getConnection();
+                var statement = c.createStatement()) {
+            assertThat(scalar(c, "select packet_logging_enabled from application_settings"))
+                    .isEqualTo("FALSE");
+            statement.execute("update application_settings set packet_logging_enabled=true");
+        }
+        migrate(ds);
+        try (var c = ds.getConnection()) {
+            assertThat(scalar(c, "select packet_logging_enabled from application_settings"))
+                    .isEqualTo("TRUE");
+        }
+    }
+
+    @Test
+    void legacyPacketsBecomeReceivedAndDirectionSurvivesRepeatMigration() throws Exception {
+        var ds = database();
+        try (var c = ds.getConnection();
+                var statement = c.createStatement()) {
+            legacy(c);
+            statement.execute("insert into station_packets(id,callsign,command) values(random_uuid(),'N1TEST','old')");
+        }
+        migrate(ds);
+        try (var c = ds.getConnection();
+                var statement = c.createStatement()) {
+            assertThat(scalar(c, "select direction from station_packets")).isEqualTo("RX");
+            statement.execute(
+                    "insert into station_packets(id,callsign,command,direction) values(random_uuid(),'N2TEST',repeat('x',512),'TX')");
+        }
+        migrate(ds);
+        try (var c = ds.getConnection()) {
+            assertThat(scalar(c, "select direction from station_packets where callsign='N2TEST'"))
+                    .isEqualTo("TX");
+        }
+    }
+
+    @Test
     void tinyTopicsDefaultIsPersistedAndEditsSurviveMigration() throws Exception {
         for (boolean existingSettings : new boolean[] {false, true}) {
             var ds = database();
@@ -146,7 +191,7 @@ class LiquibaseMigrationTest {
         migrate(ds);
         try (Connection c = ds.getConnection()) {
             assertThat(scalar(c, "select status from welcome_centers")).isEqualTo("CLOSED");
-            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("19");
+            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("21");
             assertThat(scalar(c, "select communication_mode from welcome_centers"))
                     .isEqualTo("SELECTED");
         }

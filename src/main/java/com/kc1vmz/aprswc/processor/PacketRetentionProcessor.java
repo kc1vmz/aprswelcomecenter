@@ -82,6 +82,7 @@ public class PacketRetentionProcessor {
             }
             LocalDateTime cutoff = LocalDateTime.now(clock).minusDays(days);
             int deleted = packets.deleteReceivedBefore(cutoff);
+            packets.deleteRoutesBefore(cutoff);
             int deletedPositions = positions.deleteCreatedBefore(cutoff);
             log.info(
                     "Retention cleanup deleted {} packets and {} positions before {} (retention: {} days)",

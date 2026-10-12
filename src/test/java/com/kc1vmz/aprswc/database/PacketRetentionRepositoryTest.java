@@ -45,6 +45,39 @@ class PacketRetentionRepositoryTest {
     StationMessageRepository messages;
 
     @Test
+    void routingMetadataKeepsLatestReceptionPerConnectionAndExpires() {
+        var now = LocalDateTime.of(2026, 10, 12, 12, 0);
+        packets.recordRoute("N1META", "route-a", now);
+        packets.recordRoute("N1META", "route-a", now.minusHours(1));
+        packets.recordRoute("N1META", "route-b", now.plusHours(1));
+        assertThat(packets.findHeardRoutes("n1meta"))
+                .extracting(StationPacketRepository.HeardRoute::getPacketProcessorId)
+                .containsExactly("route-b", "route-a");
+        assertThat(packets.findHeardRoutes("n1meta").get(1).getReceivedTime()).isEqualTo(now);
+        assertThat(packets.findLastHeardByCallsign()).anySatisfy(row -> {
+            assertThat(row.getCallsign()).isEqualTo("N1META");
+            assertThat(row.getReceivedTime()).isEqualTo(now.plusHours(1));
+        });
+        assertThat(packets.deleteRoutesBefore(now.plusMinutes(1))).isEqualTo(1);
+        assertThat(packets.findHeardRoutes("N1META")).hasSize(1);
+    }
+
+    @Test
+    void outgoingHistoryDoesNotAffectRoutingOrLastHeardAndExpiresNormally() {
+        var now = LocalDateTime.of(2026, 10, 12, 12, 0);
+        var rx = packets.saveAndFlush(new StationPacket(null, "rx-route", "N1TEST", now.minusHours(1), "rx", null));
+        var tx = packets.saveAndFlush(new StationPacket(null, "tx-route", "N1TEST", now, "tx", null, "TX"));
+        assertThat(packets.findAllByCallsignIgnoreCaseOrderByReceivedTimeDesc("n1test"))
+                .extracting(StationPacket::getId)
+                .containsExactly(rx.getId());
+        assertThat(packets.findLastHeardByCallsign()).hasSize(1);
+        assertThat(packets.findLastHeardByCallsign().getFirst().getReceivedTime())
+                .isEqualTo(rx.getReceivedTime());
+        assertThat(packets.deleteReceivedBefore(now.plusSeconds(1))).isEqualTo(2);
+        assertThat(packets.existsById(tx.getId())).isFalse();
+    }
+
+    @Test
     void expiresPositionsButKeepsStationsAndMessages() {
         var cutoff = LocalDateTime.of(2026, 9, 20, 12, 34, 56);
         var station = stations.saveAndFlush(new Station(null, "N1KEEP", null, List.of()));

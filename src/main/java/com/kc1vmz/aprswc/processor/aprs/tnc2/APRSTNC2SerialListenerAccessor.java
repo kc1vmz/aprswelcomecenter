@@ -28,7 +28,7 @@ import java.time.*;
 import java.util.UUID;
 
 /** One accessor owns one connection. Reads never acquire the writer's lock. */
-public class APRSTNC2SerialListenerAccessor implements CommunicationTransport {
+public class APRSTNC2SerialListenerAccessor extends PacketLoggingTransport {
     private SerialPort serial;
     private boolean closed;
     private final CommunicationConfig config;
@@ -92,20 +92,21 @@ public class APRSTNC2SerialListenerAccessor implements CommunicationTransport {
     private synchronized void write(byte[] bytes) throws IOException {
         output.write(bytes);
         output.flush();
+        recordTransmitted(new String(bytes, StandardCharsets.US_ASCII));
     }
 
     public void sendMessage(String from, String to, String content) throws IOException {
         write(String.format(
                         "%s>%s,%s::%-9s:%s\r\n",
                         from, ApplicationToCallConstant.TOCALL_NC2, config.digiPath(), to, content)
-                .getBytes());
+                .getBytes(StandardCharsets.US_ASCII));
     }
 
     public void sendObject(ObjectBeacon b) throws IOException {
         write(String.format(
                         "%s>%s,%s:;%s\r\n",
                         b.getCallsignFrom(), ApplicationToCallConstant.TOCALL_NC2, config.digiPath(), objectData(b))
-                .getBytes());
+                .getBytes(StandardCharsets.US_ASCII));
     }
 
     public static String objectData(ObjectBeacon b) {

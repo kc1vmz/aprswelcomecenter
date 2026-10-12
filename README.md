@@ -107,9 +107,11 @@ While beaconing objects works correctly, any messages or bulletins would be sour
 #### Packet list
 
 
-Pressing this button will show a list of packets heard by APRS Welcome Center application.
+In **Communication Settings > Packet Logging**, enable or disable raw packet history. Logging defaults to off, and changes take effect immediately. Existing history remains until deleted or expired. Callsign, connection, and last-heard metadata are maintained separately so routing and station activity continue when logging is off.
 
-You can delete all of the heard packets from this dialog.
+Pressing this button shows received (RX) and sent (TX) APRS packets. Use the direction selector to show All, Received, or Sent packets. Each entry includes its time and communication instance; CSV exports include these fields and direction.
+
+You can delete all packet history from this dialog. TX records are created after a successful write to the server or TNC, including each message retry and each connection used for a bulletin or object beacon. They do not confirm reception by the destination. Login and initialization commands are excluded, and packets containing shriek `!x!` in their payload are not saved. Outgoing history does not update station activity or influence message routing.
 
 
 
@@ -134,7 +136,7 @@ There are several application-side settings that can be configured
 
 #### Packet and position retention
 
-Set **Retain packets and positions for (days)** to a whole number greater than zero (default: 1). A dedicated background worker deletes packets received and positions created before the current date/time minus this number of days, once after startup and then every 24 hours. It reads the current setting each run, so changes require no restart. Stations and messages have separate retention periods. Packet-based last-heard times and automatic message routing are no longer available for stations whose packets have all expired.
+Set **Retain packets and positions for (days)** to a whole number greater than zero (default: 1). A dedicated background worker deletes packets received or sent and positions created before the current date/time minus this number of days, once after startup and then every 24 hours. It reads the current setting each run, so changes require no restart. Stations and messages have separate retention periods. Packet-based last-heard times and automatic message routing are no longer available for stations whose packets have all expired.
 
 #### Station and message retention
 
@@ -335,7 +337,7 @@ Use **Sort & filter** beside the Stations heading to sort by callsign (A-Z) or l
 
 
 
-Last heard is the latest received time in stored packet history, displayed in your browser's local time. Stations without packet history appear under All with an Unknown time. Deleting packet history also removes that history from the last-heard calculation.
+Last heard is the latest received time in reception metadata or available RX packet history, displayed in your browser's local time. Stations without reception history appear under All with an Unknown time. Deleting raw packet history does not clear separately maintained reception metadata.
 
 
 

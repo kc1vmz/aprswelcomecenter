@@ -41,6 +41,51 @@ class ApplicationSettingsControllerTest {
     }
 
     @Test
+    void loggingDefaultsOffAndCanBePersistentlyToggledWithoutChangingOtherSettings() {
+        client.get()
+                .uri("/api/v1/application-settings/packet-logging")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.enabled")
+                .isEqualTo(false);
+        for (boolean enabled : new boolean[] {true, false}) {
+            client.patch()
+                    .uri("/api/v1/application-settings/packet-logging")
+                    .header("Content-Type", "application/json")
+                    .bodyValue("{\"enabled\":" + enabled + "}")
+                    .exchange()
+                    .expectStatus()
+                    .isOk()
+                    .expectBody()
+                    .jsonPath("$.enabled")
+                    .isEqualTo(enabled);
+            client.get()
+                    .uri("/api/v1/application-settings")
+                    .exchange()
+                    .expectStatus()
+                    .isOk()
+                    .expectBody()
+                    .jsonPath("$[0].packetLoggingEnabled")
+                    .isEqualTo(enabled)
+                    .jsonPath("$[0].packetRetentionDays")
+                    .isEqualTo(1);
+            var settings = repository.findAll().getFirst();
+            settings.setPacketLoggingEnabled(!enabled);
+            client.put()
+                    .uri("/api/v1/application-settings/" + settings.getId())
+                    .bodyValue(settings)
+                    .exchange()
+                    .expectStatus()
+                    .isOk()
+                    .expectBody()
+                    .jsonPath("$.packetLoggingEnabled")
+                    .isEqualTo(enabled);
+        }
+    }
+
+    @Test
     void createsAndReadsSettings() {
         ApplicationSettings settings = new ApplicationSettings(
                 null, "https://tiles.example.test/{z}/{x}/{y}.png", ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL);

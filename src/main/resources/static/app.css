@@ -568,6 +568,24 @@ label {
     gap: 0.6rem;
 }
 
+.packet-list-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.packet-list-heading .form-message { margin: 0; }
+.packet-list-heading label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    white-space: nowrap;
+}
+.packet-list-heading select { width: auto; }
+
 .packet-item {
     display: grid;
     grid-template-columns: minmax(11rem, 0.8fr) minmax(6rem, 0.4fr) minmax(14rem, 1.8fr);
@@ -583,6 +601,8 @@ label {
     color: var(--muted);
     font-size: 0.85rem;
 }
+
+.packet-metadata { display: grid; gap: 0.35rem; overflow-wrap: anywhere; color: var(--muted); }
 
 .packet-item strong { color: var(--accent); }
 

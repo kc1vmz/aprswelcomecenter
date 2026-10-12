@@ -21,6 +21,7 @@ import com.kc1vmz.aprswc.processor.StationPacketQueue;
 import java.time.LocalDateTime;
 import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +34,7 @@ public class ManagedPacketListener {
     private record Pending(CommunicationTransport connection, Send send, BooleanSupplier permitted, Runnable onSent) {}
 
     public final CommunicationConfig config;
+    private Consumer<String> packetLogger;
     private final StationPacketQueue packets;
     private final Supplier<CommunicationTransport> factory;
     private final BlockingQueue<Pending> outgoing = new ArrayBlockingQueue<>(100);
@@ -48,6 +50,15 @@ public class ManagedPacketListener {
 
     public ManagedPacketListener(
             CommunicationConfig config, StationPacketQueue packets, Supplier<CommunicationTransport> factory) {
+        this(config, packets, factory, packet -> {});
+    }
+
+    public ManagedPacketListener(
+            CommunicationConfig config,
+            StationPacketQueue packets,
+            Supplier<CommunicationTransport> factory,
+            Consumer<String> packetLogger) {
+        this.packetLogger = packetLogger;
         this.config = config;
         this.packets = packets;
         this.factory = factory;
@@ -55,6 +66,10 @@ public class ManagedPacketListener {
         writer = new Thread(this::writeLoop, "Communication-writer-" + config.id());
         reader.setDaemon(true);
         writer.setDaemon(true);
+    }
+
+    public void setPacketLogger(Consumer<String> packetLogger) {
+        this.packetLogger = packetLogger;
     }
 
     public void start() {
@@ -66,6 +81,7 @@ public class ManagedPacketListener {
         long delay = 1000;
         while (!stopping) {
             CommunicationTransport transport = factory.get();
+            if (transport instanceof PacketLoggingTransport logging) logging.setPacketLogger(packetLogger);
             connection = transport;
             try {
                 if (stopping) break;

@@ -94,6 +94,10 @@ final class KenwoodSession implements AutoCloseable {
     }
 
     synchronized void send(String destination, String information) throws IOException {
+        send(destination, information, () -> {});
+    }
+
+    synchronized void send(String destination, String information, Runnable onWritten) throws IOException {
         // Control characters would execute commands or prematurely terminate a packet.
         if (information.length() > 255 || information.chars().anyMatch(c -> c < 32 || c > 126))
             throw new IOException("Kenwood payload must be at most 255 printable ASCII characters");
@@ -102,6 +106,7 @@ final class KenwoodSession implements AutoCloseable {
         write("CONVERS\r");
         pause();
         write(information + "\r");
+        onWritten.run();
         pause();
         command("\003", 3000);
     }

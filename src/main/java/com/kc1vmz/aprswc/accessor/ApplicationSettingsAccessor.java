@@ -20,7 +20,6 @@ package com.kc1vmz.aprswc.accessor;
 import com.kc1vmz.aprswc.database.ApplicationSettingsRepository;
 import com.kc1vmz.aprswc.object.ApplicationSettings;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -30,8 +29,24 @@ import reactor.core.scheduler.Schedulers;
 
 @Service
 public class ApplicationSettingsAccessor {
-    @Autowired
-    private ApplicationSettingsRepository repository;
+    private final ApplicationSettingsRepository repository;
+
+    public ApplicationSettingsAccessor(ApplicationSettingsRepository repository) {
+        this.repository = repository;
+    }
+
+    public Mono<Void> setPacketLogging(boolean enabled) {
+        return Mono.fromRunnable(() -> {
+                    var settings = repository.findAll().stream()
+                            .findFirst()
+                            .orElseGet(() -> new ApplicationSettings(
+                                    null, null, ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL));
+                    settings.setPacketLoggingEnabled(enabled);
+                    repository.save(settings);
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .then();
+    }
 
     public Flux<ApplicationSettings> findAll() {
         return Mono.fromCallable(repository::findAll)
@@ -54,12 +69,12 @@ public class ApplicationSettingsAccessor {
     }
 
     public Mono<ApplicationSettings> replace(UUID id, ApplicationSettings value) {
-        Mono<ApplicationSettings> ret = findById(id)
-                .then(Mono.fromCallable(() -> {
-                            value.setId(id);
-                            return repository.save(value);
-                        })
-                        .subscribeOn(Schedulers.boundedElastic()));
+        Mono<ApplicationSettings> ret = findById(id).flatMap(current -> Mono.fromCallable(() -> {
+                    value.setId(id);
+                    value.setPacketLoggingEnabled(current.isPacketLoggingEnabled());
+                    return repository.save(value);
+                })
+                .subscribeOn(Schedulers.boundedElastic()));
         return ret;
     }
 

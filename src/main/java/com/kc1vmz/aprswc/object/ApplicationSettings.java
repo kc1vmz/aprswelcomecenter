@@ -91,6 +91,17 @@ public class ApplicationSettings {
 
     private String mapTileUrl;
 
+    @Column(nullable = false)
+    private boolean packetLoggingEnabled;
+
+    public boolean isPacketLoggingEnabled() {
+        return packetLoggingEnabled;
+    }
+
+    public void setPacketLoggingEnabled(boolean value) {
+        packetLoggingEnabled = value;
+    }
+
     @NotBlank
     @Size(max = 2048)
     @Column(nullable = false, length = 2048)
@@ -140,6 +151,29 @@ public class ApplicationSettings {
             Integer messageRetentionDays,
             Integer messageMaxRetries,
             Integer messageRetryIntervalSeconds) {
+        this(
+                id,
+                mapTileUrl,
+                tinyTopicsServerUrl,
+                packetRetentionDays,
+                stationRetentionDays,
+                messageRetentionDays,
+                messageMaxRetries,
+                messageRetryIntervalSeconds,
+                false);
+    }
+
+    public ApplicationSettings(
+            UUID id,
+            String mapTileUrl,
+            String tinyTopicsServerUrl,
+            Integer packetRetentionDays,
+            Integer stationRetentionDays,
+            Integer messageRetentionDays,
+            Integer messageMaxRetries,
+            Integer messageRetryIntervalSeconds,
+            boolean packetLoggingEnabled) {
+        this.packetLoggingEnabled = packetLoggingEnabled;
         this.packetRetentionDays = packetRetentionDays;
         this.stationRetentionDays = stationRetentionDays;
         this.messageRetentionDays = messageRetentionDays;

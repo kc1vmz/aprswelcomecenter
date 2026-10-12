@@ -25,9 +25,10 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
+import org.slf4j.LoggerFactory;
 
 /** Per-instance KISS framing shared by TCP and serial accessors. */
-public abstract class APRSKISSListenerAccessor implements CommunicationTransport {
+public abstract class APRSKISSListenerAccessor extends PacketLoggingTransport {
     protected final CommunicationConfig config;
     protected InputStream input;
     protected OutputStream output;
@@ -62,7 +63,10 @@ public abstract class APRSKISSListenerAccessor implements CommunicationTransport
                 started = false;
             }
         }
-        byte[] bytes = frame.toByteArray();
+        return decodeFrame(frame.toByteArray());
+    }
+
+    private StationPacket decodeFrame(byte[] bytes) {
         if (bytes.length < 17 || (bytes[0] & 15) != 0) return null;
         List<String> addresses = new ArrayList<>();
         int offset = 1;
@@ -113,6 +117,14 @@ public abstract class APRSKISSListenerAccessor implements CommunicationTransport
     private synchronized void write(byte[] bytes) throws IOException {
         output.write(KissPacketBuilder.build(bytes, (byte) 0));
         output.flush();
+        try {
+            byte[] frame = new byte[bytes.length + 1];
+            System.arraycopy(bytes, 0, frame, 1, bytes.length);
+            StationPacket packet = decodeFrame(frame);
+            if (packet != null) recordTransmitted(packet.getCommand());
+        } catch (RuntimeException failure) {
+            LoggerFactory.getLogger(getClass()).error("Failed to format transmitted KISS packet history", failure);
+        }
     }
 
     public void sendMessage(String from, String to, String content) throws IOException {

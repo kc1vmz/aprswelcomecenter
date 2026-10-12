@@ -61,6 +61,8 @@ class CommunicationTransportTest {
             var b = config("APRS_IS", second.getLocalPort());
             var t1 = new APRSInternetServerListenerAccessor(a, utility);
             var t2 = new APRSInternetServerListenerAccessor(b, utility);
+            List<String> history = new ArrayList<>();
+            t1.setPacketLogger(history::add);
             try {
                 t1.connect();
                 t2.connect();
@@ -79,12 +81,14 @@ class CommunicationTransportTest {
                             throw new UncheckedIOException(e);
                         }
                     });
+                    assertTrue(history.isEmpty()); // Authentication is never logged.
                     t1.sendMessage("N1TEST", "N2TEST", "Hello");
-                    assertTrue(in1.readLine().endsWith("::N2TEST   :Hello"));
+                    assertEquals(in1.readLine(), history.getFirst());
                     var object = new ObjectBeacon(
                             "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "?", "\\", "Local landmark", true, null);
                     t1.sendObject(object);
                     String live = in1.readLine();
+                    assertEquals(live, history.get(1));
                     assertTrue(live.startsWith("N1TEST-7>"));
                     assertTrue(live.contains(":;LANDMARK9*"));
                     assertTrue(live.endsWith("4336.50N\\07258.30W?Local landmark"));
@@ -157,6 +161,8 @@ class CommunicationTransportTest {
             }
         }
         var transport = new MemoryKiss();
+        List<String> history = new ArrayList<>();
+        transport.setPacketLogger(history::add);
         var beacon = new ObjectBeacon(
                 "LANDMARK9", "N1TEST-7", "07258.30W", "4336.50N", "?", "\\", "Local landmark", true, null);
         transport.sendObject(beacon);
@@ -165,6 +171,11 @@ class CommunicationTransportTest {
         transport.loopback();
         var live = transport.read();
         var down = transport.read();
+        assertEquals(List.of(live.getCommand(), down.getCommand()), history);
+        transport.setPacketLogger(packet -> {
+            throw new IllegalStateException("Database unavailable");
+        });
+        assertDoesNotThrow(() -> transport.sendObject(beacon));
         assertEquals("N1TEST-7", live.getCallsign());
         assertTrue(live.getCommand().contains(":;LANDMARK9*"));
         assertTrue(live.getCommand().endsWith("4336.50N\\07258.30W?Local landmark"));

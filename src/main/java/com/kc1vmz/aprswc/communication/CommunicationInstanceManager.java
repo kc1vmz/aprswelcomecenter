@@ -17,6 +17,7 @@
  */
 package com.kc1vmz.aprswc.communication;
 
+import com.kc1vmz.aprswc.accessor.StationPacketAccessor;
 import com.kc1vmz.aprswc.database.CommunicationInstanceRepository;
 import com.kc1vmz.aprswc.object.*;
 import com.kc1vmz.aprswc.processor.StationPacketQueue;
@@ -40,6 +41,7 @@ public class CommunicationInstanceManager {
 
     public record Health(String status, String lastError, LocalDateTime lastPacketTime) {}
 
+    private final StationPacketAccessor history;
     private final MessageDeliveryService deliveries;
     private final CommunicationInstanceRepository repository;
     private final StationPacketQueue packets;
@@ -54,13 +56,24 @@ public class CommunicationInstanceManager {
         this(repository, packets, utility, null, null);
     }
 
-    @Autowired
     public CommunicationInstanceManager(
             CommunicationInstanceRepository repository,
             StationPacketQueue packets,
             APRSUtilityAccessor utility,
             MessageDeliveryService deliveries,
             CenterCommunicationRouting routing) {
+        this(repository, packets, utility, deliveries, routing, null);
+    }
+
+    @Autowired
+    public CommunicationInstanceManager(
+            CommunicationInstanceRepository repository,
+            StationPacketQueue packets,
+            APRSUtilityAccessor utility,
+            MessageDeliveryService deliveries,
+            CenterCommunicationRouting routing,
+            StationPacketAccessor history) {
+        this.history = history;
         this.routing = routing;
         this.deliveries = deliveries;
         this.repository = repository;
@@ -120,6 +133,18 @@ public class CommunicationInstanceManager {
             } else {
                 worker = new PacketListenerKISS(config, packets);
             }
+            if (history != null)
+                worker.setPacketLogger(raw -> {
+                    int separator = raw.indexOf('>');
+                    history.recordTransmitted(new StationPacket(
+                            UUID.randomUUID(),
+                            config.id().toString(),
+                            separator < 0 ? null : raw.substring(0, separator),
+                            LocalDateTime.now(),
+                            raw,
+                            null,
+                            "TX"));
+                });
             workers.put(c.getId(), worker);
             worker.start();
         }

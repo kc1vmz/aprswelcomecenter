@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /** A single Kenwood command-mode serial connection, managed by the shared worker. */
-public final class KenwoodSerialTransport implements CommunicationTransport {
+public final class KenwoodSerialTransport extends PacketLoggingTransport {
     private final CommunicationConfig config;
     private SerialPort serial;
     private volatile KenwoodSession session;
@@ -64,12 +64,21 @@ public final class KenwoodSerialTransport implements CommunicationTransport {
     @Override
     public void sendMessage(String from, String to, String content) throws IOException {
         if (to == null || !to.matches("[A-Za-z0-9-]{1,9}")) throw new IOException("Invalid message destination");
-        session.send(ApplicationToCallConstant.TOCALL_NC2, String.format(":%-9s:%s", to, content));
+        sendPacket(String.format(":%-9s:%s", to, content));
     }
 
     @Override
     public void sendObject(ObjectBeacon beacon) throws IOException {
-        session.send(ApplicationToCallConstant.TOCALL_NC2, ";" + APRSTNC2SerialListenerAccessor.objectData(beacon));
+        sendPacket(";" + APRSTNC2SerialListenerAccessor.objectData(beacon));
+    }
+
+    private void sendPacket(String information) throws IOException {
+        session.send(
+                ApplicationToCallConstant.TOCALL_NC2,
+                information,
+                () -> recordTransmitted(config.username() + ">" + ApplicationToCallConstant.TOCALL_NC2
+                        + (config.digiPath() == null || config.digiPath().isBlank() ? "" : "," + config.digiPath())
+                        + ":" + information));
     }
 
     @Override

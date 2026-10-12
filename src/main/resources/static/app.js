@@ -54,6 +54,7 @@ let welcomeCenterStationsMapTileLayer = null;
 let activeWeatherCenterId = null;
 let activeStationId = null;
 let activeStationCallsign = null;
+let packetStationCallsign = null;
 const defaultMapTileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 let mapTileUrl = defaultMapTileUrl;
 let centerLocationMap = null;
@@ -377,6 +378,10 @@ function openSendWelcomeCenterMessageDialog() {
     if (!activeMessageCenterId) return;
     const center = welcomeCenters.get(activeMessageCenterId);
     if (!center) return;
+    if (center.status === "CLOSED") {
+        document.querySelector("#welcome-center-closed-message-dialog").showModal();
+        return;
+    }
     const form = document.querySelector("#send-welcome-center-message-form");
     form.reset();
     updateMessageCharacterCount(form);
@@ -456,6 +461,7 @@ async function openStationDialog(stationId) {
     document.querySelector("#ignore-station").disabled = true;
     document.querySelector("#delete-station").disabled = true;
     document.querySelector("#view-station-messages").disabled = true;
+    document.querySelector("#view-station-packets").disabled = true;
     document.querySelector("#view-station-positions").disabled = true;
     document.querySelector("#view-station-weather").disabled = true;
     dialog.showModal();
@@ -477,6 +483,7 @@ async function openStationDialog(stationId) {
         document.querySelector("#ignore-station").disabled = false;
         document.querySelector("#delete-station").disabled = false;
         document.querySelector("#view-station-messages").disabled = false;
+        document.querySelector("#view-station-packets").disabled = false;
         document.querySelector("#view-station-positions").disabled = false;
         document.querySelector("#view-station-weather").disabled = false;
         stationWelcomeCenters.innerHTML = renderStationWelcomeCenters(centers);
@@ -549,6 +556,7 @@ async function renderStationLocation(station, positions) {
 }
 
 function closeStationDialog() {
+    if (packetStationCallsign) closePacketsDialog();
     [
         "#station-messages-dialog",
         "#send-station-message-dialog",
@@ -1111,7 +1119,15 @@ function handleStationAction(event) {
     }
 }
 
-async function openPacketsDialog() {
+function openStationPacketsDialog() {
+    if (activeStationCallsign) return openPacketsDialog(activeStationCallsign);
+}
+
+async function openPacketsDialog(callsign = null) {
+    packetStationCallsign = callsign;
+    document.querySelector("#packets-title").textContent = callsign ? `Packets - ${callsign}` : "Station Packets";
+    document.querySelector("#delete-all-packets").hidden = Boolean(callsign);
+    document.querySelector("#packet-direction-filter").value = "ALL";
     const dialog = document.querySelector("#packets-dialog");
     dialog.showModal();
     await refreshPackets();
@@ -1119,6 +1135,9 @@ async function openPacketsDialog() {
 
 async function refreshPackets() {
     const message = document.querySelector("#packets-message");
+    const loggingStatus = document.querySelector("#packets-logging-status");
+    let loggingEnabled = false;
+    loggingStatus.textContent = "Checking packet logging status…";
     const list = document.querySelector("#packets-list");
     const refreshButton = document.querySelector("#refresh-packets");
     message.className = "form-message";
@@ -1127,21 +1146,33 @@ async function refreshPackets() {
     refreshButton.disabled = true;
 
     try {
-        const packets = await requestJson("/api/v1/station-packets");
+        const setting = await requestJson("/api/v1/application-settings/packet-logging");
+        loggingEnabled = setting.enabled === true;
+        loggingStatus.textContent = loggingEnabled
+            ? "Packet logging is enabled."
+            : "Packet logging is disabled. Previously logged packets are shown below. Enable logging in Communication Settings to record new packets.";
+        const packets = await requestJson("/api/v1/station-packets"
+            + (packetStationCallsign ? `?callsign=${encodeURIComponent(packetStationCallsign)}` : ""));
         packets.sort((left, right) => String(right.receivedTime || "").localeCompare(String(left.receivedTime || "")));
         document.querySelector("#delete-all-packets").disabled = packets.length === 0;
         message.textContent = packets.length ? `${packets.length} packet(s)` : "No persisted station packets.";
-        list.innerHTML = packets.map(packet => `
+        const direction = document.querySelector("#packet-direction-filter").value;
+        const visible = packets.filter(packet => direction === "ALL" || (packet.direction || "RX") === direction);
+        message.textContent = `${visible.length} of ${packets.length} packet(s)`;
+        list.innerHTML = visible.map(packet => `
             <article class="packet-item">
-                <time datetime="${escapeHtml(packet.receivedTime)}">${formatReceivedTime(packet.receivedTime)}</time>
-                <strong>${escapeHtml(packet.callsign || "Unknown callsign")}</strong>
+                <div class="packet-metadata"><time datetime="${escapeHtml(packet.receivedTime)}">${formatReceivedTime(packet.receivedTime)}</time></div>
+                <strong><span class="tag">${escapeHtml(packet.direction || "RX")}</span> ${escapeHtml(packet.callsign || "Unknown callsign")}</strong>
                 <code>${escapeHtml(packet.command || "")}</code>
             </article>`).join("");
     } catch (error) {
+        if (loggingStatus.textContent === "Checking packet logging status…") {
+            loggingStatus.textContent = "Packet logging status could not be loaded. Reopen this dialog to try again.";
+        }
         message.className = "form-message error";
         message.textContent = "Station packets could not be loaded.";
     } finally {
-        refreshButton.disabled = false;
+        refreshButton.disabled = !loggingEnabled;
     }
 }
 
@@ -1152,12 +1183,14 @@ function formatReceivedTime(receivedTime) {
 }
 
 function closePacketsDialog() {
+    packetStationCallsign = null;
     document.querySelector("#packets-dialog").close();
 }
 
 function downloadStationPackets() {
     const link = document.createElement("a");
-    link.href = "/api/v1/station-packets/csv";
+    link.href = "/api/v1/station-packets/csv"
+        + (packetStationCallsign ? `?callsign=${encodeURIComponent(packetStationCallsign)}` : "");
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -2212,11 +2245,51 @@ async function openCommunicationSettingsDialog() {
     document.querySelector("#communication-list-message").textContent = "";
     await Promise.all([
         loadStationCount(),
+        loadPacketLoggingSetting(),
         loadIgnoredStations(),
         loadCommunicationInstances().catch(error => {
             document.querySelector("#communication-list-message").textContent = error.message;
         })
     ]);
+}
+
+async function loadPacketLoggingSetting() {
+    const checkbox = document.querySelector("#packet-logging-enabled");
+    const message = document.querySelector("#packet-logging-message");
+    checkbox.disabled = true;
+    message.className = "form-message";
+    message.textContent = "Loading…";
+    try {
+        const setting = await requestJson("/api/v1/application-settings/packet-logging");
+        checkbox.checked = setting.enabled;
+        checkbox.disabled = false;
+        message.textContent = "";
+    } catch (error) {
+        message.className = "form-message error";
+        message.textContent = "Packet logging setting could not be loaded.";
+    }
+}
+
+async function savePacketLoggingSetting() {
+    const checkbox = document.querySelector("#packet-logging-enabled");
+    const message = document.querySelector("#packet-logging-message");
+    const enabled = checkbox.checked;
+    checkbox.disabled = true;
+    message.className = "form-message";
+    message.textContent = "Saving…";
+    try {
+        const setting = await requestJson("/api/v1/application-settings/packet-logging", {
+            method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled })
+        });
+        checkbox.checked = setting.enabled;
+        message.textContent = setting.enabled ? "Packet logging enabled." : "Packet logging disabled.";
+    } catch (error) {
+        checkbox.checked = !enabled;
+        message.className = "form-message error";
+        message.textContent = "Packet logging setting could not be saved.";
+    } finally {
+        checkbox.disabled = false;
+    }
 }
 
 function closeSettingsDialog() {
@@ -2577,8 +2650,11 @@ document.querySelector("#delete-category-form").addEventListener("submit", confi
 document.querySelector("#open-settings").addEventListener("click", openSettingsDialog);
 document.querySelector("#open-communication-settings").addEventListener("click", openCommunicationSettingsDialog);
 document.querySelector("#close-communication-settings").addEventListener("click", () => document.querySelector("#communication-settings-dialog").close());
-document.querySelector("#open-packets").addEventListener("click", openPacketsDialog);
+document.querySelector("#packet-logging-enabled").addEventListener("change", savePacketLoggingSetting);
+document.querySelector("#open-packets").addEventListener("click", () => openPacketsDialog());
+document.querySelector("#view-station-packets").addEventListener("click", openStationPacketsDialog);
 document.querySelector("#close-packets").addEventListener("click", closePacketsDialog);
+document.querySelector("#packet-direction-filter").addEventListener("change", refreshPackets);
 document.querySelector("#refresh-packets").addEventListener("click", refreshPackets);
 document.querySelector("#download-station-packets").addEventListener("click", downloadStationPackets);
 document.querySelector("#delete-all-packets").addEventListener("click", openDeleteAllPacketsDialog);

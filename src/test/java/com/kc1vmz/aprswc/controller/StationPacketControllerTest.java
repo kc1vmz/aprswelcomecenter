@@ -47,11 +47,70 @@ class StationPacketControllerTest {
     }
 
     @Test
+    void stationHistoryIncludesSourceAndMessageRecipientButExcludesBulletinsAndOtherSsids() {
+        String[] packets = {
+            "N1ABC-1>APRS:>Station status",
+            "CENTER>APRS::N1ABC-1  :Hello{00001",
+            "N1ABC-1>APRS::BLN1     :Bulletin",
+            "CENTER>APRS::BLN1     :N1ABC-1 event",
+            "N1ABC-2>APRS:>Other SSID",
+            "CENTER>APRS::N1ABC-2  :Other recipient",
+            "OTHER>APRS:>Mentions N1ABC-1"
+        };
+        for (int i = 0; i < packets.length; i++) {
+            repository.saveAndFlush(new StationPacket(
+                    null,
+                    "route",
+                    packets[i].split(">")[0],
+                    LocalDateTime.now(),
+                    packets[i],
+                    null,
+                    i == 1 ? "TX" : "RX"));
+        }
+        client.get()
+                .uri("/api/v1/station-packets?callsign=n1abc-1")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBodyList(StationPacket.class)
+                .hasSize(2)
+                .value(history -> {
+                    assertEquals(
+                            1,
+                            history.stream()
+                                    .filter(packet -> "TX".equals(packet.getDirection()))
+                                    .count());
+                    assertEquals(
+                            1,
+                            history.stream()
+                                    .filter(packet -> "RX".equals(packet.getDirection()))
+                                    .count());
+                });
+        client.get()
+                .uri("/api/v1/station-packets/csv?callsign=N1ABC-1")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(String.class)
+                .value(csv -> {
+                    assertEquals(3, csv.lines().count());
+                    assertEquals(false, csv.contains("Bulletin"));
+                });
+        client.get()
+                .uri("/api/v1/station-packets")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBodyList(StationPacket.class)
+                .hasSize(packets.length);
+    }
+
+    @Test
     void deletesAllPackets() {
         repository.save(
                 new StationPacket(UUID.randomUUID(), "processor-1", "N1ABC", LocalDateTime.now(), "first", null));
-        repository.save(
-                new StationPacket(UUID.randomUUID(), "processor-1", "N2ABC", LocalDateTime.now(), "second", null));
+        repository.save(new StationPacket(
+                UUID.randomUUID(), "processor-1", "N2ABC", LocalDateTime.now(), "second", null, "TX"));
 
         client.delete()
                 .uri("/api/v1/station-packets")
@@ -77,15 +136,11 @@ class StationPacketControllerTest {
 
     @Test
     void downloadsDisplayedPacketFieldsAsCsvNewestFirst() {
-        repository.save(new StationPacket(
-                UUID.randomUUID(),
-                "processor-1",
-                "N1ABC",
-                LocalDateTime.of(2026, 8, 24, 10, 30),
-                "first, \"quoted\"",
-                null));
-        repository.save(new StationPacket(
-                UUID.randomUUID(), "processor-2", "N2ABC", LocalDateTime.of(2026, 8, 24, 11, 30), "second", null));
+        LocalDateTime newest = LocalDateTime.now().withNano(0);
+        LocalDateTime oldest = newest.minusHours(1);
+        repository.save(
+                new StationPacket(UUID.randomUUID(), "processor-1", "N1ABC", oldest, "first, \"quoted\"", null));
+        repository.save(new StationPacket(UUID.randomUUID(), "processor-2", "N2ABC", newest, "second", null, "TX"));
 
         client.get()
                 .uri("/api/v1/station-packets/csv")
@@ -98,8 +153,8 @@ class StationPacketControllerTest {
                 .expectHeader()
                 .valueEquals(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"station-packets.csv\"")
                 .expectBody(String.class)
-                .isEqualTo("receivedTime,callsign,command\r\n"
-                        + "\"2026-08-24T11:30\",\"N2ABC\",\"second\"\r\n"
-                        + "\"2026-08-24T10:30\",\"N1ABC\",\"first, \"\"quoted\"\"\"\r\n");
+                .isEqualTo("time,direction,communicationInstanceId,callsign,command\r\n"
+                        + "\"" + newest + "\",\"TX\",\"processor-2\",\"N2ABC\",\"second\"\r\n"
+                        + "\"" + oldest + "\",\"RX\",\"processor-1\",\"N1ABC\",\"first, \"\"quoted\"\"\"\r\n");
     }
 }

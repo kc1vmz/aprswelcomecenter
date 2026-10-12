@@ -108,4 +108,21 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
     <changeSet id="019-message-delivery" author="aprswc" dbms="h2">
         <sqlFile path="019-message-delivery.sql" relativeToChangelogFile="true"/>
     </changeSet>
+    <changeSet id="020-packet-direction" author="aprswc" dbms="h2">
+        <sql>ALTER TABLE station_packets ADD COLUMN direction VARCHAR(2) DEFAULT 'RX' NOT NULL;
+        ALTER TABLE station_packets ALTER COLUMN command VARCHAR(4096);
+        ALTER TABLE station_packets ADD CONSTRAINT packet_direction_valid CHECK (direction IN ('RX', 'TX'));</sql>
+    </changeSet>
+    <changeSet id="021-packet-logging-setting" author="aprswc" dbms="h2">
+        <sql>
+            ALTER TABLE application_settings ADD COLUMN packet_logging_enabled BOOLEAN DEFAULT FALSE NOT NULL;
+            CREATE TABLE station_packet_routes (
+                callsign VARCHAR(10) NOT NULL,
+                packet_processor_id VARCHAR(255) NOT NULL,
+                received_time TIMESTAMP(6) NOT NULL,
+                PRIMARY KEY (callsign, packet_processor_id)
+            );
+            CREATE INDEX idx_packet_routes_time ON station_packet_routes(received_time);
+        </sql>
+    </changeSet>
 </databaseChangeLog>

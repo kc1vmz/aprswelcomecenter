@@ -20,7 +20,6 @@ package com.kc1vmz.aprswc.controller;
 import com.kc1vmz.aprswc.accessor.StationPacketAccessor;
 import com.kc1vmz.aprswc.object.StationPacket;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -33,6 +32,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -40,17 +40,20 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/v1/station-packets")
 public class StationPacketController {
-    @Autowired
-    private StationPacketAccessor accessor;
+    private final StationPacketAccessor accessor;
+
+    public StationPacketController(StationPacketAccessor accessor) {
+        this.accessor = accessor;
+    }
 
     @GetMapping
-    public Flux<StationPacket> all() {
-        return accessor.findAll();
+    public Flux<StationPacket> all(@RequestParam(required = false) String callsign) {
+        return accessor.findHistory(callsign);
     }
 
     @GetMapping(value = "/csv", produces = "text/csv")
-    public Mono<ResponseEntity<String>> download() {
-        return accessor.exportCsv().map(csv -> ResponseEntity.ok()
+    public Mono<ResponseEntity<String>> download(@RequestParam(required = false) String callsign) {
+        return accessor.exportCsv(callsign).map(csv -> ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
