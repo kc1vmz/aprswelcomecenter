@@ -4,6 +4,11 @@
 
 APRS Welcome Center is an APRS-based messaging app that can provide timely information to other APRS-enabled operators in an area.
 
+## Additional information
+
+Check out the KC1VMZ YouTube channel (https://www.youtube.com/@KC1VMZ-hamradio) for additional videos describing the features of APRS Welcome Center.
+
+Join the Groups.IO conversation at https://groups.io/g/aprswelcomecenter 
 
 
 ## Terminology
