@@ -10,6 +10,8 @@ Check out the KC1VMZ YouTube channel (https://www.youtube.com/@KC1VMZ-hamradio) 
 
 Join the Groups.IO conversation at https://groups.io/g/aprswelcomecenter 
 
+Check out all the other fun open source projects at https://www.kc1vmz.com 
+
 
 ## Terminology
 
