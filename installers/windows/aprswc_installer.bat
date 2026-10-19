@@ -38,11 +38,10 @@ SET WC_PORT=8080
 REM Prompt the user for input
 SET /P "WC_VERSION=What version of APRS Welcome Center? (Default: %WC_VERSION%): "
 SET /P "WC_INSTALL_DIR=Where should APRS Welcome Center be installed? (Default: %WC_INSTALL_DIR%): "
-SET /P "WC_TEMP_DIR=Where should APRS Welcome Center database space be located? (Default: %WC_DB_DIR%): "
+SET /P "WC_DB_DIR=Where should APRS Welcome Center database space be located? (Default: %WC_DB_DIR%): "
 SET /P "WC_TEMP_DIR=Where should APRS Welcome Center temp space be located? (Default: %WC_TEMP_DIR%): "
 SET /P "WC_PORT=What port should the HTTP service listen on? (Default: %WC_PORT%): "
 
-SET APRSWC_TEMP_DIR=%WC_TEMP_DIR%
 pushd .
 
 echo Checking for pre-requisite - Java 21
@@ -94,10 +93,10 @@ echo @ECHO OFF>> aprswc_start.bat
 echo pushd .>> aprswc_start.bat
 echo cd %WC_INSTALL_DIR%>> aprswc_start.bat
 echo REM Set Environment Variables>> aprswc_start.bat
-echo SET APRSWC_DB_DIR=%APRSWC_DB_DIR%>> aprswc_start.bat
-echo SET APRSWC_TEMP_DIR=%APRSWC_TEMP_DIR%>> aprswc_start.bat
-echo SET SERVER_PORT=%APRSWC_PORT%>> aprswc_start.bat
-echo SET APRSWC_INSTALL_DIR=%APRSWC_INSTALL_DIR%>> aprswc_start.bat
+echo SET APRSWC_DB_DIR=%WC_DB_DIR%>> aprswc_start.bat
+echo SET APRSWC_TEMP_DIR=%WC_TEMP_DIR%>> aprswc_start.bat
+echo SET SERVER_PORT=%WC_PORT%>> aprswc_start.bat
+echo SET APRSWC_INSTALL_DIR=%WC_INSTALL_DIR%>> aprswc_start.bat
 echo REM Start Processes>> aprswc_start.bat
 echo start java -jar aprs-welcome-center-%WC_VERSION%.jar>> aprswc_start.bat
 echo echo APRS Welcome Center started>> aprswc_start.bat
