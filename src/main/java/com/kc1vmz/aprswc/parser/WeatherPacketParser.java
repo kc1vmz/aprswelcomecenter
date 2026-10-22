@@ -67,7 +67,9 @@ public class WeatherPacketParser {
     public WelcomeCenterWeatherReport parseWeatherPacket(StationPacket packet) {
         WelcomeCenterWeatherReport ret = null;
 
-        if ((packet == null) || (packet.getCommand() == null)) {
+        if ((packet == null)
+                || (packet.getCommand() == null)
+                || packet.getCommand().isEmpty()) {
             return ret;
         }
         char weatherPacketType = packet.getCommand().charAt(0);
@@ -93,7 +95,7 @@ public class WeatherPacketParser {
     private WelcomeCenterWeatherReport parseCompleteWithTimestamp(StationPacket packet) {
         WelcomeCenterWeatherReport ret = null;
 
-        if (packet.getCommand().charAt(1) == '_') {
+        if (isCompressedWeatherPosition(packet.getCommand(), 8)) {
             return parseCompleteWithTimestampCompressedLocation(packet);
         }
 
@@ -198,6 +200,16 @@ public class WeatherPacketParser {
         return ret;
     }
 
+    private static boolean isCompressedWeatherPosition(String content, int positionStart) {
+        // Check the compressed position's weather symbol, not the packet length.
+        if (content.length() < positionStart + 13 || content.charAt(positionStart + 9) != '_') return false;
+        for (int index = positionStart + 1; index < positionStart + 9; index++) {
+            char value = content.charAt(index);
+            if (value < '!' || value > '{') return false;
+        }
+        return true;
+    }
+
     private WelcomeCenterWeatherReport parseCompleteWithoutTimestamp(StationPacket packet) {
         WelcomeCenterWeatherReport ret = null;
 
@@ -209,7 +221,7 @@ public class WeatherPacketParser {
         int messageIndex = 0;
 
         try {
-            if (content.length() <= 27) {
+            if (isCompressedWeatherPosition(content, 1)) {
                 return parseCompleteWithoutTimestampCompressedLocation(packet);
             }
 

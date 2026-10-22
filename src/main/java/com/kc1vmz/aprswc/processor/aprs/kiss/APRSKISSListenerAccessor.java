@@ -32,35 +32,49 @@ public abstract class APRSKISSListenerAccessor extends PacketLoggingTransport {
     protected final CommunicationConfig config;
     protected InputStream input;
     protected OutputStream output;
+    private boolean frameStarted;
 
     protected APRSKISSListenerAccessor(CommunicationConfig config) {
         this.config = config;
+        this.frameStarted = false;
     }
 
     public StationPacket read() throws IOException {
         ByteArrayOutputStream frame = new ByteArrayOutputStream();
-        boolean started = false, escaped = false;
+        boolean escaped = false;
         while (true) {
             int b = input.read();
-            if (b < 0) throw new EOFException("Connection closed");
+            if (b < 0) {
+                frameStarted = false;
+                throw new EOFException("Connection closed");
+            }
             if (b == 0xc0) {
-                if (started && frame.size() > 0) break;
-                started = true;
+                // A closing delimiter also starts the next frame, including across read() calls.
+                boolean complete = frameStarted && frame.size() > 0 && !escaped;
+                frameStarted = true;
+                if (complete) break;
+                frame.reset();
+                escaped = false;
                 continue;
             }
-            if (!started) continue;
-            if (b == 0xdb) {
+            if (!frameStarted) continue;
+            if (escaped) {
+                if (b != 0xdc && b != 0xdd) {
+                    frame.reset();
+                    frameStarted = false;
+                    escaped = false;
+                    continue;
+                }
+                b = b == 0xdc ? 0xc0 : 0xdb;
+                escaped = false;
+            } else if (b == 0xdb) {
                 escaped = true;
                 continue;
-            }
-            if (escaped) {
-                b = b == 0xdc ? 0xc0 : b == 0xdd ? 0xdb : b;
-                escaped = false;
             }
             frame.write(b);
             if (frame.size() > 4096) {
                 frame.reset();
-                started = false;
+                frameStarted = false;
             }
         }
         return decodeFrame(frame.toByteArray());
