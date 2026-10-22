@@ -123,6 +123,36 @@ class PointOfInterestControllerTest {
     }
 
     @Test
+    void frequencyNamesPreserveSuffixCaseAndRejectCaseInsensitiveDuplicates() {
+        var c = center("N6FREQ");
+        for (String name : List.of("146.5", "146.520", "146.52-", "146.52-a", "146.52-aB", "146.520-z", "146.53-9")) {
+            var p = create(c, name, false);
+            assertThat(p.name()).isEqualTo(name);
+            assertThat(repository.findById(p.id()).orElseThrow().getName()).isEqualTo(name);
+            assertThat(snapshot(p).name()).isEqualTo(name);
+        }
+        client.post()
+                .uri(path(c))
+                .bodyValue(edit(null, "146.52-Ab", false))
+                .exchange()
+                .expectStatus()
+                .isEqualTo(409);
+        var p = service.list(c.getId()).stream()
+                .filter(v -> v.name().equals("146.52-aB"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(update(c, p, "146.52-Ab", false).name()).isEqualTo("146.52-Ab");
+        for (String invalid : List.of("14.52", "146.5200", "146.52-abc", "146.520-ab", "146.52-a_", "146.52ab")) {
+            client.post()
+                    .uri(path(c))
+                    .bodyValue(edit(null, invalid, false))
+                    .exchange()
+                    .expectStatus()
+                    .isBadRequest();
+        }
+    }
+
+    @Test
     void availabilityLifecyclePreservesFlagInvalidatesQueueAndRejectsStaleEdits() {
         var c = center("N1POI");
         var p = create(c, "Park1", false);

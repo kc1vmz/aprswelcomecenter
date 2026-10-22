@@ -26,6 +26,9 @@ public interface PointOfInterestRepository extends JpaRepository<PointOfInterest
     List<PointOfInterest> findByWelcomeCenterIdOrderByName(UUID centerId);
 
     @EntityGraph(attributePaths = {"welcomeCenter", "welcomeCenter.communicationInstanceIds"})
+    Optional<PointOfInterest> findByNameIgnoreCase(String name);
+
+    @EntityGraph(attributePaths = {"welcomeCenter", "welcomeCenter.communicationInstanceIds"})
     Optional<PointOfInterest> findByName(String name);
 
     @Override

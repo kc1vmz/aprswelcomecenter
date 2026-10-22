@@ -26,6 +26,7 @@ import com.kc1vmz.aprswc.processor.aprs.is.*;
 import com.kc1vmz.aprswc.processor.aprs.kiss.*;
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
@@ -180,6 +181,21 @@ class CommunicationTransportTest {
         assertTrue(live.getCommand().contains(":;LANDMARK9*"));
         assertTrue(live.getCommand().endsWith("4336.50N\\07258.30W?Local landmark"));
         assertTrue(down.getCommand().contains(":;LANDMARK9_"));
+    }
+
+    @Test
+    void frequencyObjectNameKeepsPunctuationAndSuffixCaseOnAir() {
+        var beacon = new ObjectBeacon("146.52-aB", "N1TEST", "07258.30W", "4336.50N", "c", "/", "Repeater", true, null);
+        var packet = new KISSPacket();
+        packet.setCallsignFrom("N1TEST");
+        packet.setApplicationName("APRS");
+        packet.setDigipeaters(List.of());
+        for (boolean active : List.of(true, false)) {
+            beacon.setActive(active);
+            packet.setData(";" + APRSInternetServerListenerAccessor.objectData(beacon));
+            String encoded = new String(AX25PacketBuilder.buildObjectPacket(packet), StandardCharsets.ISO_8859_1);
+            assertTrue(encoded.contains(";146.52-aB" + (active ? "*" : "_")));
+        }
     }
 
     @Test

@@ -110,7 +110,7 @@ public class PointOfInterestService {
 
     public void validateCenterName(String callsign) {
         if (callsign != null
-                && pois.findByName(callsign.toUpperCase(Locale.ROOT)).isPresent())
+                && pois.findByNameIgnoreCase(callsign.toUpperCase(Locale.ROOT)).isPresent())
             throw error(HttpStatus.CONFLICT, "Callsign conflicts with a Point of Interest object name");
     }
 
@@ -185,11 +185,16 @@ public class PointOfInterestService {
             throw error(
                     HttpStatus.CONFLICT, "Point of Interest or Welcome Center changed. Refresh and reopen the editor.");
         Snapshot previous = id == null ? null : snapshot(p);
-        String name = Objects.toString(edit.name(), "").trim().toUpperCase(Locale.ROOT);
-        if (!name.matches("[A-Z0-9]{1,9}"))
-            throw error(HttpStatus.BAD_REQUEST, "Name must contain 1-9 letters or digits");
+        String name = Objects.toString(edit.name(), "").trim();
+        if (name.matches("[A-Za-z0-9]{1,9}")) {
+            name = name.toUpperCase(Locale.ROOT);
+        } else if (name.length() > 9 || !name.matches("[0-9]{3}\\.[0-9]{1,3}(-[A-Za-z0-9]{0,2})?")) {
+            throw error(
+                    HttpStatus.BAD_REQUEST,
+                    "Name must be 1-9 letters/digits or a frequency such as 146.52-ab (9 characters maximum)");
+        }
         if (centers.findByCallsignIgnoreCase(name).isPresent()
-                || pois.findByName(name)
+                || pois.findByNameIgnoreCase(name)
                         .filter(other -> !other.getId().equals(id))
                         .isPresent())
             throw error(HttpStatus.CONFLICT, "Object name is already used by a POI or Welcome Center");

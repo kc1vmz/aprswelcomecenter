@@ -125,4 +125,7 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
             CREATE INDEX idx_packet_routes_time ON station_packet_routes(received_time);
         </sql>
     </changeSet>
+    <changeSet id="022-poi-frequency-names" author="aprswc" dbms="h2">
+        <sqlFile path="022-poi-frequency-names.sql" relativeToChangelogFile="true"/>
+    </changeSet>
 </databaseChangeLog>
