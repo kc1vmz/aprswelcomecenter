@@ -41,7 +41,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class MessageDeliveryService {
     private static final Logger LOG = LoggerFactory.getLogger(MessageDeliveryService.class);
     private static final String ACTIVE = "state in ('PENDING','AWAITING_ACK')";
-    private static final Pattern CONTROL = Pattern.compile("^(ack|rej)([A-Za-z0-9]{1,5})(?:}([A-Za-z0-9]{0,5}))?$");
+    // Some radios incorrectly give an ACK its own message number. Consume it without acknowledging it.
+    private static final Pattern CONTROL =
+            Pattern.compile("^(ack|rej)([A-Za-z0-9]{1,5})(?:}[A-Za-z0-9]{0,5}|\\{[A-Za-z0-9]{1,5})?$");
     private static final Pattern REPLY = Pattern.compile("\\{[A-Za-z0-9]{1,5}}([A-Za-z0-9]{1,5})$");
     private final JdbcTemplate jdbc;
     private final TransactionTemplate tx;

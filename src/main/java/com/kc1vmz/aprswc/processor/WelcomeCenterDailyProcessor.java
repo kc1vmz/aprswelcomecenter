@@ -69,6 +69,7 @@ public class WelcomeCenterDailyProcessor {
     }
 
     void processWelcomeCenter(WelcomeCenter welcomeCenter) {
+        if (!welcomeCenter.isOpen()) return;
         String bulletinContent = String.format(
                 "APRS Welcome Center %s open - send HELP for more commands.", welcomeCenter.getCallsign());
         StationMessage stationMessage = new StationMessage(
@@ -80,6 +81,7 @@ public class WelcomeCenterDailyProcessor {
                 bulletinContent,
                 null,
                 MessageType.BULLETIN);
+        stationMessage.setRequiresOpenCenter(true);
         stationMessageQueue.offer(stationMessage);
     }
 

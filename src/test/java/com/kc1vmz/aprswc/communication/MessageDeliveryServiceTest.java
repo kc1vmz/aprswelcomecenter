@@ -165,6 +165,25 @@ class MessageDeliveryServiceTest {
     }
 
     @Test
+    void ackWithAppendedMessageNumberStopsRetriesWithoutReply() {
+        var m = message();
+        write(0);
+        due(m);
+        service.tick(Instant.now());
+        String ack = "ack" + m.getMessageIdentifier() + "{AB123";
+        assertThat(service.acknowledge("KC1VMZ-5", "WC1", ack)).isTrue();
+        assertThat(service.acknowledge("KC1VMZ-4", "WC2", ack)).isTrue();
+        assertThat(state(m)).isEqualTo("AWAITING_ACK");
+        assertThat(service.acknowledge("KC1VMZ-4", "WC1", ack + "X")).isFalse();
+        assertThat(state(m)).isEqualTo("AWAITING_ACK");
+        assertThat(service.acknowledge("KC1VMZ-4", "WC1", ack)).isTrue();
+        assertThat(state(m)).isEqualTo("ACKNOWLEDGED");
+        assertThat(guards.get(1).getAsBoolean()).isFalse();
+        service.tick(Instant.now().plusSeconds(120));
+        assertThat(wires).hasSize(2);
+    }
+
+    @Test
     void maximumRetriesExpirationAndLateAck() {
         var m = message();
         write(0);

@@ -20,6 +20,7 @@ package com.kc1vmz.aprswc.processor;
 import static org.mockito.Mockito.*;
 
 import com.kc1vmz.aprswc.accessor.*;
+import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
 import com.kc1vmz.aprswc.communication.MessageIdentifierService;
 import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.enumeration.*;
@@ -27,6 +28,7 @@ import com.kc1vmz.aprswc.object.*;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 
@@ -62,6 +64,32 @@ class ClosedCenterProcessingTest {
         center.setStatus(WelcomeCenterStatus.OPEN);
         processor.beaconWelcomeCenterObject(center);
         verify(queue).offer(any());
+    }
+
+    @Test
+    void dailyAnnouncementsSkipClosedCentersAndRecheckBeforeSending() {
+        var daily = new WelcomeCenterDailyProcessor();
+        var queue = mock(StationMessageQueue.class);
+        ReflectionTestUtils.setField(daily, "stationMessageQueue", queue);
+        var center = center();
+        center.setStatus(WelcomeCenterStatus.CLOSED);
+        daily.processWelcomeCenter(center);
+        verifyNoInteractions(queue);
+        center.setStatus(WelcomeCenterStatus.OPEN);
+        daily.processWelcomeCenter(center);
+        var captured = ArgumentCaptor.forClass(StationMessage.class);
+        verify(queue).offer(captured.capture());
+
+        var centers = mock(WelcomeCenterAccessor.class);
+        var communications = mock(CommunicationInstanceManager.class);
+        var sender =
+                new StationMessageProcessor(null, null, null, null, null, null, mock(MessageIdentifierService.class));
+        ReflectionTestUtils.setField(sender, "welcomeCenterAccessor", centers);
+        ReflectionTestUtils.setField(sender, "communications", communications);
+        when(centers.findOpenById(center.getId())).thenReturn(Mono.empty());
+        sender.processMessage(captured.getValue());
+        verify(centers).findOpenById(center.getId());
+        verifyNoInteractions(communications);
     }
 
     @Test
@@ -150,7 +178,7 @@ class ClosedCenterProcessingTest {
         var processor =
                 new StationMessageProcessor(null, null, null, null, null, null, mock(MessageIdentifierService.class));
         var centers = mock(WelcomeCenterAccessor.class);
-        var settings = mock(com.kc1vmz.aprswc.communication.CommunicationInstanceManager.class);
+        var settings = mock(CommunicationInstanceManager.class);
         var messages = mock(StationMessageAccessor.class);
         ReflectionTestUtils.setField(processor, "welcomeCenterAccessor", centers);
         ReflectionTestUtils.setField(processor, "communications", settings);

@@ -39,8 +39,8 @@ class MessageIdentifierServiceTest {
         jdbc.update("insert into message_identifier_counter values(1,1)");
         var transactions = new DataSourceTransactionManager(data);
         var service = new MessageIdentifierService(jdbc, transactions);
-        assertThat(service.next()).isEqualTo("00001");
-        assertThat(new MessageIdentifierService(jdbc, transactions).next()).isEqualTo("00002");
+        assertThat(service.next()).isEqualTo("1");
+        assertThat(new MessageIdentifierService(jdbc, transactions).next()).isEqualTo("2");
         try (var executor = Executors.newFixedThreadPool(8)) {
             var tasks = new ArrayList<Callable<String>>();
             for (int i = 0; i < 200; i++) tasks.add(service::next);
@@ -49,17 +49,21 @@ class MessageIdentifierServiceTest {
             assertThat(values).hasSize(200);
         }
         jdbc.update("update message_identifier_counter set next_value=35");
-        assertThat(service.next()).isEqualTo("0000Z");
-        assertThat(service.next()).isEqualTo("00010");
+        assertThat(service.next()).isEqualTo("Z");
+        assertThat(service.next()).isEqualTo("10");
         jdbc.update("update message_identifier_counter set next_value=60466175");
         assertThat(service.next()).isEqualTo("ZZZZZ");
-        assertThat(service.next()).isEqualTo("00000");
+        assertThat(service.next()).isEqualTo("0");
         var message = new StationMessage(null, "KC1VMZ-4", "WC1", null, null, "Welcome", "route", MessageType.MESSAGE);
         service.prepare(message);
         String number = message.getMessageIdentifier();
         service.prepare(message);
         assertThat(message.getMessageIdentifier()).isEqualTo(number);
         assertThat(MessageIdentifierService.wireContent(message)).isEqualTo("Welcome{" + number);
+        message.setMessageIdentifier("00013");
+        service.prepare(message);
+        assertThat(message.getMessageIdentifier()).isEqualTo("00013");
+        assertThat(MessageIdentifierService.wireContent(message)).isEqualTo("Welcome{00013");
         for (String text : new String[] {"ack00001", "rejAB123"}) {
             var control = new StationMessage(null, "KC1VMZ-4", "WC1", null, null, text, "route", MessageType.MESSAGE);
             service.prepare(control);

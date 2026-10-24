@@ -53,16 +53,15 @@ public class MessageIdentifierService {
                     "select next_value from message_identifier_counter where id=1 for update", Integer.class);
             for (int checked = 0; checked < 60466176; checked++) {
                 String value = Integer.toString(number, 36).toUpperCase(Locale.ROOT);
-                String formatted = "0".repeat(5 - value.length()) + value;
                 number = (number + 1) % 60466176;
                 if (deliveries == null
                         || jdbc.queryForObject(
                                         "select count(*) from message_deliveries where identifier=? and state in ('PENDING','AWAITING_ACK')",
                                         Integer.class,
-                                        formatted)
+                                        value)
                                 == 0) {
                     jdbc.update("update message_identifier_counter set next_value=? where id=1", number);
-                    return formatted;
+                    return value;
                 }
             }
             throw new IllegalStateException("All message identifiers are in use");
