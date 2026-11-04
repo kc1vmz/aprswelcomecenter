@@ -1,4 +1,5 @@
 let stationListRows = [];
+let stationPacketRetentionDays = 1;
 let stationListOptions = { sort: "callsign", hours: 0 };
 try {
     const saved = JSON.parse(localStorage.getItem("aprswc.stationList") || "null");
@@ -19,7 +20,9 @@ function renderStationList() {
                 <strong>${escapeHtml(station.callsign)}</strong>
                 <button type="button" class="secondary view-station" data-id="${station.id}">Details</button>
             </div>
-            <small>Last heard: ${escapeHtml(station.lastHeard ? new Date(station.lastHeard).toLocaleString() : "Unknown")}</small>
+            <small>${escapeHtml(station.lastHeard
+                ? `Last heard: ${new Date(station.lastHeard).toLocaleString()}`
+                : `Not heard in ${stationPacketRetentionDays} day${stationPacketRetentionDays === 1 ? "" : "s"}`)}</small>
         </article>`, stationListRows.length ? "No stations heard within this time period." : "No stations yet.");
 }
 
@@ -182,6 +185,7 @@ async function load() {
         ]);
 
         const settings = settingsRecords[0] || null;
+        stationPacketRetentionDays = settings?.packetRetentionDays || 1;
         applicationSettingsId = settings?.id || null;
         applyMapTileUrl(settings?.mapTileUrl);
 
@@ -2487,6 +2491,8 @@ async function saveSettings(event) {
         });
         applicationSettingsId = saved.id;
         applyMapTileUrl(saved.mapTileUrl);
+        stationPacketRetentionDays = saved.packetRetentionDays || 1;
+        renderStationList();
         closeSettingsConfirmation();
         closeSettingsDialog();
     } catch (error) {
