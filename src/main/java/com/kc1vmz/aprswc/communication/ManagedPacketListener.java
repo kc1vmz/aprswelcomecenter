@@ -100,7 +100,7 @@ public class ManagedPacketListener {
                 }
             } catch (Exception failure) {
                 // Do not expose exception messages containing credentials or untrusted peer data.
-                lastError = "Connection failed (" + failure.getClass().getSimpleName() + ")";
+                lastError = "Connection failed (" + failure.getMessage() + ")";
             } finally {
                 health = stopping ? "STOPPING" : "RETRYING";
                 transport.close();
