@@ -21,6 +21,7 @@ import com.kc1vmz.aprswc.accessor.StationAccessor;
 import com.kc1vmz.aprswc.accessor.StationMessageAccessor;
 import com.kc1vmz.aprswc.accessor.StationPacketAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
+import com.kc1vmz.aprswc.communication.AprsMessageProtocol;
 import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
 import com.kc1vmz.aprswc.communication.MessageIdentifierService;
 import com.kc1vmz.aprswc.enumeration.MessageType;
@@ -37,6 +38,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BooleanSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -186,19 +188,35 @@ public class StationMessageProcessor {
         if (message.getPacketProcessorId() == null
                 || message.getPacketProcessorId().isBlank())
             message.setPacketProcessorId(determinePacketProcessor(message, routingCenterId));
-        identifiers.prepare(message);
-        boolean queued = communications.sendMessage(
-                message.getPacketProcessorId(),
-                message.getCallsignFrom(),
-                message.getCallsignTo(),
-                MessageIdentifierService.wireContent(message),
-                () -> centerIsOpenIfRequired(message)
-                        && (routingCenterId == null
-                                || communications.isEligible(routingCenterId, message.getPacketProcessorId())),
-                () -> {
-                    message.setSentTime(LocalDateTime.now());
-                    stationMessageAccessor.saveProcessedMessage(message).block();
-                });
+        BooleanSupplier permitted = () -> centerIsOpenIfRequired(message)
+                && (routingCenterId == null
+                        || communications.isEligible(routingCenterId, message.getPacketProcessorId()));
+        Runnable sent = () -> {
+            message.setSentTime(LocalDateTime.now());
+            stationMessageAccessor.saveProcessedMessage(message).block();
+        };
+        var control = AprsMessageProtocol.control(message.getContent());
+        boolean queued;
+        if (control != null) {
+            message.setContent(control.wireText());
+            message.setMessageIdentifier(null);
+            queued = communications.sendUntracked(
+                    message.getPacketProcessorId(),
+                    message.getCallsignFrom(),
+                    message.getCallsignTo(),
+                    control.wireText(),
+                    permitted,
+                    sent);
+        } else {
+            identifiers.prepare(message);
+            queued = communications.sendMessage(
+                    message.getPacketProcessorId(),
+                    message.getCallsignFrom(),
+                    message.getCallsignTo(),
+                    MessageIdentifierService.wireContent(message),
+                    permitted,
+                    sent);
+        }
         if (!queued)
             log.debug("Dropping message with unavailable communication route {}", message.getPacketProcessorId());
     }

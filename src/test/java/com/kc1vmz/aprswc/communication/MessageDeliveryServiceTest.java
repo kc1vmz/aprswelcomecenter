@@ -36,6 +36,8 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,6 +58,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 class MessageDeliveryServiceTest {
     @Autowired
     MessageDeliveryService service;
+
+    @Autowired
+    IncomingCommandService incoming;
 
     @Autowired
     StationPacketProcessor packets;
@@ -95,6 +100,7 @@ class MessageDeliveryServiceTest {
     @BeforeEach
     void setup() {
         jdbc.update("delete from message_deliveries");
+        jdbc.update("delete from incoming_command_receipts");
         ignored.deleteAll();
         jdbc.update("update application_settings set message_max_retries=3,message_retry_interval_seconds=60");
         route = UUID.randomUUID().toString();
@@ -142,6 +148,79 @@ class MessageDeliveryServiceTest {
     private void write(int index) {
         assertThat(guards.get(index).getAsBoolean()).isTrue();
         callbacks.get(index).run();
+    }
+
+    @Test
+    void carriageReturnAckStopsAlreadyQueuedRetryAndReplyAckWorks() {
+        var m = message();
+        write(0);
+        due(m);
+        service.tick(Instant.now());
+        assertThat(service.acknowledge("KC1VMZ-4", "WC1", "ack" + m.getMessageIdentifier() + "\r"))
+                .isTrue();
+        assertThat(state(m)).isEqualTo("ACKNOWLEDGED");
+        assertThat(guards.get(1).getAsBoolean()).isFalse();
+        var reply = message();
+        assertThat(service.acknowledge("KC1VMZ-4", "WC1", "h{17}" + reply.getMessageIdentifier() + "\r\n"))
+                .isFalse();
+        assertThat(state(reply)).isEqualTo("ACKNOWLEDGED");
+    }
+
+    @Test
+    void controlMessagesNeverAllocateIdentifiersOrRegisterRetries() {
+        for (String text : new String[] {"ack18\r", "rej18\r\n", "ack18\r{69"}) {
+            var m = new StationMessage(null, "N2EDX-7", "K4BO", null, null, text, route, MessageType.MESSAGE);
+            m.setMessageIdentifier("OLD");
+            identifiers.prepare(m);
+            assertThat(m.getMessageIdentifier()).isNull();
+            assertThat(m.getContent()).isIn("ack18", "rej18");
+        }
+        assertThat(jdbc.queryForObject("select count(*) from message_deliveries", Integer.class))
+                .isZero();
+    }
+
+    @Test
+    void startupCancelsLegacyAckRetriesButKeepsRealMessages() {
+        var ack = message();
+        var valid = message();
+        jdbc.update("update message_deliveries set content=? where id=?", "ack18\r", ack.getId());
+        service.start();
+        assertThat(state(ack)).isEqualTo("CANCELLED");
+        assertThat(state(valid)).isEqualTo("PENDING");
+        assertThat(guards.getFirst().getAsBoolean()).isFalse();
+    }
+
+    @Test
+    void numberedCommandClaimsAreAtomicDurableAndExpire() throws Exception {
+        UUID center = UUID.randomUUID();
+        jdbc.update("insert into welcome_centers(id,callsign,status) values(?,'DUPTEST','OPEN')", center);
+        try {
+            var executor = Executors.newFixedThreadPool(4);
+            try {
+                var tasks = new ArrayList<Callable<Boolean>>();
+                for (int i = 0; i < 8; i++) tasks.add(() -> incoming.claim(center, "N2EDX-7", "v{18\r"));
+                int accepted = 0;
+                for (var future : executor.invokeAll(tasks)) if (future.get()) accepted++;
+                assertThat(accepted).isEqualTo(1);
+            } finally {
+                executor.shutdownNow();
+            }
+            assertThat(new IncomingCommandService(jdbc).claim(center, "n2edx-7", "v{18\r\n"))
+                    .isFalse();
+            assertThat(incoming.claim(center, "N2EDX-8", "v{18\r")).isTrue();
+            assertThat(incoming.claim(center, "N2EDX-7", "h{18\r")).isTrue();
+            assertThat(incoming.claim(center, "N2EDX-7", "v{19\r")).isTrue();
+            assertThat(incoming.claim(center, "N2EDX-7", "v")).isTrue();
+            jdbc.update(
+                    "update incoming_command_receipts set expires_at=?",
+                    Timestamp.from(Instant.now().minusSeconds(1)));
+            assertThat(incoming.claim(center, "N2EDX-7", "v{18\r")).isTrue();
+        } finally {
+            jdbc.update("delete from welcome_centers where id=?", center);
+        }
+        assertThat(jdbc.queryForObject(
+                        "select count(*) from incoming_command_receipts where center_id=?", Integer.class, center))
+                .isZero();
     }
 
     @Test

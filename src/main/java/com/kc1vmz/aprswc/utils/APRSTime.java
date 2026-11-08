@@ -20,6 +20,7 @@ package com.kc1vmz.aprswc.utils;
 import com.kc1vmz.aprswc.exceptions.APRSTimeConversionException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 public class APRSTime {
@@ -144,6 +145,7 @@ public class APRSTime {
     }
 
     public static String convertZonedDateTimeToDDHHMM(ZonedDateTime time) {
-        return String.format("%02d%02d%02dz", time.getDayOfMonth(), time.getHour(), time.getMinute());
+        ZonedDateTime utc = time.withZoneSameInstant(ZoneOffset.UTC);
+        return String.format("%02d%02d%02dz", utc.getDayOfMonth(), utc.getHour(), utc.getMinute());
     }
 }

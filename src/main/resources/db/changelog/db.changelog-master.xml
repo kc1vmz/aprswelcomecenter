@@ -128,4 +128,18 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
     <changeSet id="022-poi-frequency-names" author="aprswc" dbms="h2">
         <sqlFile path="022-poi-frequency-names.sql" relativeToChangelogFile="true"/>
     </changeSet>
+    <changeSet id="023-incoming-command-receipts" author="aprswc" dbms="h2">
+        <sql>
+            CREATE TABLE incoming_command_receipts (
+                center_id UUID NOT NULL,
+                sender VARCHAR(10) NOT NULL,
+                identifier VARCHAR(5) NOT NULL,
+                command_text VARCHAR(4096) NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                PRIMARY KEY(center_id, sender, identifier, command_text),
+                FOREIGN KEY(center_id) REFERENCES welcome_centers(id) ON DELETE CASCADE
+            );
+            CREATE INDEX idx_command_receipt_expiry ON incoming_command_receipts(expires_at);
+        </sql>
+    </changeSet>
 </databaseChangeLog>

@@ -23,7 +23,9 @@ import com.kc1vmz.aprswc.accessor.StationAccessor;
 import com.kc1vmz.aprswc.accessor.StationPacketAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterWeatherReportAccessor;
+import com.kc1vmz.aprswc.communication.AprsMessageProtocol;
 import com.kc1vmz.aprswc.communication.CommunicationScope;
+import com.kc1vmz.aprswc.communication.IncomingCommandService;
 import com.kc1vmz.aprswc.communication.MessageDeliveryService;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.DistanceUnit;
@@ -64,10 +66,12 @@ public class StationPacketProcessor {
 
     private final PolicyAutomationProcessor automation;
     private final MessageDeliveryService deliveries;
+    private final IncomingCommandService incomingCommands;
 
     public StationPacketProcessor(PolicyAutomationProcessor automation) {
         this(
                 automation,
+                null,
                 null,
                 null,
                 null,
@@ -106,7 +110,9 @@ public class StationPacketProcessor {
             GeoFenceUtils geoFenceUtils,
             StationMessageQueue stationMessageQueue,
             WelcomeCenterWeatherReportAccessor welcomeCenterWeatherReportAccessor,
-            MessageDeliveryService deliveries) {
+            MessageDeliveryService deliveries,
+            IncomingCommandService incomingCommands) {
+        this.incomingCommands = incomingCommands;
         this.deliveries = deliveries;
         this.automation = automation;
         this.queue = queue;
@@ -491,8 +497,10 @@ public class StationPacketProcessor {
             return;
         }
         if (isWelcomeCenterCommand(packet)) {
+            boolean first = incomingCommands == null
+                    || incomingCommands.claim(center.getId(), packet.getCallsign(), packet.getCommand());
             ackPacket(packet, center);
-            processWelcomeCenterCommand(packet);
+            if (first) processWelcomeCenterCommand(packet);
         } else {
             rejectPacket(packet, center);
         }
@@ -533,26 +541,7 @@ public class StationPacketProcessor {
     }
 
     private String getPacketAckId(StationPacket packet) {
-        String packetId = null;
-        String content = packet.getCommand();
-        if ((content == null) || (content.isBlank()) || (content.isEmpty())) {
-            return packetId;
-        }
-        try {
-            int indexAckPos = content.indexOf("{");
-            if (indexAckPos != -1) {
-                packetId = content.substring(indexAckPos + 1);
-                int index = packetId.indexOf("}");
-                if (index != -1) {
-                    packetId = packetId.substring(0, index); // handle {XXXX}YYYY
-                }
-            }
-        } catch (Exception e) {
-            objectLog.error("Exception caught parsing ack id", e);
-            packetId = null;
-        }
-
-        return packetId;
+        return AprsMessageProtocol.identifier(packet.getCommand());
     }
 
     void processWelcomeCenterCommand(StationPacket packet) {
@@ -588,7 +577,7 @@ public class StationPacketProcessor {
             String callsignTo = content.substring(0, indexToSep);
             packet.setCallsignTo(callsignTo.stripTrailing().toUpperCase());
             content = content.substring(indexToSep + 1);
-            packet.setCommand(content);
+            packet.setCommand(AprsMessageProtocol.normalize(content));
         } catch (Exception e) {
             objectLog.error("Exception caught parsing message", e);
             return;

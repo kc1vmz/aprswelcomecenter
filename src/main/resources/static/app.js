@@ -1167,7 +1167,7 @@ async function refreshPackets() {
             <article class="packet-item">
                 <div class="packet-metadata"><time datetime="${escapeHtml(packet.receivedTime)}">${formatReceivedTime(packet.receivedTime)}</time></div>
                 <strong><span class="tag">${escapeHtml(packet.direction || "RX")}</span> ${escapeHtml(packet.callsign || "Unknown callsign")}</strong>
-                <code>${escapeHtml(packet.command || "")}</code>
+                <code>${escapeHtml((packet.command || "").replaceAll("\r", "\\r").replaceAll("\n", "\\n"))}</code>
             </article>`).join("");
     } catch (error) {
         if (loggingStatus.textContent === "Checking packet logging status…") {

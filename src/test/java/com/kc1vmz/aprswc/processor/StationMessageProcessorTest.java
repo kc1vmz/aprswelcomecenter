@@ -34,6 +34,7 @@ import com.kc1vmz.aprswc.accessor.StationPacketAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
 import com.kc1vmz.aprswc.communication.MessageIdentifierService;
+import com.kc1vmz.aprswc.enumeration.MessageType;
 import com.kc1vmz.aprswc.object.Station;
 import com.kc1vmz.aprswc.object.StationMessage;
 import com.kc1vmz.aprswc.object.StationPacket;
@@ -72,6 +73,16 @@ class StationMessageProcessorTest {
 
     @InjectMocks
     private StationMessageProcessor processor;
+
+    @Test
+    void sendsAckDirectlyWithoutIdentifierServiceOrRetryQueue() {
+        var ack = new StationMessage(null, "N2EDX-7", "K4BO", null, null, "ack18\r", "route", MessageType.MESSAGE);
+        processor.processMessage(ack);
+        verify(communications).sendUntracked(eq("route"), eq("K4BO"), eq("N2EDX-7"), eq("ack18"), any(), any());
+        verify(communications, never()).sendMessage(any(), any(), any(), any(), any(), any());
+        verifyNoInteractions(identifiers);
+        assertNull(ack.getMessageIdentifier());
+    }
 
     @Test
     void createsOnePersistedDirectedMessagePerStationInWelcomeCenter() {

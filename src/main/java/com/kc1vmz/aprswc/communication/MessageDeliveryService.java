@@ -24,7 +24,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BooleanSupplier;
-import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -41,10 +40,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class MessageDeliveryService {
     private static final Logger LOG = LoggerFactory.getLogger(MessageDeliveryService.class);
     private static final String ACTIVE = "state in ('PENDING','AWAITING_ACK')";
-    // Some radios incorrectly give an ACK its own message number. Consume it without acknowledging it.
-    private static final Pattern CONTROL =
-            Pattern.compile("^(ack|rej)([A-Za-z0-9]{1,5})(?:}[A-Za-z0-9]{0,5}|\\{[A-Za-z0-9]{1,5})?$");
-    private static final Pattern REPLY = Pattern.compile("\\{[A-Za-z0-9]{1,5}}([A-Za-z0-9]{1,5})$");
     private final JdbcTemplate jdbc;
     private final TransactionTemplate tx;
     private final ObjectProvider<CommunicationInstanceManager> managers;
@@ -94,12 +89,16 @@ public class MessageDeliveryService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void start() {
+        for (UUID id : jdbc.queryForList("select id from message_deliveries where " + ACTIVE, UUID.class)) {
+            Delivery delivery = get(id);
+            if (AprsMessageProtocol.control(delivery.content()) != null) finish(id, "CANCELLED", Instant.now());
+        }
         jdbc.update("update message_deliveries set armed=true,lease=null,lease_until=null where " + ACTIVE);
         ready = true;
     }
 
     public void register(StationMessage m, UUID policy, Long version, String occurrence, UUID claim) {
-        if (m.getMessageIdentifier() == null) return;
+        if (m.getMessageIdentifier() == null || AprsMessageProtocol.control(m.getContent()) != null) return;
         if (m.getId() == null) m.setId(UUID.randomUUID());
         Instant now = Instant.now();
         int inserted = jdbc.update(
@@ -193,6 +192,7 @@ public class MessageDeliveryService {
     }
 
     private boolean eligible(Delivery d) {
+        if (AprsMessageProtocol.control(d.content()) != null) return false;
         if (ignored.findByCallsignIgnoreCase(d.to()).isPresent()) return false;
         UUID route;
         try {
@@ -379,13 +379,13 @@ public class MessageDeliveryService {
     /** Called before command, center-state, and incoming-route filtering. */
     public boolean acknowledge(String from, String to, String text) {
         if (from == null || to == null || text == null) return false;
-        var control = CONTROL.matcher(text);
-        if (control.matches()) {
-            complete(from, to, control.group(2), control.group(1).equals("ack") ? "ACKNOWLEDGED" : "REJECTED");
+        var control = AprsMessageProtocol.control(text);
+        if (control != null) {
+            complete(from, to, control.identifier(), control.kind().equals("ack") ? "ACKNOWLEDGED" : "REJECTED");
             return true;
         }
-        var reply = REPLY.matcher(text);
-        if (reply.find()) complete(from, to, reply.group(1), "ACKNOWLEDGED");
+        String reply = AprsMessageProtocol.replyAcknowledgement(text);
+        if (reply != null) complete(from, to, reply, "ACKNOWLEDGED");
         return false;
     }
 

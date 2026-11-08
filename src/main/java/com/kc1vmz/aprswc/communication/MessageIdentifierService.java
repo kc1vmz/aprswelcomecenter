@@ -73,13 +73,19 @@ public class MessageIdentifierService {
     }
 
     public void prepare(StationMessage message, UUID policy, Long version, String occurrence, UUID claim) {
-        String text = message.getContent();
+        String text = AprsMessageProtocol.normalize(message.getContent());
+        message.setContent(text);
+        var control = AprsMessageProtocol.control(text);
+        if (control != null) {
+            message.setContent(control.wireText());
+            message.setMessageIdentifier(null);
+            return;
+        }
         String to = message.getCallsignTo();
         if (message.getMessageType() != MessageType.MESSAGE
                 || to == null
                 || to.toUpperCase(Locale.ROOT).startsWith("BLN")
-                || text == null
-                || text.matches("(?:ack|rej)[A-Za-z0-9]{1,5}(?:}[A-Za-z0-9]{0,5})?")) return;
+                || text == null) return;
         if (message.getMessageIdentifier() == null) message.setMessageIdentifier(next());
         if (deliveries != null) deliveries.register(message, policy, version, occurrence, claim);
     }
