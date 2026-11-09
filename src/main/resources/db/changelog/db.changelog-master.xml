@@ -142,4 +142,7 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
             CREATE INDEX idx_command_receipt_expiry ON incoming_command_receipts(expires_at);
         </sql>
     </changeSet>
+    <changeSet id="024-transmit-spacing" author="aprswc" dbms="h2">
+        <sql>ALTER TABLE communication_instances ADD COLUMN transmit_spacing_ms INTEGER DEFAULT 1000 NOT NULL CHECK (transmit_spacing_ms &gt;= 0)</sql>
+    </changeSet>
 </databaseChangeLog>

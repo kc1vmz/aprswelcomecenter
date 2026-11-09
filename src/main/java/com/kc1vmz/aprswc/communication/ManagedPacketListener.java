@@ -119,9 +119,17 @@ public class ManagedPacketListener {
     }
 
     private void writeLoop() {
+        long lastWriteCompleted = 0;
+        long spacingNanos = "APRS_IS".equals(config.type()) ? 0 : config.transmitSpacingMs() * 1_000_000L;
         while (!stopping) {
             try {
                 Pending pending = outgoing.take();
+                if (lastWriteCompleted != 0 && spacingNanos > 0) {
+                    long remaining;
+                    while ((remaining = spacingNanos - (System.nanoTime() - lastWriteCompleted)) > 0) {
+                        Thread.sleep(remaining / 1_000_000, (int) (remaining % 1_000_000));
+                    }
+                }
                 if (stopping || !"CONNECTED".equals(health) || pending.connection() != connection) continue;
                 try {
                     if (!pending.permitted().getAsBoolean()) continue;
@@ -134,6 +142,7 @@ public class ManagedPacketListener {
                 writingSince = System.nanoTime();
                 try {
                     pending.send().run(pending.connection());
+                    lastWriteCompleted = System.nanoTime();
                     writingSince = 0;
                 } catch (Exception failure) {
                     lastError = "Send failed (" + failure.getClass().getSimpleName() + ")";

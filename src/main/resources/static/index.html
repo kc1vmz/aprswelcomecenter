@@ -982,6 +982,7 @@
                 <label data-connection-types="KISS_SERIAL TNC2_SERIAL">Initialization command 1<input name="initCommand1" maxlength="255"></label>
                 <label data-connection-types="KISS_SERIAL TNC2_SERIAL">Initialization command 2<input name="initCommand2" maxlength="255"></label>
                 <label data-connection-types="KISS_TCP KISS_SERIAL TNC2_TCP TNC2_SERIAL KENWOOD_SERIAL">Digipeater path<input name="digiPath" maxlength="255" placeholder="WIDE1-1,WIDE2-1"></label>
+                <label data-connection-types="KISS_TCP KISS_SERIAL TNC2_TCP TNC2_SERIAL KENWOOD_SERIAL">Transmit spacing (milliseconds)<input name="transmitSpacingMs" type="number" min="0" max="2147483647" step="1" value="1000" required></label>
             </div>
             <p data-connection-types="KENWOOD_SERIAL">Kenwood packet/command mode. RESET, MYCALL and monitor settings are applied automatically.</p>
             <p id="communication-message" class="form-message" role="status"></p>

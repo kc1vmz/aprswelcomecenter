@@ -34,7 +34,39 @@ public record CommunicationConfig(
         Integer baudRate,
         String initCommand1,
         String initCommand2,
-        String digiPath) {
+        String digiPath,
+        int transmitSpacingMs) {
+    public CommunicationConfig(
+            UUID id,
+            long version,
+            String type,
+            String host,
+            Integer port,
+            String username,
+            String passcode,
+            String filter,
+            String serialDevice,
+            Integer baudRate,
+            String initCommand1,
+            String initCommand2,
+            String digiPath) {
+        this(
+                id,
+                version,
+                type,
+                host,
+                port,
+                username,
+                passcode,
+                filter,
+                serialDevice,
+                baudRate,
+                initCommand1,
+                initCommand2,
+                digiPath,
+                1000);
+    }
+
     public static CommunicationConfig from(CommunicationInstance c) {
         return new CommunicationConfig(
                 c.getId(),
@@ -49,7 +81,8 @@ public record CommunicationConfig(
                 c.getBaudRate(),
                 c.getInitCommand1(),
                 c.getInitCommand2(),
-                c.getDigiPath());
+                c.getDigiPath(),
+                c.getTransmitSpacingMs());
     }
 
     @Override

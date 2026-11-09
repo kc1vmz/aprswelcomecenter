@@ -169,7 +169,7 @@ communicationForm.addEventListener('submit', async event => {
     const button = communicationForm.querySelector('[type="submit"]');
     button.disabled = true;
     const value = {version: editingCommunication?.version ?? 0};
-    for (const [key, text] of new FormData(communicationForm)) value[key] = ['port', 'baudRate'].includes(key) ? Number(text) : text.trim();
+    for (const [key, text] of new FormData(communicationForm)) value[key] = ['port', 'baudRate', 'transmitSpacingMs'].includes(key) ? Number(text) : text.trim();
     try {
         await communicationRequest('/api/v1/communication-instances' + (editingCommunication ? `/${editingCommunication.id}` : ''), editingCommunication ? 'PUT' : 'POST', value);
         document.querySelector('#communication-dialog').close();

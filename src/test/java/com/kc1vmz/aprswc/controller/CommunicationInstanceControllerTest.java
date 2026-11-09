@@ -44,6 +44,54 @@ class CommunicationInstanceControllerTest {
     }
 
     @Test
+    void transmitSpacingDefaultsPersistsAndRejectsNegativeValues() {
+        var body = new HashMap<String, Object>();
+        body.put("type", "KISS_TCP");
+        body.put("state", "PAUSED");
+        body.put("host", "localhost");
+        body.put("port", 8001);
+        body.put("digiPath", "WIDE1-1");
+        client.post()
+                .uri("/api/v1/communication-instances")
+                .bodyValue(body)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.transmitSpacingMs")
+                .isEqualTo(1000);
+        for (int spacing : new int[] {0, 250}) {
+            body.put("transmitSpacingMs", spacing);
+            client.post()
+                    .uri("/api/v1/communication-instances")
+                    .bodyValue(body)
+                    .exchange()
+                    .expectStatus()
+                    .isOk()
+                    .expectBody()
+                    .jsonPath("$.transmitSpacingMs")
+                    .isEqualTo(spacing);
+        }
+        assertThat(repository.findAll())
+                .extracting(c -> c.getTransmitSpacingMs())
+                .containsExactlyInAnyOrder(1000, 0, 250);
+        body.put("transmitSpacingMs", -1);
+        client.post()
+                .uri("/api/v1/communication-instances")
+                .bodyValue(body)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+        body.put("transmitSpacingMs", 1.5);
+        client.post()
+                .uri("/api/v1/communication-instances")
+                .bodyValue(body)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+    }
+
+    @Test
     void creationRequiresAllApplicableFieldsExceptInitializationCommands() {
         for (String type :
                 new String[] {"APRS_IS", "KISS_TCP", "TNC2_TCP", "KISS_SERIAL", "TNC2_SERIAL", "KENWOOD_SERIAL"}) {

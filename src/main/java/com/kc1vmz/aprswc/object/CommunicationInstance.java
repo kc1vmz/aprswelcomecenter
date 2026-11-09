@@ -47,6 +47,25 @@ public class CommunicationInstance {
     private String digiPath;
     private Integer port;
     private Integer baudRate;
+    private Integer transmitSpacingMs;
+
+    public CommunicationInstance() {
+        this(1000);
+    }
+
+    public CommunicationInstance(Integer transmitSpacingMs) {
+        this.transmitSpacingMs = transmitSpacingMs;
+    }
+
+    public Integer getTransmitSpacingMs() {
+        return transmitSpacingMs;
+    }
+
+    public void setTransmitSpacingMs(Number value) {
+        if (value != null && value.doubleValue() != value.intValue())
+            throw new IllegalArgumentException("Transmit spacing must be an integer in milliseconds");
+        transmitSpacingMs = value == null ? null : value.intValue();
+    }
 
     public UUID getId() {
         return id;

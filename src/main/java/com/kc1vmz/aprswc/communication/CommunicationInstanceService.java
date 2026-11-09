@@ -135,6 +135,8 @@ public class CommunicationInstanceService {
     }
 
     private static void validate(CommunicationInstance c) {
+        if (c.getTransmitSpacingMs() == null || c.getTransmitSpacingMs() < 0)
+            throw error(HttpStatus.BAD_REQUEST, "Transmit spacing must be a nonnegative integer in milliseconds");
         if ("KENWOOD_SERIAL".equals(c.getType())) {
             required(c.getUsername(), "Kenwood MYCALL");
             c.setUsername(c.getUsername().trim().toUpperCase(Locale.ROOT));
