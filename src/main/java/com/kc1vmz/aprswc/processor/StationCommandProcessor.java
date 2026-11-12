@@ -437,8 +437,7 @@ public class StationCommandProcessor {
     }
 
     private void processHelpRequest(StationCommand command) {
-        String messageText1 = "Commands: H[ELP],I[NFO],WE[ATHER],WX,STA[RT],STO[P]";
-        String messageText2 = "Commands: O[THERS],CO[MM],V[OICE],CL[UBS],E[VENTS],WA[RNINGS]";
+        String messageText1 = "Help,Info,WX,STArt,STOp,Others,COmm,Voice,CLubs,Events,WArnings";
 
         StationMessage stationMessage1 = new StationMessage(
                 UUID.randomUUID(),
@@ -449,18 +448,7 @@ public class StationCommandProcessor {
                 messageText1,
                 null,
                 MessageType.MESSAGE);
-        StationMessage stationMessage2 = new StationMessage(
-                UUID.randomUUID(),
-                command.getCallsign(),
-                command.getWelcomeCenter().getCallsign(),
-                command.getWelcomeCenter(),
-                null,
-                messageText2,
-                null,
-                MessageType.MESSAGE);
-
         queueReply(command, stationMessage1);
-        queueReply(command, stationMessage2);
     }
 
     public boolean isRecognizedCommand(String content) {
