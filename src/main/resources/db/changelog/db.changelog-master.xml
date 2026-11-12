@@ -145,4 +145,25 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
     <changeSet id="024-transmit-spacing" author="aprswc" dbms="h2">
         <sql>ALTER TABLE communication_instances ADD COLUMN transmit_spacing_ms INTEGER DEFAULT 1000 NOT NULL CHECK (transmit_spacing_ms &gt;= 0)</sql>
     </changeSet>
+    <changeSet id="025-policy-categories" author="aprswc" dbms="h2">
+        <sqlFile path="025-policy-categories.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+    <changeSet id="026-category-commands" author="aprswc" dbms="h2">
+        <sql>
+            ALTER TABLE communication_categories ADD COLUMN associated_command VARCHAR(16);
+            UPDATE communication_categories SET associated_command = CASE name
+                WHEN 'Amateur Radio' THEN 'VOICE' WHEN 'Clubs' THEN 'CLUBS'
+                WHEN 'Events' THEN 'EVENTS' WHEN 'Commercial Radio' THEN 'COMM' END
+            WHERE name IN ('Amateur Radio','Clubs','Events','Commercial Radio');
+        </sql>
+    </changeSet>
+    <changeSet id="027-warnings-category" author="aprswc" dbms="h2">
+        <sql>
+            INSERT INTO communication_categories(id,name,description,auto_generated_text,system_defined,associated_command)
+            SELECT '10000000-0000-0000-0000-000000000009','Warnings','Local warnings and advisories.',FALSE,TRUE,'WARNINGS'
+            WHERE NOT EXISTS (SELECT 1 FROM communication_categories WHERE LOWER(name)='warnings');
+            UPDATE communication_categories SET associated_command='WARNINGS',system_defined=TRUE,auto_generated_text=FALSE
+            WHERE LOWER(name)='warnings';
+        </sql>
+    </changeSet>
 </databaseChangeLog>

@@ -110,7 +110,7 @@ class ContainmentDeletionControllerTest {
     }
 
     private CommunicationCategory category(String name) {
-        return categories.saveAndFlush(new CommunicationCategory(null, name, "Test", false, false));
+        return categories.saveAndFlush(new CommunicationCategory(null, name, "Test", false, false, null));
     }
 
     private CommunicationPolicy policy(WelcomeCenter center, CommunicationCategory category) {

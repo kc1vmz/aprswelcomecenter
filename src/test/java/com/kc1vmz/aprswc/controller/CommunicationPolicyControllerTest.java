@@ -17,6 +17,8 @@
  */
 package com.kc1vmz.aprswc.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.kc1vmz.aprswc.database.CommunicationCategoryRepository;
 import com.kc1vmz.aprswc.database.CommunicationPolicyRepository;
 import com.kc1vmz.aprswc.database.WelcomeCenterRepository;
@@ -60,7 +62,7 @@ class CommunicationPolicyControllerTest {
     @Test
     void filtersPoliciesByWelcomeCenter() {
         CommunicationCategory category =
-                categories.save(new CommunicationCategory(null, "General", "General messages", false, false));
+                categories.save(new CommunicationCategory(null, "General", "General messages", false, false, null));
         WelcomeCenter firstCenter = welcomeCenters.save(new WelcomeCenter(
                 null, "First", null, "N1ABC", null, null, null, null, null, null, null, null, "c", "/", List.of()));
         WelcomeCenter secondCenter = welcomeCenters.save(new WelcomeCenter(
@@ -104,5 +106,53 @@ class CommunicationPolicyControllerTest {
                 .isOk()
                 .expectBodyList(CommunicationPolicy.class)
                 .hasSize(2);
+    }
+
+    @Test
+    void enforcesTriggerCategoriesOnCreateAndEdit() {
+        var center = welcomeCenters.save(new WelcomeCenter(
+                null, "Test", null, "N1ABC", null, null, null, null, null, null, null, null, "c", "/", List.of()));
+        var events = categories.save(new CommunicationCategory(null, "Events", "", false, false, "EVENTS"));
+        var policy = new CommunicationPolicy(
+                null, events, center, "Hello", null, null, MessageType.MESSAGE, CommunicationEventType.ENTER_REGION);
+        var saved = client.post()
+                .uri("/api/v1/communication-policies")
+                .bodyValue(policy)
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .expectBody(CommunicationPolicy.class)
+                .returnResult()
+                .getResponseBody();
+        assertEquals("Welcome", saved.getCategory().getName());
+        saved.setCommunicationEventType(CommunicationEventType.EXIT_REGION);
+        saved.setCategory(null);
+        saved = client.put()
+                .uri("/api/v1/communication-policies/{id}", saved.getId())
+                .bodyValue(saved)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(CommunicationPolicy.class)
+                .returnResult()
+                .getResponseBody();
+        assertEquals("Goodbye", saved.getCategory().getName());
+        saved.setCommunicationEventType(CommunicationEventType.ON_REQUEST);
+        client.put()
+                .uri("/api/v1/communication-policies/{id}", saved.getId())
+                .bodyValue(saved)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+        saved.setCategory(events);
+        client.put()
+                .uri("/api/v1/communication-policies/{id}", saved.getId())
+                .bodyValue(saved)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.category.name")
+                .isEqualTo("Events");
     }
 }

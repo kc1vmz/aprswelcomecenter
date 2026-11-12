@@ -79,7 +79,7 @@ class StationCommandProcessorTest {
     @Test
     void requestsExcludeScheduledAndShriekPolicies() {
         var center = welcomeCenter();
-        var category = new CommunicationCategory(UUID.randomUUID(), "EVENTS", "", false, false);
+        var category = new CommunicationCategory(UUID.randomUUID(), "Renamed category", "", false, false, "EVENTS");
         var regular = new CommunicationPolicy(
                 null, category, center, "Info", null, null, MessageType.MESSAGE, CommunicationEventType.ON_REQUEST);
         var scheduled = new CommunicationPolicy(
@@ -254,6 +254,38 @@ class StationCommandProcessorTest {
         verify(stationMessageQueue).offer(message.capture());
         assertEquals(
                 "No others known to this welcome center", message.getValue().getContent());
+    }
+
+    @Test
+    void warningsFallbackHasNoFictitiousPolicyReference() {
+        var center = welcomeCenter();
+        when(communicationPolicyAccessor.findByWelcomeCenterId(center.getId())).thenReturn(Flux.empty());
+        processor.processCommand(new StationCommand(UUID.randomUUID(), "N1ABC", center, null, "WARNINGS", null));
+        var message = ArgumentCaptor.forClass(StationMessage.class);
+        verify(stationMessageQueue).offer(message.capture());
+        assertEquals("Warnings: No information available", message.getValue().getContent());
+        assertEquals(null, message.getValue().getOriginPolicyId());
+    }
+
+    @Test
+    void warningsUsesCategoryCommandAndResolvesConfiguredContent() {
+        var center = welcomeCenter();
+        var category = new CommunicationCategory(UUID.randomUUID(), "Local advisories", "", false, true, "WARNINGS");
+        var policy = new CommunicationPolicy(
+                UUID.randomUUID(),
+                category,
+                center,
+                "Road closed",
+                null,
+                null,
+                MessageType.MESSAGE,
+                CommunicationEventType.ON_REQUEST);
+        when(communicationPolicyAccessor.findByWelcomeCenterId(center.getId())).thenReturn(Flux.just(policy));
+        processor.processCommand(new StationCommand(UUID.randomUUID(), "N1ABC", center, null, "WARNINGS", null));
+        var message = ArgumentCaptor.forClass(StationMessage.class);
+        verify(stationMessageQueue).offer(message.capture());
+        assertEquals("Road closed", message.getValue().getContent());
+        assertEquals(policy.getId(), message.getValue().getOriginPolicyId());
     }
 
     private WelcomeCenter welcomeCenter() {

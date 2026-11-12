@@ -212,7 +212,8 @@ class DomainObjectsTest {
     void remainingObjectsExposeAllFields() {
         WelcomeCenter c = new WelcomeCenter(
                 UUID.randomUUID(), "n", "d", "A", "o", "B", "org", "C", "ct", "D", null, null, "c", "/", List.of());
-        CommunicationCategory category = new CommunicationCategory(UUID.randomUUID(), "General", "d", true, false);
+        CommunicationCategory category =
+                new CommunicationCategory(UUID.randomUUID(), "General", "d", true, false, null);
         CommunicationPolicy policy = new CommunicationPolicy(
                 UUID.randomUUID(),
                 category,

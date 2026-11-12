@@ -191,7 +191,7 @@ class LiquibaseMigrationTest {
         migrate(ds);
         try (Connection c = ds.getConnection()) {
             assertThat(scalar(c, "select status from welcome_centers")).isEqualTo("CLOSED");
-            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("24");
+            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("27");
             assertThat(scalar(c, "select communication_mode from welcome_centers"))
                     .isEqualTo("SELECTED");
         }
@@ -347,5 +347,104 @@ class LiquibaseMigrationTest {
         }
         assertThatThrownBy(() -> migrate(ds))
                 .hasStackTraceContaining("Incompatible column WELCOME_CENTERS.DESCRIPTION");
+    }
+
+    @Test
+    void categoryMigrationAssignsTriggerCategoriesAndPreservesOnDemand() throws Exception {
+        var ds = database();
+        migrate(ds);
+        try (var c = ds.getConnection();
+                var statement = c.createStatement()) {
+            statement.execute(
+                    "insert into welcome_centers(id,name,callsign) values('20000000-0000-0000-0000-000000000001','Test','N1ABC')");
+            statement.execute(
+                    "insert into communication_categories(id,name,auto_generated_text,system_defined) values('30000000-0000-0000-0000-000000000001','Custom',false,false)");
+            for (String trigger : new String[] {
+                "ENTER_REGION", "EXIT_REGION", "SCHEDULED_ONCE", "SCHEDULED_RECURRING", "SHRIEK_HEARD", "ON_REQUEST"
+            }) {
+                statement.execute(
+                        "insert into communication_policies(id,welcome_center_id,category_id,message_text,communication_event_type) values(random_uuid(),'20000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','Preserve text','"
+                                + trigger + "')");
+            }
+            statement.execute(
+                    "insert into communication_policies(id,welcome_center_id,category_id,message_text,communication_event_type) select random_uuid(),'20000000-0000-0000-0000-000000000001',id,'Legacy on demand','ON_REQUEST' from communication_categories where name in ('Welcome','Goodbye')");
+            for (int run = 0; run < 2; run++) {
+                ScriptUtils.executeSqlScript(c, new ClassPathResource("db/changelog/025-policy-categories.sql"));
+                assertThat(
+                                scalar(
+                                        c,
+                                        "select count(*) from communication_policies p join communication_categories c on p.category_id=c.id where p.communication_event_type='ON_REQUEST' and c.name in ('Welcome','Goodbye') and p.version=0"))
+                        .isEqualTo("2");
+                assertThat(
+                                scalar(
+                                        c,
+                                        "select count(*) from communication_policies p join communication_categories c on p.category_id=c.id where (p.communication_event_type='ENTER_REGION' and c.name='Welcome') or (p.communication_event_type='EXIT_REGION' and c.name='Goodbye') or (p.communication_event_type='ON_REQUEST' and c.name='Custom') or (p.communication_event_type in ('SCHEDULED_ONCE','SCHEDULED_RECURRING','SHRIEK_HEARD') and c.name='General')"))
+                        .isEqualTo("6");
+                assertThat(scalar(c, "select count(*) from communication_policies where message_text='Preserve text'"))
+                        .isEqualTo("6");
+                assertThat(scalar(c, "select sum(version) from communication_policies"))
+                        .isEqualTo("5");
+            }
+        }
+    }
+
+    @Test
+    void categoryCommandsMigrateExistingRowsAndRemainStableOnRestart() throws Exception {
+        var ds = database();
+        try (var c = ds.getConnection();
+                var statement = c.createStatement()) {
+            legacy(c);
+            for (String name : new String[] {"Amateur Radio", "Clubs", "Events", "Commercial Radio"})
+                statement.execute(
+                        "insert into communication_categories(id,name,description,auto_generated_text,system_defined) values(random_uuid(),'"
+                                + name + "','Preserved',false,true)");
+        }
+        migrate(ds);
+        migrate(ds);
+        try (var c = ds.getConnection()) {
+            for (String[] pair : new String[][] {
+                {"Amateur Radio", "VOICE"}, {"Clubs", "CLUBS"}, {"Events", "EVENTS"}, {"Commercial Radio", "COMM"}
+            })
+                assertThat(scalar(
+                                c,
+                                "select associated_command from communication_categories where name='" + pair[0] + "'"))
+                        .isEqualTo(pair[1]);
+            assertThat(scalar(c, "select count(*) from communication_categories where description='Preserved'"))
+                    .isEqualTo("4");
+            assertThat(
+                            scalar(
+                                    c,
+                                    "select count(*) from communication_categories where name='General' and associated_command is null"))
+                    .isEqualTo("1");
+        }
+    }
+
+    @Test
+    void warningsMigrationPreservesExistingCategoryAndPolicies() throws Exception {
+        var ds = database();
+        String category = UUID.randomUUID().toString();
+        try (var c = ds.getConnection();
+                var statement = c.createStatement()) {
+            legacy(c);
+            statement.execute(
+                    "insert into communication_categories(id,name,description,auto_generated_text,system_defined) values('"
+                            + category + "','Warnings','Existing warnings',false,false)");
+            statement.execute(
+                    "insert into welcome_centers(id,name,callsign) values('20000000-0000-0000-0000-000000000001','Test','N1ABC')");
+            statement.execute(
+                    "insert into communication_policies(id,category_id,welcome_center_id,message_text,communication_event_type) values(random_uuid(),'"
+                            + category + "','20000000-0000-0000-0000-000000000001','Keep this warning','ON_REQUEST')");
+        }
+        migrate(ds);
+        migrate(ds);
+        try (var c = ds.getConnection()) {
+            assertThat(scalar(c, "select associated_command from communication_categories where id='" + category + "'"))
+                    .isEqualTo("WARNINGS");
+            assertThat(scalar(c, "select count(*) from communication_categories where name='Warnings'"))
+                    .isEqualTo("1");
+            assertThat(scalar(
+                            c, "select message_text from communication_policies where category_id='" + category + "'"))
+                    .isEqualTo("Keep this warning");
+        }
     }
 }

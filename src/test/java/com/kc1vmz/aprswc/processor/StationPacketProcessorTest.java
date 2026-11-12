@@ -238,7 +238,8 @@ class StationPacketProcessorTest {
                 "/",
                 List.of());
         Station station = new Station(UUID.randomUUID(), "N1ABC", StationState.UNKNOWN, List.of());
-        CommunicationCategory category = new CommunicationCategory(UUID.randomUUID(), "General", null, false, false);
+        CommunicationCategory category =
+                new CommunicationCategory(UUID.randomUUID(), "General", null, false, false, null);
         String packetProcessorId = "packet-processor-id-1";
         CommunicationPolicy policy = new CommunicationPolicy(
                 UUID.randomUUID(),

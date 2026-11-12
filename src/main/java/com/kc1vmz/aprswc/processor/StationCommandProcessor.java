@@ -23,6 +23,7 @@ import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterWeatherReportAccessor;
 import com.kc1vmz.aprswc.communication.CommunicationScope;
 import com.kc1vmz.aprswc.content.PolicyContentService;
+import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
 import com.kc1vmz.aprswc.object.CommunicationPolicy;
 import com.kc1vmz.aprswc.object.StationCommand;
@@ -172,38 +173,38 @@ public class StationCommandProcessor {
     }
 
     private void processVoiceRequest(StationCommand command) {
-        processCommunicationPolicyRequest(command, "Amateur Radio");
+        processCommunicationPolicyRequest(command, VOICE_COMMAND);
     }
 
     private void processCommRequest(StationCommand command) {
-        processCommunicationPolicyRequest(command, "Commercial Radio");
+        processCommunicationPolicyRequest(command, COMM_COMMAND);
     }
 
     private void processClubsRequest(StationCommand command) {
-        processCommunicationPolicyRequest(command, "Clubs");
+        processCommunicationPolicyRequest(command, CLUBS_COMMAND);
     }
 
     private void processEventsRequest(StationCommand command) {
-        processCommunicationPolicyRequest(command, "Events");
+        processCommunicationPolicyRequest(command, EVENTS_COMMAND);
     }
 
     private void processWarningsRequest(StationCommand command) {
-        processCommunicationPolicyRequest(command, "Warnings");
+        processCommunicationPolicyRequest(command, WARNINGS_COMMAND);
     }
 
     private void processCommunicationPolicyRequest(StationCommand command, String name) {
         List<CommunicationPolicy> communicationPolicies = getCommunicationPolicies(command.getWelcomeCenter(), name);
         if ((communicationPolicies == null) || (communicationPolicies.isEmpty())) {
             CommunicationPolicy policy = new CommunicationPolicy(
-                    UUID.randomUUID(),
+                    null,
                     null,
                     command.getWelcomeCenter(),
-                    name + ": No information available",
+                    name.substring(0, 1) + name.substring(1).toLowerCase(Locale.ROOT) + ": No information available",
                     null,
                     null,
                     MessageType.MESSAGE,
                     null);
-            communicationPolicies.add(policy);
+            communicationPolicies = List.of(policy);
         }
         for (CommunicationPolicy communicationPolicy : communicationPolicies) {
             String messageText = content.resolve(communicationPolicy);
@@ -216,7 +217,8 @@ public class StationCommandProcessor {
                     messageText,
                     null,
                     MessageType.MESSAGE);
-            stationMessage.setOriginPolicy(communicationPolicy.getId(), communicationPolicy.getVersion());
+            if (communicationPolicy.getId() != null)
+                stationMessage.setOriginPolicy(communicationPolicy.getId(), communicationPolicy.getVersion());
             queueReply(command, stationMessage);
         }
     }
@@ -227,10 +229,10 @@ public class StationCommandProcessor {
         }
         return communicationPolicyAccessor
                 .findByWelcomeCenterId(welcomeCenter.getId())
-                .filter(policy -> !PolicySchedule.automated(policy))
+                .filter(policy -> policy.getCommunicationEventType() == CommunicationEventType.ON_REQUEST)
                 .filter(policy -> policy.getCategory() != null)
-                .filter(policy -> policy.getCategory().getName() != null)
-                .filter(policy -> policy.getCategory().getName().equalsIgnoreCase(name))
+                .filter(policy -> policy.getCategory().getCommand() != null)
+                .filter(policy -> policy.getCategory().getCommand().equalsIgnoreCase(name))
                 .collectList()
                 .blockOptional()
                 .orElseGet(List::of);

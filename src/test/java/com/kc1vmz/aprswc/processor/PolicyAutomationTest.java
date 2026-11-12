@@ -99,7 +99,7 @@ class PolicyAutomationTest {
     void setup() {
         policies.deleteAll();
         category = categories.save(
-                new CommunicationCategory(null, UUID.randomUUID().toString(), "", false, false));
+                new CommunicationCategory(null, UUID.randomUUID().toString(), "", false, false, null));
         center = centers.save(new WelcomeCenter(
                 null,
                 "Test",
@@ -145,9 +145,11 @@ class PolicyAutomationTest {
                         null,
                         null,
                         null);
-        return accessor.create(new CommunicationPolicy(
+        var saved = accessor.create(new CommunicationPolicy(
                         null, category, center, "Welcome", null, null, MessageType.MESSAGE, type, 0, settings, null))
                 .block();
+        assertThat(saved.getCategory().getName()).isEqualTo("General");
+        return saved;
     }
 
     private void due(CommunicationPolicy p, Instant when) {

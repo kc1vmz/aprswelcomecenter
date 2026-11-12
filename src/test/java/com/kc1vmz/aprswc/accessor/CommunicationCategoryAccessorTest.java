@@ -34,9 +34,10 @@ class CommunicationCategoryAccessorTest {
     @Test
     void createIfAbsentReturnsCategoryWithExistingName() {
         UUID configuredId = UUID.randomUUID();
-        CommunicationCategory configured = new CommunicationCategory(configuredId, "Welcome", "Default", false, true);
+        CommunicationCategory configured =
+                new CommunicationCategory(configuredId, "Welcome", "Default", false, true, null);
         CommunicationCategory existing =
-                new CommunicationCategory(UUID.randomUUID(), "Welcome", "Existing", false, false);
+                new CommunicationCategory(UUID.randomUUID(), "Welcome", "Existing", false, false, null);
         CommunicationCategoryRepository repository = mock(CommunicationCategoryRepository.class);
         when(repository.findById(configuredId)).thenReturn(Optional.empty());
         when(repository.findByName("Welcome")).thenReturn(Optional.of(existing));

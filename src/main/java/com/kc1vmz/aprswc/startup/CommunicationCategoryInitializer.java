@@ -21,7 +21,6 @@ import com.kc1vmz.aprswc.accessor.CommunicationCategoryAccessor;
 import com.kc1vmz.aprswc.object.CommunicationCategory;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -34,46 +33,70 @@ public class CommunicationCategoryInitializer implements ApplicationRunner {
                     "Welcome",
                     "Send a welcome message upon entering the welcome center's region.",
                     false,
-                    true),
+                    true,
+                    null),
             new CommunicationCategory(
                     UUID.fromString("10000000-0000-0000-0000-000000000002"),
                     "Goodbye",
                     "Send a goodbye message upon leaving the welcome center's region.",
                     false,
-                    true),
+                    true,
+                    null),
             new CommunicationCategory(
                     UUID.fromString("10000000-0000-0000-0000-000000000003"),
                     "Weather",
                     "Send a weather report based on local APRS weather",
                     true,
-                    true),
+                    true,
+                    null),
             new CommunicationCategory(
                     UUID.fromString("10000000-0000-0000-0000-000000000004"),
                     "Commercial Radio",
                     "Send information about commercial radio in the area",
                     false,
-                    true),
+                    true,
+                    "COMM"),
             new CommunicationCategory(
                     UUID.fromString("10000000-0000-0000-0000-000000000005"),
                     "Events",
                     "Send information about current local events",
                     false,
-                    true),
+                    true,
+                    "EVENTS"),
             new CommunicationCategory(
                     UUID.fromString("10000000-0000-0000-0000-000000000006"),
                     "Clubs",
                     "Send information about local amateur clubs",
                     false,
-                    true),
+                    true,
+                    "CLUBS"),
             new CommunicationCategory(
                     UUID.fromString("10000000-0000-0000-0000-000000000007"),
                     "Amateur Radio",
                     "Send information about amateur radio infrastructure in the area",
                     false,
-                    true));
+                    true,
+                    "VOICE"),
+            new CommunicationCategory(
+                    UUID.fromString("10000000-0000-0000-0000-000000000008"),
+                    "General",
+                    "Messages for scheduled and shriek events.",
+                    false,
+                    true,
+                    null),
+            new CommunicationCategory(
+                    UUID.fromString("10000000-0000-0000-0000-000000000009"),
+                    "Warnings",
+                    "Local warnings and advisories.",
+                    false,
+                    true,
+                    "WARNINGS"));
 
-    @Autowired
-    private CommunicationCategoryAccessor accessor;
+    private final CommunicationCategoryAccessor accessor;
+
+    public CommunicationCategoryInitializer(CommunicationCategoryAccessor accessor) {
+        this.accessor = accessor;
+    }
 
     @Override
     public void run(ApplicationArguments arguments) {

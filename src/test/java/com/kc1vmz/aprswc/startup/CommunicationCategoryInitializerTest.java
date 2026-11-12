@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,7 +32,6 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.ApplicationArguments;
-import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 
 class CommunicationCategoryInitializerTest {
@@ -40,16 +40,24 @@ class CommunicationCategoryInitializerTest {
         CommunicationCategoryAccessor accessor = mock(CommunicationCategoryAccessor.class);
         when(accessor.createIfAbsent(any(CommunicationCategory.class)))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        CommunicationCategoryInitializer initializer = new CommunicationCategoryInitializer();
-        ReflectionTestUtils.setField(initializer, "accessor", accessor);
+        CommunicationCategoryInitializer initializer = new CommunicationCategoryInitializer(accessor);
 
         initializer.run(mock(ApplicationArguments.class));
 
         ArgumentCaptor<CommunicationCategory> captor = ArgumentCaptor.forClass(CommunicationCategory.class);
-        verify(accessor, org.mockito.Mockito.times(7)).createIfAbsent(captor.capture());
+        verify(accessor, times(9)).createIfAbsent(captor.capture());
         List<CommunicationCategory> categories = captor.getAllValues();
         assertEquals(
-                List.of("Welcome", "Goodbye", "Weather", "Commercial Radio", "Events", "Clubs", "Amateur Radio"),
+                List.of(
+                        "Welcome",
+                        "Goodbye",
+                        "Weather",
+                        "Commercial Radio",
+                        "Events",
+                        "Clubs",
+                        "Amateur Radio",
+                        "General",
+                        "Warnings"),
                 categories.stream().map(CommunicationCategory::getName).toList());
         assertTrue(categories.stream().allMatch(category -> category.getId() != null));
         assertTrue(categories.stream().allMatch(CommunicationCategory::isSystemDefined));
