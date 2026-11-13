@@ -183,6 +183,21 @@ public class CommunicationInstanceManager {
         }
     }
 
+    public boolean sendStatus(String id, String from, String content, BooleanSupplier permitted, Runnable onSent) {
+        if (id == null) return false;
+        try {
+            var worker = workers.get(UUID.fromString(id));
+            UUID owner = routing.senderCenter(from);
+            return worker != null
+                    && worker.send(
+                            t -> t.sendStatus(from, content),
+                            () -> permitted.getAsBoolean() && routing.permits(owner, id),
+                            onSent);
+        } catch (IllegalArgumentException invalid) {
+            return false;
+        }
+    }
+
     public void sendBulletin(String from, String to, String content) {
         sendBulletin(null, from, to, content, () -> true);
     }

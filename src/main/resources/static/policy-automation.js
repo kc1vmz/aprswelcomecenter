@@ -26,12 +26,23 @@ const policyAutomation = (() => {
         fields.scheduleMinute.required = hourly;
         document.querySelector('#policy-time-zone-field').hidden = type === 'SHRIEK_HEARD';
         fields.timeZone.required = automated() && type !== 'SHRIEK_HEARD';
-        fields.messageText.maxLength = automated() ? 64 : 4000;
+        const scheduled = ['SCHEDULED_ONCE', 'SCHEDULED_RECURRING'].includes(type);
+        const bulletin = fields.policyMessageType.value !== 'STATUS_REPORT';
+        document.querySelector('#policy-transmission-fields').hidden = !scheduled;
+        fields.policyMessageType.disabled = !scheduled;
+        fields.bulletinAddress.disabled = !scheduled || !bulletin;
+        fields.bulletinAddress.required = scheduled && bulletin;
+        document.querySelector('#policy-bulletin-address-field').hidden = !bulletin;
+        document.querySelectorAll('[data-policy-transmission]').forEach(button =>
+            button.setAttribute('aria-pressed', String(button.dataset.policyTransmission === fields.policyMessageType.value)));
+        fields.messageText.maxLength = scheduled ? bulletin ? 67 : 62 : automated() ? 64 : 4000;
         fields.messageText.required = automated();
+        if (typeof updateMessageCharacterCount === "function") updateMessageCharacterCount(form);
         globalThis.policyContent?.update();
         document.querySelector('#policy-delivery-description').textContent = type === 'SHRIEK_HEARD'
             ? 'Exact, case-sensitive match in a station status or position-report comment once a day while in Welcome Center regions.'
-            : 'Send as a BLN1 bulletin on eligible connections. Missed occurrences are skipped. Closed Welcome Centers do not send.';
+            : '';
+        document.querySelector('#policy-delivery-description').hidden = type !== 'SHRIEK_HEARD';
     }
     function value() {
         if (!automated()) return null;
@@ -66,6 +77,8 @@ const policyAutomation = (() => {
         fields.scheduleTime.value = `${String(a.hour ?? 8).padStart(2, '0')}:${String(a.minute ?? 0).padStart(2, '0')}`;
         fields.scheduleMinute.value = a.minute ?? 0;
         fields.shriekCode.value = a.shriekCode || '';
+        fields.policyMessageType.value = policy?.messageType === 'STATUS_REPORT' ? 'STATUS_REPORT' : 'BULLETIN';
+        fields.bulletinAddress.value = policy?.bulletinAddress || 'BLN1';
         update();
         status.textContent = policy?.nextRunAt ? `Next scheduled: ${new Date(policy.nextRunAt).toLocaleString([], {timeZone: a.timeZone})} (${a.timeZone})` : '';
         if (!policy?.id || !a.timeZone) return;
@@ -82,6 +95,15 @@ const policyAutomation = (() => {
             if (current === sequence) status.textContent += ' Transmission history could not be loaded.';
         }
     }
+    function transmission() {
+        const scheduled = ['SCHEDULED_ONCE', 'SCHEDULED_RECURRING'].includes(fields.communicationEventType.value);
+        return {messageType: scheduled ? fields.policyMessageType.value : 'MESSAGE',
+            bulletinAddress: scheduled && fields.policyMessageType.value === 'BULLETIN' ? fields.bulletinAddress.value.trim().toUpperCase() : null};
+    }
+    document.querySelectorAll('[data-policy-transmission]').forEach(button => button.addEventListener('click', () => {
+        fields.policyMessageType.value = button.dataset.policyTransmission;
+        update();
+    }));
     fields.communicationEventType.addEventListener('change', update);
     for (const button of box.querySelectorAll('[data-policy-recurrence]'))
         button.addEventListener('click', () => { fields.recurrence.value = button.dataset.policyRecurrence; update(); });
@@ -97,5 +119,5 @@ const policyAutomation = (() => {
         list.append(option);
     }
     for (const zone of ['UTC', ...zones]) addTimeZone(zone);
-    return {load, value, update, summary};
+    return {load, value, update, summary, transmission};
 })();

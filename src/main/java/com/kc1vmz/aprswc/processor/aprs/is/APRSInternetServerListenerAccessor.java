@@ -65,6 +65,10 @@ public class APRSInternetServerListenerAccessor extends PacketLoggingTransport {
         recordTransmitted(ascii(data));
     }
 
+    public void sendStatus(String from, String content) throws IOException {
+        writePacket(String.format("%s>%s,TCPIP*:>%s\r\n", from, ApplicationToCallConstant.TOCALL_NC2, content));
+    }
+
     public void sendMessage(String from, String to, String content) throws IOException {
         writePacket(
                 String.format("%s>%s,TCPIP*::%-9s:%s\r\n", from, ApplicationToCallConstant.TOCALL_NC2, to, content));

@@ -24,6 +24,8 @@ import com.kc1vmz.aprswc.object.ObjectBeacon;
 import com.kc1vmz.aprswc.processor.StationPacketQueue;
 import com.kc1vmz.aprswc.processor.aprs.is.*;
 import com.kc1vmz.aprswc.processor.aprs.kiss.*;
+import com.kc1vmz.aprswc.processor.aprs.tnc2.APRSTNC2SerialListenerAccessor;
+import com.kc1vmz.aprswc.processor.aprs.tnc2.APRSTNC2TCPIPListenerAccessor;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +33,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class CommunicationTransportTest {
     private CommunicationConfig config(String type, int port) {
@@ -48,6 +51,43 @@ class CommunicationTransportTest {
                 null,
                 null,
                 "WIDE1-1");
+    }
+
+    @Test
+    void statusAndBulletinWireFormatsAcrossTransports() throws Exception {
+        var c = config("APRS_IS", 1);
+        List<PacketLoggingTransport> transports = List.of(
+                new APRSInternetServerListenerAccessor(c, mock(APRSUtilityAccessor.class)),
+                new APRSTNC2TCPIPListenerAccessor(c),
+                new APRSTNC2SerialListenerAccessor(c) {},
+                new APRSTCPIPListenerAccessor(c),
+                new KenwoodSerialTransport(c));
+        for (var transport : transports) {
+            List<String> history = new ArrayList<>();
+            transport.setPacketLogger(history::add);
+            if (transport instanceof KenwoodSerialTransport) {
+                var session = mock(KenwoodSession.class);
+                doAnswer(call -> {
+                            call.getArgument(2, Runnable.class).run();
+                            return null;
+                        })
+                        .when(session)
+                        .send(any(), any(), any());
+                ReflectionTestUtils.setField(transport, "session", session);
+            } else if (transport instanceof APRSKISSListenerAccessor
+                    || transport instanceof APRSTNC2SerialListenerAccessor)
+                ReflectionTestUtils.setField(transport, "output", new ByteArrayOutputStream());
+            else ReflectionTestUtils.setField(transport, "writer", new StringWriter());
+            transport.sendStatus("N1TEST", "Ready for visitors");
+            assertTrue(
+                    history.getFirst().endsWith(":>Ready for visitors"),
+                    transport.getClass().getName());
+            for (String address : List.of("BLN", "BLN1", "BLN0WXMY", "BLNA-WEB", "BLNASCACS", "BLND-RPT1")) {
+                transport.sendMessage("N1TEST", address, "Bulletin text");
+                assertTrue(
+                        history.getLast().endsWith(String.format(":%-9s:Bulletin text", address)), history.getLast());
+            }
+        }
     }
 
     @Test

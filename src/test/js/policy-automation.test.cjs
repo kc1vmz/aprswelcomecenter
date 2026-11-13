@@ -6,13 +6,13 @@ const source = fs.readFileSync(require('node:path').join(__dirname, '../../main/
 function setup() {
     const node = () => ({value:'', textContent:'', dataset:{}, listeners:{}, children:[],
         addEventListener(type, fn) {this.listeners[type]=fn;}, setAttribute(key,value){this[key]=value;}, append(child){this.children.push(child);}});
-    const fields = Object.fromEntries(['communicationEventType','timeZone','scheduledAt','recurrence','scheduleTime','scheduleMinute','shriekCode','messageText'].map(k=>[k,node()]));
+    const fields = Object.fromEntries(['communicationEventType','timeZone','scheduledAt','recurrence','scheduleTime','scheduleMinute','shriekCode','policyMessageType','bulletinAddress','messageText'].map(k=>[k,node()]));
     fields.communicationEventType.value = 'ENTER_REGION';
     const buttons = ['HOURLY','DAILY'].map(value=>{const b=node();b.dataset.policyRecurrence=value;return b;});
     const labels = [['SCHEDULED_ONCE','scheduledAt'],['SCHEDULED_RECURRING','recurrence'],['SCHEDULED_RECURRING','scheduleMinute'],['SHRIEK_HEARD','shriekCode']].map(([type,name])=>({dataset:{policyTrigger:type},querySelectorAll:()=>[fields[name]]}));
     const box = {querySelectorAll: selector => selector === '[data-policy-trigger]' ? labels : selector === '[data-policy-recurrence]' ? buttons : Object.values(fields).slice(1,-1)};
-    const elements = {'#policy-form':{elements:fields},'#policy-automation-fields':box,'#policy-execution-status':node(),'#policy-time-zone-field':node(),'#policy-time-field':node(),'#policy-minute-field':node(),'#policy-delivery-description':node(),'#policy-time-zones':node()};
-    const context = vm.createContext({document:{querySelector:selector=>elements[selector],createElement:node},Intl,Date,Set,fetch:async()=>({ok:true,json:async()=>[]})});
+    const elements = {'#policy-transmission-fields':node(),'#policy-bulletin-address-field':node(),'#policy-form':{elements:fields},'#policy-automation-fields':box,'#policy-execution-status':node(),'#policy-time-zone-field':node(),'#policy-time-field':node(),'#policy-minute-field':node(),'#policy-delivery-description':node(),'#policy-time-zones':node()};
+    const context = vm.createContext({document:{querySelector:selector=>elements[selector],querySelectorAll:()=>[],createElement:node},Intl,Date,Set,fetch:async()=>({ok:true,json:async()=>[]})});
     vm.runInContext(source+'; this.api=policyAutomation;',context);
     return {fields,buttons,elements,api:context.api};
 }
@@ -34,7 +34,7 @@ test('recurring mode buttons require the appropriate fields and serialize time z
     assert.equal(ui.buttons[1]['aria-pressed'],'true');
     ui.fields.timeZone.value='America/New_York';ui.fields.scheduleTime.value='20:30';
     const value=ui.api.value();assert.equal(value.hour,20);assert.equal(value.minute,30);assert.equal(value.timeZone,'America/New_York');
-    assert.equal(value.shriekCode,null);assert.equal(ui.fields.messageText.maxLength,64);
+    assert.equal(value.shriekCode,null);assert.equal(ui.fields.messageText.maxLength,67);
 });
 test('shriek and one-time editors restore settings and exclude irrelevant values',async()=>{
     const ui=setup();ui.fields.communicationEventType.value='SHRIEK_HEARD';
@@ -45,4 +45,16 @@ test('shriek and one-time editors restore settings and exclude irrelevant values
     ui.fields.communicationEventType.value='SCHEDULED_ONCE';await ui.api.load({automation:{timeZone:'UTC',scheduledAt:'2030-01-01T12:00:00'}});
     assert.equal(ui.api.value().scheduledAt,'2030-01-01T12:00:00');assert.equal(ui.fields.shriekCode.disabled,true);
     assert.equal(ui.api.value().shriekCode,null);
+});
+
+test('scheduled transmission restores status mode and serializes bulletin addresses', async()=>{
+    const ui=setup();ui.fields.communicationEventType.value='SCHEDULED_ONCE';
+    await ui.api.load({messageType:'STATUS_REPORT',automation:{timeZone:'UTC'}});
+    assert.equal(ui.fields.messageText.maxLength,62);assert.equal(ui.fields.bulletinAddress.disabled,true);
+    assert.equal(ui.api.transmission().messageType,'STATUS_REPORT');assert.equal(ui.api.transmission().bulletinAddress,null);
+    ui.fields.policyMessageType.value='BULLETIN';ui.fields.bulletinAddress.value='blna-web';ui.api.update();
+    assert.equal(ui.fields.bulletinAddress.required,true);assert.equal(ui.fields.messageText.maxLength,67);
+    assert.equal(ui.api.transmission().bulletinAddress,'BLNA-WEB');
+    ui.fields.communicationEventType.value='SHRIEK_HEARD';ui.api.update();
+    assert.equal(ui.elements['#policy-transmission-fields'].hidden,true);assert.equal(ui.api.transmission().messageType,'MESSAGE');
 });

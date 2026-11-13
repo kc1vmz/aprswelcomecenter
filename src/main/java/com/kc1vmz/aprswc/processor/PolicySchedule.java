@@ -52,6 +52,7 @@ public final class PolicySchedule {
 
     public static void validate(CommunicationPolicy p, CommunicationPolicy old, Instant now) {
         if (p.getCommunicationEventType() == null) throw invalid("When communication occurs is required");
+        PolicyTransmission.configure(p);
         if (!automated(p)) {
             p.setAutomation(null);
             return;
@@ -63,13 +64,8 @@ public final class PolicySchedule {
         } catch (DateTimeException | NullPointerException e) {
             throw invalid("Choose a valid time zone");
         }
-        String text = p.getMessageText();
-        if (p.getContentSource() != PolicyContentSource.TINYTOPICS
-                && (text == null
-                        || text.isBlank()
-                        || text.length() > 64
-                        || text.chars().anyMatch(c -> c < 32 || c > 126 || c == '{')))
-            throw invalid("Message must contain 1-64 printable ASCII characters without an opening brace");
+        if (p.getContentSource() != PolicyContentSource.TINYTOPICS)
+            PolicyTransmission.validateText(p, p.getMessageText());
         if (p.getCommunicationEventType() == CommunicationEventType.SHRIEK_HEARD) {
             String code = a.getShriekCode();
             if (code == null || !code.matches("![\\x20\\x22-\\x7e]{1,10}!"))
@@ -81,7 +77,7 @@ public final class PolicySchedule {
             p.setMessageType(MessageType.MESSAGE);
         } else {
             a.setShriekCode(null);
-            p.setMessageType(MessageType.BULLETIN);
+
             if (p.getCommunicationEventType() == CommunicationEventType.SCHEDULED_ONCE) {
                 if (a.getScheduledAt() == null) throw invalid("Scheduled date and time are required");
                 a.setScheduledAt(a.getScheduledAt().withSecond(0).withNano(0));

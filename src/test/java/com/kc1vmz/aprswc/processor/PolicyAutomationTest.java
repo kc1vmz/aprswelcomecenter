@@ -146,7 +146,18 @@ class PolicyAutomationTest {
                         null,
                         null);
         var saved = accessor.create(new CommunicationPolicy(
-                        null, category, center, "Welcome", null, null, MessageType.MESSAGE, type, 0, settings, null))
+                        null,
+                        category,
+                        center,
+                        "Welcome",
+                        null,
+                        null,
+                        MessageType.MESSAGE,
+                        type,
+                        0,
+                        settings,
+                        null,
+                        "BLN1"))
                 .block();
         assertThat(saved.getCategory().getName()).isEqualTo("General");
         return saved;
@@ -173,6 +184,73 @@ class PolicyAutomationTest {
     }
 
     @Test
+    void scheduledStatusUsesStatusTransportAndLogsOnlyAfterWriting() {
+        var p = policy(CommunicationEventType.SCHEDULED_ONCE);
+        p.setMessageType(MessageType.STATUS_REPORT);
+        p = accessor.replace(p.getId(), p).block();
+        assertThat(p.getBulletinAddress()).isNull();
+        int before = messages.findAll().size();
+        when(communications.sendStatus(any(), any(), any(), any(), any())).thenAnswer(call -> {
+            assertThat(messages.findAll()).hasSize(before);
+            assertThat(call.getArgument(2, String.class)).isEqualTo("Welcome");
+            assertThat(call.getArgument(3, BooleanSupplier.class).getAsBoolean())
+                    .isTrue();
+            call.getArgument(4, Runnable.class).run();
+            return true;
+        });
+        Instant now = Instant.now().plusSeconds(1).truncatedTo(ChronoUnit.MILLIS);
+        due(p, now);
+        processor.tick(now);
+        processor.tick(now);
+        verify(communications, times(1)).sendStatus(any(), any(), any(), any(), any());
+        var logged = messages.findAll().stream()
+                .filter(m -> m.getMessageType() == MessageType.STATUS_REPORT)
+                .findFirst()
+                .orElseThrow();
+        assertThat(logged.getSentTime()).isNotNull();
+        assertThat(logged.getCallsignTo()).isNull();
+        assertThat(logged.getMessageIdentifier()).isNull();
+        verify(communications, never()).sendMessage(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void statusTinyTopicsRequests62CharactersAndRejectsOversizedResult() {
+        var p = policy(CommunicationEventType.SCHEDULED_ONCE);
+        p.setMessageType(MessageType.STATUS_REPORT);
+        p.setContentSource(PolicyContentSource.TINYTOPICS);
+        p.setTopicId("forecast");
+        p.setMessageText(null);
+        p = accessor.replace(p.getId(), p).block();
+        when(tinyTopics.resolve(eq("forecast"), any(), eq(62)))
+                .thenReturn(new TinyTopicsClient.Result("CONTENT", 200, null, "x".repeat(63)));
+        Instant now = Instant.now().plusSeconds(1).truncatedTo(ChronoUnit.MILLIS);
+        due(p, now);
+        processor.tick(now);
+        assertThat(outcome(p)).isEqualTo("FAILED");
+        verify(communications, never()).sendStatus(any(), any(), any(), any(), any());
+        verify(tinyTopics).resolve(eq("forecast"), any(), eq(62));
+    }
+
+    @Test
+    void scheduledGroupBulletinUsesConfiguredAddress() {
+        var p = policy(CommunicationEventType.SCHEDULED_ONCE);
+        p.setBulletinAddress("blna-web");
+        p = accessor.replace(p.getId(), p).block();
+        when(communications.sendMessage(any(), any(), any(), any(), any(), any()))
+                .thenAnswer(call -> {
+                    assertThat(call.getArgument(2, String.class)).isEqualTo("BLNA-WEB");
+                    assertThat(call.getArgument(4, BooleanSupplier.class).getAsBoolean())
+                            .isTrue();
+                    call.getArgument(5, Runnable.class).run();
+                    return true;
+                });
+        Instant now = Instant.now().plusSeconds(1).truncatedTo(ChronoUnit.MILLIS);
+        due(p, now);
+        processor.tick(now);
+        assertThat(outcome(p)).isEqualTo("TRANSMITTED");
+    }
+
+    @Test
     void tinyTopicsPersistsParametersAndSharesContentAcrossRoutesAndRetries() {
         var p = policy(CommunicationEventType.SCHEDULED_ONCE);
         p.setContentSource(PolicyContentSource.TINYTOPICS);
@@ -182,7 +260,7 @@ class PolicyAutomationTest {
         p = accessor.replace(p.getId(), p).block();
         assertThat(policies.findById(p.getId()).orElseThrow().getTopicParameters())
                 .containsEntry("x", "-72.97");
-        when(tinyTopics.resolve("forecast", p.getTopicParameters()))
+        when(tinyTopics.resolve("forecast", p.getTopicParameters(), 67))
                 .thenReturn(new TinyTopicsClient.Result("CONTENT", 200, null, "Sunny today"));
         when(communications.connectedRoutes(any())).thenReturn(List.of(route, "second-route"));
         when(communications.sendMessage(any(), any(), any(), any(), any(), any()))
@@ -196,9 +274,9 @@ class PolicyAutomationTest {
         Instant now = Instant.now().plusSeconds(1).truncatedTo(ChronoUnit.MILLIS);
         due(p, now);
         processor.tick(now);
-        verify(tinyTopics, times(1)).resolve("forecast", p.getTopicParameters());
+        verify(tinyTopics, times(1)).resolve("forecast", p.getTopicParameters(), 67);
         assertThat(content.resolve(p, "B:" + now)).isEqualTo("Sunny today");
-        verify(tinyTopics, times(1)).resolve("forecast", p.getTopicParameters());
+        verify(tinyTopics, times(1)).resolve("forecast", p.getTopicParameters(), 67);
         assertThat(content.history(p.getId())).hasSize(1);
         assertThat(processor.executions(p.getId())).hasSize(2).allSatisfy(row -> assertThat(row.get("OUTCOME"))
                 .isEqualTo("TRANSMITTED"));
@@ -211,7 +289,7 @@ class PolicyAutomationTest {
         p.setTopicId("forecast");
         p.setMessageText(null);
         p = accessor.replace(p.getId(), p).block();
-        when(tinyTopics.resolve(eq("forecast"), any()))
+        when(tinyTopics.resolve(eq("forecast"), any(), eq(67)))
                 .thenReturn(
                         new TinyTopicsClient.Result("ERROR", 502, "Upstream unavailable", TinyTopicsClient.FALLBACK));
         when(communications.sendMessage(any(), any(), any(), any(), any(), any()))

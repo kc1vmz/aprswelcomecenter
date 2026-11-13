@@ -148,7 +148,15 @@ public class PolicyAutomationProcessor {
                 }
                 String resolved = content.resolve(p, "B:" + dueAt);
                 for (String route : routes)
-                    dispatch(p, "B:" + dueAt + ":" + route, route, "BLN1", null, dueAt, now, () -> resolved);
+                    dispatch(
+                            p,
+                            "B:" + dueAt + ":" + route,
+                            route,
+                            p.getMessageType() == MessageType.STATUS_REPORT ? null : p.getBulletinAddress(),
+                            null,
+                            dueAt,
+                            now,
+                            () -> resolved);
             } catch (RuntimeException error) {
                 LOG.error("Scheduled policy {} failed", id, error);
             }
@@ -259,6 +267,17 @@ public class PolicyAutomationProcessor {
         UUID token = claim(p, key, route, stationId == null ? null : to, due, now);
         if (token == null) return;
         String resolved = resolve.get();
+        try {
+            PolicyTransmission.validateText(p, resolved);
+        } catch (RuntimeException invalid) {
+            jdbc.update(
+                    "update policy_executions set outcome='FAILED' where policy_id=? and occurrence_key=? and claim_token=?",
+                    p.getId(),
+                    key,
+                    token);
+            LOG.warn("Policy {} content cannot be transmitted: {}", p.getId(), invalid.getMessage());
+            return;
+        }
         StationMessage outgoing = new StationMessage(
                 null,
                 to,
@@ -267,27 +286,35 @@ public class PolicyAutomationProcessor {
                 null,
                 resolved,
                 route,
-                stationId == null ? MessageType.BULLETIN : MessageType.MESSAGE);
-        identifiers.prepare(outgoing, p.getId(), p.getVersion(), key, token);
-        boolean queued = communications.sendMessage(
-                route,
-                p.getWelcomeCenter().getCallsign(),
-                to,
-                MessageIdentifierService.wireContent(outgoing),
-                () -> permitted(p, key, token, route, stationId),
-                () -> transaction.executeWithoutResult(tx -> {
-                    Instant sent = Instant.now();
-                    int recorded = jdbc.update(
-                            "update policy_executions set outcome='TRANSMITTED', transmitted_at=? where policy_id=? and occurrence_key=? and claim_token=? and outcome <> 'TRANSMITTED'",
-                            Timestamp.from(sent),
-                            p.getId(),
-                            key,
-                            token);
-                    if (recorded == 1) {
-                        outgoing.setSentTime(LocalDateTime.ofInstant(sent, ZoneId.systemDefault()));
-                        messages.save(outgoing);
-                    }
-                }));
+                stationId == null ? p.getMessageType() : MessageType.MESSAGE);
+        if (stationId != null) identifiers.prepare(outgoing, p.getId(), p.getVersion(), key, token);
+        Runnable onSent = () -> transaction.executeWithoutResult(tx -> {
+            Instant sent = Instant.now();
+            int recorded = jdbc.update(
+                    "update policy_executions set outcome='TRANSMITTED', transmitted_at=? where policy_id=? and occurrence_key=? and claim_token=? and outcome <> 'TRANSMITTED'",
+                    Timestamp.from(sent),
+                    p.getId(),
+                    key,
+                    token);
+            if (recorded == 1) {
+                outgoing.setSentTime(LocalDateTime.ofInstant(sent, ZoneId.systemDefault()));
+                messages.save(outgoing);
+            }
+        });
+        boolean queued = outgoing.getMessageType() == MessageType.STATUS_REPORT
+                ? communications.sendStatus(
+                        route,
+                        p.getWelcomeCenter().getCallsign(),
+                        resolved,
+                        () -> permitted(p, key, token, route, stationId),
+                        onSent)
+                : communications.sendMessage(
+                        route,
+                        p.getWelcomeCenter().getCallsign(),
+                        to,
+                        MessageIdentifierService.wireContent(outgoing),
+                        () -> permitted(p, key, token, route, stationId),
+                        onSent);
         if (!queued)
             jdbc.update(
                     "update policy_executions set outcome='FAILED' where policy_id=? and occurrence_key=? and claim_token=?",

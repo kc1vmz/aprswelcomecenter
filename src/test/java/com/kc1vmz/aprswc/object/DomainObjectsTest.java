@@ -222,7 +222,8 @@ class DomainObjectsTest {
                 LocalTime.NOON,
                 LocalTime.MIDNIGHT,
                 MessageType.MESSAGE,
-                CommunicationEventType.ON_REQUEST);
+                CommunicationEventType.ON_REQUEST,
+                "BLN1");
         Announcement a = new Announcement(UUID.randomUUID(), c, policy, null);
         CommunicationEvent e = new CommunicationEvent(
                 UUID.randomUUID(), c, CommunicationEventType.ENTER_REGION, a.getId(), null, null);

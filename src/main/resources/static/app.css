@@ -919,6 +919,8 @@ legend {
 
 .message-character-count { display: block; margin-top: 0.25rem; color: var(--muted); font-weight: normal; }
 
+#policy-transmission-fields[hidden],
+#policy-bulletin-address-field[hidden],
 #policy-category-field[hidden],
 #policy-automation-fields[hidden],
 #policy-text-field[hidden],

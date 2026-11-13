@@ -44,7 +44,8 @@ class PolicyScheduleTest {
                 CommunicationEventType.SCHEDULED_RECURRING,
                 0,
                 new PolicyAutomation("America/New_York", null, interval, hour, minute, null),
-                null);
+                null,
+                "BLN1");
     }
 
     @Test

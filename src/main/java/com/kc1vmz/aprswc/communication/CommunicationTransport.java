@@ -28,6 +28,8 @@ public interface CommunicationTransport extends AutoCloseable {
 
     void sendMessage(String from, String to, String content) throws IOException;
 
+    void sendStatus(String from, String content) throws IOException;
+
     void sendObject(ObjectBeacon beacon) throws IOException;
 
     void close();

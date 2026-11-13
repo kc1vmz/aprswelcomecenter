@@ -19,6 +19,7 @@ package com.kc1vmz.aprswc.content;
 
 import com.kc1vmz.aprswc.enumeration.PolicyContentSource;
 import com.kc1vmz.aprswc.object.CommunicationPolicy;
+import com.kc1vmz.aprswc.processor.PolicyTransmission;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -99,7 +100,9 @@ public class PolicyContentService {
                 result.complete(saved.getFirst());
                 return saved.getFirst();
             }
-            var resolved = client.resolve(policy.getTopicId(), policy.getTopicParameters());
+            var resolved = PolicyTransmission.scheduled(policy)
+                    ? client.resolve(policy.getTopicId(), policy.getTopicParameters(), PolicyTransmission.limit(policy))
+                    : client.resolve(policy.getTopicId(), policy.getTopicParameters());
             if (resolved.error() != null)
                 LOG.warn("Policy {} topic {}: {}", policy.getId(), policy.getTopicId(), resolved.error());
             jdbc.update(

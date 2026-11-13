@@ -60,6 +60,11 @@ public class APRSTNC2TCPIPListenerAccessor extends PacketLoggingTransport {
         recordTransmitted(ascii(data));
     }
 
+    public void sendStatus(String from, String content) throws IOException {
+        writePacket(String.format(
+                "%s>%s,%s:>%s\r\n", from, ApplicationToCallConstant.TOCALL_NC2, config.digiPath(), content));
+    }
+
     public void sendMessage(String from, String to, String content) throws IOException {
         writePacket(String.format(
                 "%s>%s,%s::%-9s:%s\r\n", from, ApplicationToCallConstant.TOCALL_NC2, config.digiPath(), to, content));

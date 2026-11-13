@@ -110,8 +110,8 @@ class SelectedCommunicationProcessingTest {
         var centers = mock(WelcomeCenterAccessor.class);
         when(centers.findOpenById(center.getId())).thenReturn(Mono.just(center));
         var messages = mock(StationMessageQueue.class);
-        var commands =
-                new StationCommandProcessor(null, null, null, null, null, null, new PolicyContentService(null, null));
+        var commands = new StationCommandProcessor(
+                null, null, null, null, null, null, new PolicyContentService(null, null), null);
         var ignores = mock(IgnoreStationAccessor.class);
         ReflectionTestUtils.setField(commands, "welcomeCenterAccessor", centers);
         ReflectionTestUtils.setField(commands, "stationMessageQueue", messages);
@@ -133,7 +133,8 @@ class SelectedCommunicationProcessingTest {
                 null,
                 null,
                 MessageType.MESSAGE,
-                CommunicationEventType.ENTER_REGION);
+                CommunicationEventType.ENTER_REGION,
+                "BLN1");
         eventProcessor.processCommunicationPolicy(
                 new CommunicationEvent(
                         null, center, CommunicationEventType.ENTER_REGION, policy.getId(), "N2TEST", denied.toString()),

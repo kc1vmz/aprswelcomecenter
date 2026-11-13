@@ -166,4 +166,13 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
             WHERE LOWER(name)='warnings';
         </sql>
     </changeSet>
+    <changeSet id="028-policy-transmission" author="aprswc" dbms="h2">
+        <sql>
+            ALTER TABLE communication_policies ALTER COLUMN message_type ENUM('BULLETIN','MESSAGE','STATUS_REPORT');
+            ALTER TABLE station_messages ALTER COLUMN message_type ENUM('BULLETIN','MESSAGE','STATUS_REPORT');
+            ALTER TABLE communication_policies ADD COLUMN bulletin_address VARCHAR(9);
+            UPDATE communication_policies SET message_type='BULLETIN',bulletin_address='BLN1'
+                WHERE communication_event_type IN ('SCHEDULED_ONCE','SCHEDULED_RECURRING');
+        </sql>
+    </changeSet>
 </databaseChangeLog>

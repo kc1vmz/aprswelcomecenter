@@ -108,6 +108,15 @@ class TinyTopicsClientTest {
     }
 
     @Test
+    void requestsTypeSpecificLength() {
+        body = "{\"status\":\"CONTENT\",\"text\":\"Ready\"}";
+        for (int limit : new int[] {62, 67}) {
+            assertThat(client.resolve("forecast", Map.of(), limit).text()).isEqualTo("Ready");
+            assertThat(uri.get()).contains("length=" + limit + "&format=APRS");
+        }
+    }
+
+    @Test
     void distinguishesNoContentFromHttpAndMalformedErrors() {
         body = "{\"status\":\"NO_CONTENT\"}";
         assertThat(client.resolve("test", Map.of()))

@@ -354,7 +354,7 @@ async function openWelcomeCenterMessagesDialog(centerId) {
             <article class="station-message-item welcome-center-message-item">
                 <time>${stationMessage.sentTime ? formatReceivedTime(stationMessage.sentTime) : "Not yet sent"}</time>
                 <div><strong>${escapeHtml(stationMessage.callsignFrom || "—")}</strong></div>
-                <div><strong>${escapeHtml(stationMessage.callsignTo || "All stations")}</strong></div>
+                <div><strong>${escapeHtml(stationMessage.messageType === "STATUS_REPORT" ? "Status report" : stationMessage.callsignTo || "All stations")}</strong></div>
                 <div><strong>${escapeHtml(stationMessage.content || "—")}</strong>${stationMessage.messageIdentifier ? `<small class="message-character-count">Message ID: ${escapeHtml(stationMessage.messageIdentifier)}${formatMessageDelivery(deliveries.get(stationMessage.id))}</small>` : ""}</div>
             </article>`).join("") : '<p class="empty-associations">No messages for this Welcome Center.</p>';
         document.querySelector("#welcome-center-message-count").textContent = `(${messages.length})`;
@@ -2014,7 +2014,7 @@ async function savePolicy(event) {
         messageText: values.messageText?.trim() || null,
         startTime: null,
         endTime: null,
-        messageType: "MESSAGE",
+        ...policyAutomation.transmission(),
         communicationEventType: values.communicationEventType,
         version: editingPolicyId ? communicationPolicies.get(editingPolicyId).version : 0,
         automation: policyAutomation.value()
@@ -2726,9 +2726,11 @@ document.querySelector("#center-status-dialog").addEventListener("cancel", event
 });
 
 function updateMessageCharacterCount(form) {
-    const count = (form.elements.content || form.elements.messageText).value.length;
-    form.querySelector(".message-character-count").textContent =
-        `${count} ${count === 1 ? "character" : "characters"} entered`;
+    const field = form.elements.content || form.elements.messageText;
+    const count = field.value.length;
+    form.querySelector(".message-character-count").textContent = form.id === "policy-form" && field.maxLength > 0
+        ? `${count} of ${field.maxLength} characters entered`
+        : `${count} ${count === 1 ? "character" : "characters"} entered`;
 }
 
 for (const id of ["send-welcome-center-message-form", "send-station-message-form", "policy-form"]) {

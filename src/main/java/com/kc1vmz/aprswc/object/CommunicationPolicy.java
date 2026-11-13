@@ -118,6 +118,17 @@ public class CommunicationPolicy {
     @Enumerated(EnumType.STRING)
     private MessageType messageType;
 
+    @Column(length = 9)
+    private String bulletinAddress;
+
+    public String getBulletinAddress() {
+        return bulletinAddress;
+    }
+
+    public void setBulletinAddress(String value) {
+        bulletinAddress = value;
+    }
+
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "communication_event_type")
@@ -133,7 +144,8 @@ public class CommunicationPolicy {
             LocalTime startTime,
             LocalTime endTime,
             MessageType messageType,
-            CommunicationEventType communicationEventType) {
+            CommunicationEventType communicationEventType,
+            String bulletinAddress) {
         this(
                 id,
                 category,
@@ -145,7 +157,8 @@ public class CommunicationPolicy {
                 communicationEventType,
                 0,
                 null,
-                null);
+                null,
+                bulletinAddress);
     }
 
     public CommunicationPolicy(
@@ -159,7 +172,8 @@ public class CommunicationPolicy {
             CommunicationEventType communicationEventType,
             long version,
             PolicyAutomation automation,
-            Instant nextRunAt) {
+            Instant nextRunAt,
+            String bulletinAddress) {
         this(
                 id,
                 category,
@@ -174,7 +188,8 @@ public class CommunicationPolicy {
                 nextRunAt,
                 PolicyContentSource.TEXT,
                 null,
-                Map.of());
+                Map.of(),
+                bulletinAddress);
     }
 
     public CommunicationPolicy(
@@ -191,7 +206,9 @@ public class CommunicationPolicy {
             Instant nextRunAt,
             PolicyContentSource contentSource,
             String topicId,
-            Map<String, String> topicParameters) {
+            Map<String, String> topicParameters,
+            String bulletinAddress) {
+        this.bulletinAddress = bulletinAddress;
         this.contentSource = contentSource;
         this.topicId = topicId;
         this.topicParameters = new LinkedHashMap<>(topicParameters);

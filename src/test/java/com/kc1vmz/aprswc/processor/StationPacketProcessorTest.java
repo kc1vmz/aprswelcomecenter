@@ -249,7 +249,8 @@ class StationPacketProcessorTest {
                 null,
                 null,
                 MessageType.MESSAGE,
-                CommunicationEventType.ENTER_REGION);
+                CommunicationEventType.ENTER_REGION,
+                "BLN1");
         when(communicationPolicyAccessor.findByWelcomeCenterId(welcomeCenter.getId()))
                 .thenReturn(Flux.just(policy));
 

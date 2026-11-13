@@ -122,7 +122,8 @@ class ClosedCenterProcessingTest {
                 null,
                 null,
                 MessageType.MESSAGE,
-                CommunicationEventType.ENTER_REGION);
+                CommunicationEventType.ENTER_REGION,
+                "BLN1");
         when(centers.findOpenById(center.getId())).thenReturn(Mono.empty());
         for (var type : List.of(CommunicationEventType.ENTER_REGION, CommunicationEventType.EXIT_REGION)) {
             processor.processCommunicationPolicy(
@@ -156,8 +157,8 @@ class ClosedCenterProcessingTest {
 
     @Test
     void pendingCommandsAreDiscardedWhileClosedWithoutChangingIgnoreList() {
-        var processor =
-                new StationCommandProcessor(null, null, null, null, null, null, new PolicyContentService(null, null));
+        var processor = new StationCommandProcessor(
+                null, null, null, null, null, null, new PolicyContentService(null, null), null);
         var centers = mock(WelcomeCenterAccessor.class);
         var messages = mock(StationMessageQueue.class);
         var ignores = mock(IgnoreStationAccessor.class);

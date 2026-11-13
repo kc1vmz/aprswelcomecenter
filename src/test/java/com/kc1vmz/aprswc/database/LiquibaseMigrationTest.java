@@ -21,7 +21,11 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.sql.*;
 import java.util.UUID;
+import liquibase.Liquibase;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
 import liquibase.integration.spring.SpringLiquibase;
+import liquibase.resource.ClassLoaderResourceAccessor;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -191,7 +195,7 @@ class LiquibaseMigrationTest {
         migrate(ds);
         try (Connection c = ds.getConnection()) {
             assertThat(scalar(c, "select status from welcome_centers")).isEqualTo("CLOSED");
-            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("27");
+            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("28");
             assertThat(scalar(c, "select communication_mode from welcome_centers"))
                     .isEqualTo("SELECTED");
         }
@@ -445,6 +449,52 @@ class LiquibaseMigrationTest {
             assertThat(scalar(
                             c, "select message_text from communication_policies where category_id='" + category + "'"))
                     .isEqualTo("Keep this warning");
+        }
+    }
+
+    @Test
+    void scheduledTransmissionMigrationDefaultsExistingPoliciesAndPreservesEdits() throws Exception {
+        var ds = database();
+        try (var connection = ds.getConnection();
+                var migration = new Liquibase(
+                        "db/changelog/db.changelog-master.xml",
+                        new ClassLoaderResourceAccessor(),
+                        DatabaseFactory.getInstance()
+                                .findCorrectDatabaseImplementation(new JdbcConnection(connection)))) {
+            migration.update(27, "");
+        }
+        try (var c = ds.getConnection();
+                var statement = c.createStatement()) {
+            statement.execute(
+                    "insert into welcome_centers(id,name,callsign) values('20000000-0000-0000-0000-000000000001','Test','N1ABC')");
+            for (String type : new String[] {"SCHEDULED_ONCE", "SCHEDULED_RECURRING", "ON_REQUEST"})
+                statement.execute(
+                        "insert into communication_policies(id,welcome_center_id,category_id,communication_event_type,message_type,message_text) select random_uuid(),'20000000-0000-0000-0000-000000000001',id,'"
+                                + type + "','MESSAGE','Original' from communication_categories where name='General'");
+        }
+        migrate(ds);
+        try (var c = ds.getConnection();
+                var statement = c.createStatement()) {
+            assertThat(
+                            scalar(
+                                    c,
+                                    "select count(*) from communication_policies where message_type='BULLETIN' and bulletin_address='BLN1'"))
+                    .isEqualTo("2");
+            assertThat(
+                            scalar(
+                                    c,
+                                    "select message_type from communication_policies where communication_event_type='ON_REQUEST'"))
+                    .isEqualTo("MESSAGE");
+            statement.execute(
+                    "update communication_policies set message_type='STATUS_REPORT',bulletin_address=null where communication_event_type='SCHEDULED_ONCE'");
+        }
+        migrate(ds);
+        try (var c = ds.getConnection()) {
+            assertThat(
+                            scalar(
+                                    c,
+                                    "select message_type from communication_policies where communication_event_type='SCHEDULED_ONCE'"))
+                    .isEqualTo("STATUS_REPORT");
         }
     }
 }

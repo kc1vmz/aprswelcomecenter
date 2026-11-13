@@ -115,7 +115,15 @@ class ContainmentDeletionControllerTest {
 
     private CommunicationPolicy policy(WelcomeCenter center, CommunicationCategory category) {
         CommunicationPolicy policy = policies.saveAndFlush(new CommunicationPolicy(
-                null, category, center, "Hello", null, null, MessageType.MESSAGE, CommunicationEventType.ENTER_REGION));
+                null,
+                category,
+                center,
+                "Hello",
+                null,
+                null,
+                MessageType.MESSAGE,
+                CommunicationEventType.ENTER_REGION,
+                "BLN1"));
         announcements.saveAndFlush(new Announcement(null, center, policy, null));
         announcements.saveAndFlush(new Announcement(null, center, policy, LocalDateTime.now()));
         events.saveAndFlush(new CommunicationEvent(

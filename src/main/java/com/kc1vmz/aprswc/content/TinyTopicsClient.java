@@ -66,11 +66,17 @@ public class TinyTopicsClient {
     }
 
     public Result resolve(String topicId, Map<String, String> parameters) {
+        return resolve(topicId, parameters, 64);
+    }
+
+    public Result resolve(String topicId, Map<String, String> parameters, int length) {
         Integer status = null;
         try {
             StringBuilder path = new StringBuilder("/api/v1/tinyTopicResult/")
                     .append(encode(topicId))
-                    .append("?length=64&format=APRS");
+                    .append("?length=")
+                    .append(length)
+                    .append("&format=APRS");
             parameters.forEach((name, value) -> {
                 if (!value.isBlank())
                     path.append('&').append(encode(name)).append('=').append(encode(value));

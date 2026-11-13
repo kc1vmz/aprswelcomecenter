@@ -141,6 +141,10 @@ public abstract class APRSKISSListenerAccessor extends PacketLoggingTransport {
         }
     }
 
+    public void sendStatus(String from, String content) throws IOException {
+        write(AX25PacketBuilder.buildObjectPacket(packet(from, null, ">" + content)));
+    }
+
     public void sendMessage(String from, String to, String content) throws IOException {
         write(AX25PacketBuilder.buildPacket(packet(from, to, content), ":"));
     }

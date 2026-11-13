@@ -75,7 +75,8 @@ class CommunicationPolicyControllerTest {
                 null,
                 null,
                 MessageType.MESSAGE,
-                CommunicationEventType.ENTER_REGION));
+                CommunicationEventType.ENTER_REGION,
+                "BLN1"));
         policies.save(new CommunicationPolicy(
                 null,
                 category,
@@ -84,7 +85,8 @@ class CommunicationPolicyControllerTest {
                 null,
                 null,
                 MessageType.BULLETIN,
-                CommunicationEventType.EXIT_REGION));
+                CommunicationEventType.EXIT_REGION,
+                "BLN1"));
 
         client.get()
                 .uri("/api/v1/communication-policies?welcomeCenterId={id}", firstCenter.getId())
@@ -114,7 +116,15 @@ class CommunicationPolicyControllerTest {
                 null, "Test", null, "N1ABC", null, null, null, null, null, null, null, null, "c", "/", List.of()));
         var events = categories.save(new CommunicationCategory(null, "Events", "", false, false, "EVENTS"));
         var policy = new CommunicationPolicy(
-                null, events, center, "Hello", null, null, MessageType.MESSAGE, CommunicationEventType.ENTER_REGION);
+                null,
+                events,
+                center,
+                "Hello",
+                null,
+                null,
+                MessageType.MESSAGE,
+                CommunicationEventType.ENTER_REGION,
+                "BLN1");
         var saved = client.post()
                 .uri("/api/v1/communication-policies")
                 .bodyValue(policy)

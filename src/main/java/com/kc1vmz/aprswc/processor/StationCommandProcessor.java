@@ -17,6 +17,7 @@
  */
 package com.kc1vmz.aprswc.processor;
 
+import com.kc1vmz.aprswc.accessor.ApplicationVersionAccessor;
 import com.kc1vmz.aprswc.accessor.CommunicationPolicyAccessor;
 import com.kc1vmz.aprswc.accessor.IgnoreStationAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
@@ -51,6 +52,7 @@ public class StationCommandProcessor {
     private static final String CLUBS_COMMAND = "CLUBS";
     private static final String COMM_COMMAND = "COMM";
     private static final String EVENTS_COMMAND = "EVENTS";
+    private static final String VERSION_COMMAND = "XV";
     private static final String HELP_COMMAND = "HELP";
     private static final String INFO_COMMAND = "INFO";
     private static final String OTHERS_COMMAND = "OTHERS";
@@ -61,6 +63,7 @@ public class StationCommandProcessor {
     private static final String WEATHER_COMMAND = "WEATHER";
     private static final String WEATHER_SHORT_COMMAND = "WX";
     private static final Set<String> WELCOME_CENTER_COMMANDS = Set.of(
+            VERSION_COMMAND,
             INFO_COMMAND,
             STOP_COMMAND,
             START_COMMAND,
@@ -90,6 +93,7 @@ public class StationCommandProcessor {
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "StationCommandProcessor"));
 
     private final PolicyContentService content;
+    private final ApplicationVersionAccessor applicationVersion;
 
     public StationCommandProcessor(
             StationCommandQueue queue,
@@ -98,7 +102,8 @@ public class StationCommandProcessor {
             WelcomeCenterAccessor welcomeCenterAccessor,
             IgnoreStationAccessor ignoreStationAccessor,
             CommunicationPolicyAccessor communicationPolicyAccessor,
-            PolicyContentService content) {
+            PolicyContentService content,
+            ApplicationVersionAccessor applicationVersion) {
         this.queue = queue;
         this.stationMessageQueue = stationMessageQueue;
         this.welcomeCenterWeatherReportAccessor = welcomeCenterWeatherReportAccessor;
@@ -106,6 +111,7 @@ public class StationCommandProcessor {
         this.ignoreStationAccessor = ignoreStationAccessor;
         this.communicationPolicyAccessor = communicationPolicyAccessor;
         this.content = content;
+        this.applicationVersion = applicationVersion;
     }
 
     @PostConstruct
@@ -140,7 +146,9 @@ public class StationCommandProcessor {
         if (actualCommand == null) {
             return;
         }
-        if (actualCommand.equalsIgnoreCase(HELP_COMMAND)) {
+        if (actualCommand.equalsIgnoreCase(VERSION_COMMAND)) {
+            processVersionRequest(command);
+        } else if (actualCommand.equalsIgnoreCase(HELP_COMMAND)) {
             processHelpRequest(command);
         } else if (actualCommand.equalsIgnoreCase(INFO_COMMAND)) {
             processInfoRequest(command);
@@ -203,7 +211,8 @@ public class StationCommandProcessor {
                     null,
                     null,
                     MessageType.MESSAGE,
-                    null);
+                    null,
+                    "BLN1");
             communicationPolicies = List.of(policy);
         }
         for (CommunicationPolicy communicationPolicy : communicationPolicies) {
@@ -398,6 +407,21 @@ public class StationCommandProcessor {
                 null,
                 MessageType.MESSAGE);
         queueReply(command, stationMessage);
+    }
+
+    private void processVersionRequest(StationCommand command) {
+        String version = applicationVersion.find().block().getVersion();
+        queueReply(
+                command,
+                new StationMessage(
+                        UUID.randomUUID(),
+                        command.getCallsign(),
+                        command.getWelcomeCenter().getCallsign(),
+                        command.getWelcomeCenter(),
+                        null,
+                        "APRS Welcome Center version " + version,
+                        null,
+                        MessageType.MESSAGE));
     }
 
     private void processInfoRequest(StationCommand command) {

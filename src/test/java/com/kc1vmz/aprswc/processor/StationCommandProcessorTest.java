@@ -24,6 +24,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.kc1vmz.aprswc.accessor.ApplicationVersionAccessor;
 import com.kc1vmz.aprswc.accessor.CommunicationPolicyAccessor;
 import com.kc1vmz.aprswc.accessor.IgnoreStationAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
@@ -31,6 +32,7 @@ import com.kc1vmz.aprswc.accessor.WelcomeCenterWeatherReportAccessor;
 import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
+import com.kc1vmz.aprswc.object.ApplicationVersion;
 import com.kc1vmz.aprswc.object.CommunicationCategory;
 import com.kc1vmz.aprswc.object.CommunicationPolicy;
 import com.kc1vmz.aprswc.object.IgnoreStation;
@@ -73,6 +75,9 @@ class StationCommandProcessorTest {
     @Mock
     private CommunicationPolicyAccessor communicationPolicyAccessor;
 
+    @Mock
+    private ApplicationVersionAccessor applicationVersion;
+
     @InjectMocks
     private StationCommandProcessor processor;
 
@@ -81,7 +86,15 @@ class StationCommandProcessorTest {
         var center = welcomeCenter();
         var category = new CommunicationCategory(UUID.randomUUID(), "Renamed category", "", false, false, "EVENTS");
         var regular = new CommunicationPolicy(
-                null, category, center, "Info", null, null, MessageType.MESSAGE, CommunicationEventType.ON_REQUEST);
+                null,
+                category,
+                center,
+                "Info",
+                null,
+                null,
+                MessageType.MESSAGE,
+                CommunicationEventType.ON_REQUEST,
+                "BLN1");
         var scheduled = new CommunicationPolicy(
                 null,
                 category,
@@ -90,9 +103,18 @@ class StationCommandProcessorTest {
                 null,
                 null,
                 MessageType.BULLETIN,
-                CommunicationEventType.SCHEDULED_ONCE);
+                CommunicationEventType.SCHEDULED_ONCE,
+                "BLN1");
         var shriek = new CommunicationPolicy(
-                null, category, center, "Shriek", null, null, MessageType.MESSAGE, CommunicationEventType.SHRIEK_HEARD);
+                null,
+                category,
+                center,
+                "Shriek",
+                null,
+                null,
+                MessageType.MESSAGE,
+                CommunicationEventType.SHRIEK_HEARD,
+                "BLN1");
         when(communicationPolicyAccessor.findByWelcomeCenterId(center.getId()))
                 .thenReturn(Flux.just(regular, scheduled, shriek));
         List<CommunicationPolicy> result =
@@ -102,6 +124,8 @@ class StationCommandProcessorTest {
 
     @Test
     void recognizesKnownCommands() {
+        assertTrue(processor.isRecognizedCommand("XV"));
+        assertTrue(processor.isRecognizedCommand("xv{A1"));
         assertTrue(processor.isRecognizedCommand("INFO"));
         assertTrue(processor.isRecognizedCommand("WEATHER"));
         assertTrue(processor.isRecognizedCommand("VOICE"));
@@ -113,6 +137,29 @@ class StationCommandProcessorTest {
         assertTrue(processor.isRecognizedCommand("STOP"));
         assertTrue(processor.isRecognizedCommand("OTHERS"));
         assertTrue(processor.isRecognizedCommand("HELP"));
+    }
+
+    @Test
+    void versionReplyUsesSharedVersionSourceAndOriginalRoute() {
+        var center = welcomeCenter();
+        when(applicationVersion.find())
+                .thenReturn(
+                        Mono.just(new ApplicationVersion("APRSWelcomeCenter", "1.0.20", "", "", "")),
+                        Mono.just(new ApplicationVersion("APRSWelcomeCenter", "2.3.4", "", "", "")));
+        var command = new StationCommand(UUID.randomUUID(), "N1ABC-7", center, null, "xv{A1", null);
+        command.setPacketProcessorId("route-1");
+        processor.processCommand(command);
+        processor.processCommand(command);
+        var messages = ArgumentCaptor.forClass(StationMessage.class);
+        verify(stationMessageQueue, times(2)).offer(messages.capture());
+        assertEquals(
+                List.of("APRS Welcome Center version 1.0.20", "APRS Welcome Center version 2.3.4"),
+                messages.getAllValues().stream().map(StationMessage::getContent).toList());
+        for (var message : messages.getAllValues()) {
+            assertEquals("N1ABC-7", message.getCallsignTo());
+            assertEquals(center.getCallsign(), message.getCallsignFrom());
+            assertEquals("route-1", message.getPacketProcessorId());
+        }
     }
 
     @Test
@@ -279,7 +326,8 @@ class StationCommandProcessorTest {
                 null,
                 null,
                 MessageType.MESSAGE,
-                CommunicationEventType.ON_REQUEST);
+                CommunicationEventType.ON_REQUEST,
+                "BLN1");
         when(communicationPolicyAccessor.findByWelcomeCenterId(center.getId())).thenReturn(Flux.just(policy));
         processor.processCommand(new StationCommand(UUID.randomUUID(), "N1ABC", center, null, "WARNINGS", null));
         var message = ArgumentCaptor.forClass(StationMessage.class);

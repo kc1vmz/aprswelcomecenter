@@ -95,6 +95,11 @@ public class APRSTNC2SerialListenerAccessor extends PacketLoggingTransport {
         recordTransmitted(new String(bytes, StandardCharsets.US_ASCII));
     }
 
+    public void sendStatus(String from, String content) throws IOException {
+        write(String.format("%s>%s,%s:>%s\r\n", from, ApplicationToCallConstant.TOCALL_NC2, config.digiPath(), content)
+                .getBytes(StandardCharsets.US_ASCII));
+    }
+
     public void sendMessage(String from, String to, String content) throws IOException {
         write(String.format(
                         "%s>%s,%s::%-9s:%s\r\n",

@@ -62,6 +62,10 @@ public final class KenwoodSerialTransport extends PacketLoggingTransport {
     }
 
     @Override
+    public void sendStatus(String from, String content) throws IOException {
+        sendPacket(">" + content);
+    }
+
     public void sendMessage(String from, String to, String content) throws IOException {
         if (to == null || !to.matches("[A-Za-z0-9-]{1,9}")) throw new IOException("Invalid message destination");
         sendPacket(String.format(":%-9s:%s", to, content));

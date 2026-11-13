@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg?v=20260918-1" type="image/svg+xml">
     <script src="/theme.js?v=20260918-2"></script>
     <link rel="stylesheet" href="/webjars/leaflet/1.9.4/leaflet.css">
-    <link rel="stylesheet" href="/app.css?v=20261111-1">
+    <link rel="stylesheet" href="/app.css?v=20261112-1">
 </head>
 <body>
     <header>
@@ -801,6 +801,18 @@
                     <label id="policy-time-zone-field">Time zone<select name="timeZone" id="policy-time-zones"></select></label>
                     <p id="policy-delivery-description"></p>
                 </div>
+                <fieldset id="policy-transmission-fields" class="full-width" hidden>
+                    <legend>Transmission</legend>
+                    <input type="hidden" name="policyMessageType" value="BULLETIN">
+                    <div class="kiss-mode-selector" role="group" aria-label="Send as">
+                        <button type="button" class="secondary" data-policy-transmission="BULLETIN">Bulletin</button>
+                        <button type="button" class="secondary" data-policy-transmission="STATUS_REPORT">Status Report</button>
+                    </div>
+                    <label id="policy-bulletin-address-field">Bulletin address
+                        <input name="bulletinAddress" maxlength="9" value="BLN1" placeholder="BLN1, BLNA-WEB or BLN" pattern="[Bb][Ll][Nn]([0-9A-Za-z][A-Za-z0-9-]{0,5})?">
+                    </label>
+                    <small>Sent on eligible connections. Missed occurrences are skipped. Closed Welcome Centers do not send.</small>
+                </fieldset>
                 <fieldset class="full-width"><legend>Message content</legend>
                 <div class="form-grid">
                 <div class="full-width kiss-mode-selector" role="group" aria-label="Content source">
@@ -1180,8 +1192,8 @@
     <script src="/poi-map.js?v=20260921-2"></script>
     <script src="/aprs-symbol-picker.js?v=20260925-2"></script>
     <script src="/policy-content.js?v=20261008-1"></script>
-    <script src="/policy-automation.js?v=20261008-1"></script>
-    <script src="/app.js?v=20261111-4"></script>
+    <script src="/policy-automation.js?v=20261112-1"></script>
+    <script src="/app.js?v=20261112-1"></script>
     <script src="/region-import.js?v=20260926-1"></script>
     <script src="/points-of-interest.js?v=20260925-1"></script>
     <script src="/center-communications.js?v=20260924-1"></script>
