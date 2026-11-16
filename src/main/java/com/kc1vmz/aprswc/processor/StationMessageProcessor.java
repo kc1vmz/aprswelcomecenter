@@ -41,7 +41,9 @@ import java.util.concurrent.Executors;
 import java.util.function.BooleanSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 @Component
 public class StationMessageProcessor {
@@ -182,9 +184,11 @@ public class StationMessageProcessor {
             log.error("No callsignFrom in StationMessage");
             return;
         }
-        UUID routingCenterId = message.getWelcomeCenter() == null
-                ? communications.centerIdForSender(message.getCallsignFrom())
-                : message.getWelcomeCenter().getId();
+        UUID routingCenterId = message.isStandalone()
+                ? null
+                : message.getWelcomeCenter() == null
+                        ? communications.centerIdForSender(message.getCallsignFrom())
+                        : message.getWelcomeCenter().getId();
         if (message.getPacketProcessorId() == null
                 || message.getPacketProcessorId().isBlank())
             message.setPacketProcessorId(determinePacketProcessor(message, routingCenterId));
@@ -200,13 +204,22 @@ public class StationMessageProcessor {
         if (control != null) {
             message.setContent(control.wireText());
             message.setMessageIdentifier(null);
-            queued = communications.sendUntracked(
-                    message.getPacketProcessorId(),
-                    message.getCallsignFrom(),
-                    message.getCallsignTo(),
-                    control.wireText(),
-                    permitted,
-                    sent);
+            queued = message.isStandalone()
+                    ? communications.sendUntracked(
+                            message.getPacketProcessorId(),
+                            message.getCallsignFrom(),
+                            message.getCallsignTo(),
+                            control.wireText(),
+                            permitted,
+                            sent,
+                            true)
+                    : communications.sendUntracked(
+                            message.getPacketProcessorId(),
+                            message.getCallsignFrom(),
+                            message.getCallsignTo(),
+                            control.wireText(),
+                            permitted,
+                            sent);
         } else {
             identifiers.prepare(message);
             queued = communications.sendMessage(
@@ -221,6 +234,26 @@ public class StationMessageProcessor {
             log.debug("Dropping message with unavailable communication route {}", message.getPacketProcessorId());
     }
 
+    public void prepareStandalone(StationMessage message) {
+        if (message.getWelcomeCenter() != null
+                || message.getMessageType() != MessageType.MESSAGE
+                || message.getCallsignFrom() == null
+                || message.getCallsignFrom().isBlank()
+                || message.getCallsignTo() == null
+                || message.getCallsignTo().isBlank()
+                || message.getContent() == null
+                || message.getContent().isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A sender, recipient and message are required.");
+        message.setStandalone(true);
+        if (message.getPacketProcessorId() == null
+                || message.getPacketProcessorId().isBlank())
+            message.setPacketProcessorId(determinePacketProcessor(message, null));
+        if (!communications.connectedRoutes(null).contains(message.getPacketProcessorId()))
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "No connected communication path is available for this selection. Choose another path.");
+    }
+
     private String determinePacketProcessor(StationMessage message, UUID routingCenterId) {
         String ret = "";
 
@@ -231,7 +264,9 @@ public class StationMessageProcessor {
         if ((stationPackets == null) || (stationPackets.isEmpty())) {
             return "";
         }
+        List<String> connected = message.isStandalone() ? communications.connectedRoutes(null) : List.of();
         stationPackets = stationPackets.stream()
+                .filter(p -> !message.isStandalone() || connected.contains(p.getPacketProcessorId()))
                 .filter(p ->
                         routingCenterId == null || communications.isEligible(routingCenterId, p.getPacketProcessorId()))
                 .sorted(Comparator.comparing(

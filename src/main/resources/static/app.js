@@ -678,7 +678,9 @@ async function deleteMessages(event) {
     }
 }
 
-function openSendStationMessageDialog() {
+let stationPathRequest = 0;
+
+async function openSendStationMessageDialog() {
     if (!activeStationCallsign) return;
     const form = document.querySelector("#send-station-message-form");
     form.reset();
@@ -687,9 +689,28 @@ function openSendStationMessageDialog() {
     document.querySelector("#send-station-message-message").textContent = "";
     document.querySelector("#send-station-message-dialog").showModal();
     form.elements.callsignFrom.focus();
+    const request = ++stationPathRequest;
+    const select = form.elements.packetProcessorId;
+    select.replaceChildren(new Option("Use last heard", ""));
+    const submit = form.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    try {
+        const instances = await requestJson("/api/v1/communication-instances");
+        if (request !== stationPathRequest) return;
+        for (const entry of instances.filter(entry => entry.health.status === "CONNECTED")) {
+            const config = entry.configuration;
+            select.add(new Option(`${config.label} - ${config.type}`, config.id));
+        }
+        submit.disabled = false;
+    } catch (error) {
+        const status = document.querySelector("#send-station-message-message");
+        status.className = "form-message error";
+        status.textContent = error.message;
+    }
 }
 
 function closeSendStationMessageDialog() {
+    stationPathRequest++;
     document.querySelector("#send-station-message-dialog").close();
     pendingStationMessage = null;
 }
@@ -703,8 +724,9 @@ function requestStationMessageConfirmation(event) {
         welcomeCenter: null,
         sentTime: null,
         content: form.elements.content.value.trim(),
-        packetProcessorId: null
+        packetProcessorId: form.elements.packetProcessorId.value || null
     };
+    document.querySelector("#confirm-station-message-path").textContent = form.elements.packetProcessorId.selectedOptions[0].textContent;
     document.querySelector("#confirm-station-message-from").textContent = pendingStationMessage.callsignFrom;
     document.querySelector("#confirm-station-message-to").textContent = pendingStationMessage.callsignTo;
     document.querySelector("#confirm-station-message-content").textContent = pendingStationMessage.content;
@@ -725,7 +747,7 @@ async function sendStationMessage(event) {
     message.className = "form-message";
     message.textContent = "Creating message…";
     try {
-        await requestJson("/api/v1/station-messages", {
+        await requestJson("/api/v1/station-messages/standalone", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(pendingStationMessage)
@@ -735,7 +757,7 @@ async function sendStationMessage(event) {
         await openStationMessagesDialog();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The message could not be created.";
+        message.textContent = error.message || "The message could not be created.";
     } finally {
         button.disabled = false;
     }

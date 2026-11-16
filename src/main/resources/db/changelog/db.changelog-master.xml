@@ -175,4 +175,10 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
                 WHERE communication_event_type IN ('SCHEDULED_ONCE','SCHEDULED_RECURRING');
         </sql>
     </changeSet>
+    <changeSet id="029-standalone-station-message" author="aprswc">
+        <sql>
+            ALTER TABLE station_messages ADD COLUMN standalone BOOLEAN DEFAULT FALSE NOT NULL;
+            ALTER TABLE message_deliveries ADD COLUMN standalone BOOLEAN DEFAULT FALSE NOT NULL;
+        </sql>
+    </changeSet>
 </databaseChangeLog>

@@ -66,7 +66,8 @@ public class MessageDeliveryService {
             Instant last,
             Instant expires,
             String state,
-            int attempts) {}
+            int attempts,
+            boolean standalone) {}
 
     public MessageDeliveryService(
             JdbcTemplate jdbc,
@@ -102,7 +103,7 @@ public class MessageDeliveryService {
         if (m.getId() == null) m.setId(UUID.randomUUID());
         Instant now = Instant.now();
         int inserted = jdbc.update(
-                "insert into message_deliveries(id,identifier,sender,recipient,route,center_id,policy_id,policy_version,occurrence_key,claim_token,content,created_at,next_attempt,expires_at,state) select ?,?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING' where not exists(select 1 from message_deliveries where id=?)",
+                "insert into message_deliveries(id,identifier,sender,recipient,route,center_id,policy_id,policy_version,occurrence_key,claim_token,content,created_at,next_attempt,expires_at,standalone,state) select ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING' where not exists(select 1 from message_deliveries where id=?)",
                 m.getId(),
                 m.getMessageIdentifier(),
                 m.getCallsignFrom().toUpperCase(Locale.ROOT),
@@ -117,12 +118,13 @@ public class MessageDeliveryService {
                 Timestamp.from(now),
                 Timestamp.from(now.plusSeconds(2)),
                 Timestamp.from(now.plusSeconds(900)),
+                m.isStandalone(),
                 m.getId());
         if (inserted == 1) {
             jdbc.update(
                     "update station_messages set message_identifier=? where id=?", m.getMessageIdentifier(), m.getId());
             jdbc.update(
-                    "insert into station_messages(id,callsign_from,callsign_to,welcome_center_id,created_time,content,packet_processor_id,message_type,message_identifier) select ?,?,?,?,?,?,?,'MESSAGE',? where not exists(select 1 from station_messages where id=?)",
+                    "insert into station_messages(id,callsign_from,callsign_to,welcome_center_id,created_time,content,packet_processor_id,message_type,message_identifier,standalone) select ?,?,?,?,?,?,?,'MESSAGE',?,? where not exists(select 1 from station_messages where id=?)",
                     m.getId(),
                     m.getCallsignFrom(),
                     m.getCallsignTo(),
@@ -131,6 +133,7 @@ public class MessageDeliveryService {
                     m.getContent(),
                     m.getPacketProcessorId(),
                     m.getMessageIdentifier(),
+                    m.isStandalone(),
                     m.getId());
         }
     }
@@ -176,7 +179,8 @@ public class MessageDeliveryService {
                                 : rs.getTimestamp("last_sent").toInstant(),
                         rs.getTimestamp("expires_at").toInstant(),
                         rs.getString("state"),
-                        rs.getInt("attempts")),
+                        rs.getInt("attempts"),
+                        rs.getBoolean("standalone")),
                 id);
         return values.isEmpty() ? null : values.getFirst();
     }
@@ -274,14 +278,24 @@ public class MessageDeliveryService {
                 Timestamp.from(now),
                 Timestamp.from(now));
         if (claimed == 0) return;
-        boolean queued = managers.getObject()
-                .sendUntracked(
-                        d.route(),
-                        d.from(),
-                        d.to(),
-                        d.content() + "{" + d.number(),
-                        () -> beforeWrite(id, lease),
-                        () -> written(id, lease));
+        boolean queued = d.standalone()
+                ? managers.getObject()
+                        .sendUntracked(
+                                d.route(),
+                                d.from(),
+                                d.to(),
+                                d.content() + "{" + d.number(),
+                                () -> beforeWrite(id, lease),
+                                () -> written(id, lease),
+                                true)
+                : managers.getObject()
+                        .sendUntracked(
+                                d.route(),
+                                d.from(),
+                                d.to(),
+                                d.content() + "{" + d.number(),
+                                () -> beforeWrite(id, lease),
+                                () -> written(id, lease));
         if (!queued)
             jdbc.update(
                     "update message_deliveries set lease=null,lease_until=null,next_attempt=? where id=? and lease=?",

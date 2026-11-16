@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -40,6 +41,7 @@ import com.kc1vmz.aprswc.object.StationMessage;
 import com.kc1vmz.aprswc.object.StationPacket;
 import com.kc1vmz.aprswc.object.StationPosition;
 import com.kc1vmz.aprswc.object.WelcomeCenter;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -48,6 +50,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -73,6 +76,38 @@ class StationMessageProcessorTest {
 
     @InjectMocks
     private StationMessageProcessor processor;
+
+    @Test
+    void standaloneUsesLatestConnectedRouteWithoutCenterRestrictions() {
+        var message = new StationMessage(null, "N1ONE", "K4BO", null, null, "Hello", null, MessageType.MESSAGE);
+        when(communications.connectedRoutes(null)).thenReturn(List.of("connected"));
+        when(stationPacketAccessor.findAllByCallsign("N1ONE"))
+                .thenReturn(Flux.just(
+                        new StationPacket(null, "offline", "N1ONE", LocalDateTime.now(), null, null),
+                        new StationPacket(
+                                null, "connected", "N1ONE", LocalDateTime.now().minusMinutes(1), null, null)));
+        processor.prepareStandalone(message);
+        assertEquals("connected", message.getPacketProcessorId());
+        processor.processMessage(message);
+        verify(communications, never()).centerIdForSender(any());
+        verify(communications, never()).isEligible(any(), any());
+    }
+
+    @Test
+    void standaloneExplicitRouteDoesNotRequireHeardHistory() {
+        var message = new StationMessage(null, "N1ONE", "K4BO", null, null, "Hello", "connected", MessageType.MESSAGE);
+        when(communications.connectedRoutes(null)).thenReturn(List.of("connected"));
+        processor.prepareStandalone(message);
+        assertEquals("connected", message.getPacketProcessorId());
+        verifyNoInteractions(stationPacketAccessor);
+    }
+
+    @Test
+    void standaloneRejectsDisconnectedRoute() {
+        var message = new StationMessage(null, "N1ONE", "K4BO", null, null, "Hello", "offline", MessageType.MESSAGE);
+        when(communications.connectedRoutes(null)).thenReturn(List.of());
+        assertThrows(ResponseStatusException.class, () -> processor.prepareStandalone(message));
+    }
 
     @Test
     void sendsAckDirectlyWithoutIdentifierServiceOrRetryQueue() {
@@ -104,15 +139,8 @@ class StationMessageProcessorTest {
         when(stationMessageAccessor.create(any(StationMessage.class)))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        processor.processMessage(new StationMessage(
-                null,
-                null,
-                "KC1VMZ",
-                center,
-                null,
-                "Welcome",
-                null,
-                com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE));
+        processor.processMessage(
+                new StationMessage(null, null, "KC1VMZ", center, null, "Welcome", null, MessageType.MESSAGE));
 
         ArgumentCaptor<StationMessage> messages = ArgumentCaptor.forClass(StationMessage.class);
         verify(stationMessageAccessor, times(2)).create(messages.capture());
@@ -131,14 +159,7 @@ class StationMessageProcessorTest {
     @Test
     void persistsDirectedMessageAfterSending() {
         StationMessage message = new StationMessage(
-                UUID.randomUUID(),
-                "N1ONE",
-                "KC1VMZ",
-                null,
-                null,
-                "Hello",
-                null,
-                com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
+                UUID.randomUUID(), "N1ONE", "KC1VMZ", null, null, "Hello", null, MessageType.MESSAGE);
         StationPacket packet = new StationPacket(UUID.randomUUID(), "APRS_IS", "N1ONE", null, "packet", null);
         when(stationPacketAccessor.findAllByCallsign("N1ONE")).thenReturn(Flux.just(packet));
         when(communications.sendMessage(eq("APRS_IS"), eq("KC1VMZ"), eq("N1ONE"), eq("Hello"), any(), any()))
@@ -160,14 +181,7 @@ class StationMessageProcessorTest {
     void explicitUnavailableRouteIsDroppedWithoutFallbackOrSentTime() {
         var route = UUID.randomUUID().toString();
         var message = new StationMessage(
-                UUID.randomUUID(),
-                "N1ONE",
-                "KC1VMZ",
-                null,
-                null,
-                "Hello",
-                route,
-                com.kc1vmz.aprswc.enumeration.MessageType.MESSAGE);
+                UUID.randomUUID(), "N1ONE", "KC1VMZ", null, null, "Hello", route, MessageType.MESSAGE);
         processor.processMessage(message);
         verify(communications).sendMessage(eq(route), eq("KC1VMZ"), eq("N1ONE"), eq("Hello"), any(), any());
         verifyNoInteractions(stationPacketAccessor, stationMessageAccessor);

@@ -395,6 +395,7 @@
             <div class="form-grid">
                 <label>To<input id="station-message-to" name="callsignTo" disabled></label>
                 <label>From<input name="callsignFrom" maxlength="10" placeholder="Your callsign" required></label>
+                <label class="full-width">Communication path<select name="packetProcessorId"><option value="">Use last heard</option></select></label>
                 <label class="full-width">Message<input name="content" maxlength="64"
                     placeholder="Type a message less than 64 characters" aria-describedby="station-message-character-count" required>
                     <small id="station-message-character-count" class="message-character-count">0 characters entered</small></label>
@@ -415,6 +416,7 @@
             <div class="confirmation-panel">
                 <p>Send from <strong id="confirm-station-message-from"></strong> to
                     <strong id="confirm-station-message-to"></strong>?</p>
+                <p>Communication path: <strong id="confirm-station-message-path"></strong></p>
                 <strong id="confirm-station-message-content"></strong>
             </div>
             <p id="confirm-send-station-message-message" class="form-message" role="status" aria-live="polite"></p>

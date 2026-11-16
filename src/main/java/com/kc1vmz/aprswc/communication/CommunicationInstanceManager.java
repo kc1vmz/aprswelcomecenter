@@ -169,6 +169,17 @@ public class CommunicationInstanceManager {
 
     public boolean sendUntracked(
             String id, String from, String to, String content, BooleanSupplier permitted, Runnable onSent) {
+        return sendUntracked(id, from, to, content, permitted, onSent, false);
+    }
+
+    public boolean sendUntracked(
+            String id,
+            String from,
+            String to,
+            String content,
+            BooleanSupplier permitted,
+            Runnable onSent,
+            boolean standalone) {
         if (id == null) return false;
         try {
             var w = workers.get(UUID.fromString(id));
@@ -176,7 +187,8 @@ public class CommunicationInstanceManager {
             return w != null
                     && w.send(
                             t -> t.sendMessage(from, to, content),
-                            () -> permitted.getAsBoolean() && routing.permits(owner, id),
+                            () -> permitted.getAsBoolean()
+                                    && (standalone ? "CONNECTED".equals(w.health()) : routing.permits(owner, id)),
                             onSent);
         } catch (IllegalArgumentException ignored) {
             return false;

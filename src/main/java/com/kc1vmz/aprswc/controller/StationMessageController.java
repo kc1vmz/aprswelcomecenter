@@ -19,11 +19,13 @@ package com.kc1vmz.aprswc.controller;
 
 import com.kc1vmz.aprswc.accessor.StationMessageAccessor;
 import com.kc1vmz.aprswc.object.StationMessage;
+import com.kc1vmz.aprswc.processor.StationMessageProcessor;
+import java.util.Map;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,12 +37,34 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @RestController
 @RequestMapping("/api/v1/station-messages")
 public class StationMessageController {
-    @Autowired
-    private StationMessageAccessor accessor;
+    private final StationMessageAccessor accessor;
+    private final StationMessageProcessor processor;
+
+    public StationMessageController(StationMessageAccessor accessor, StationMessageProcessor processor) {
+        this.accessor = accessor;
+        this.processor = processor;
+    }
+
+    @PostMapping("/standalone")
+    public Mono<ResponseEntity<StationMessage>> standalone(@RequestBody StationMessage value) {
+        return Mono.fromCallable(() -> {
+                    processor.prepareStandalone(value);
+                    return value;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(accessor::create)
+                .map(saved -> ResponseEntity.status(HttpStatus.CREATED).body(saved));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> failure(ResponseStatusException error) {
+        return ResponseEntity.status(error.getStatusCode()).body(Map.of("message", error.getReason()));
+    }
 
     @GetMapping
     public Flux<StationMessage> all(

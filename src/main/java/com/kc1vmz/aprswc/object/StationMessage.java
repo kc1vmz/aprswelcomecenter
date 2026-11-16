@@ -88,6 +88,17 @@ public class StationMessage {
 
     private String packetProcessorId;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private boolean standalone;
+
+    public boolean isStandalone() {
+        return standalone;
+    }
+
+    public void setStandalone(boolean value) {
+        standalone = value;
+    }
+
     @Column(length = 5)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String messageIdentifier;
@@ -154,6 +165,35 @@ public class StationMessage {
             String messageIdentifier,
             UUID originPolicyId,
             Long originPolicyVersion) {
+        this(
+                id,
+                callsignTo,
+                callsignFrom,
+                welcomeCenter,
+                sentTime,
+                content,
+                packetProcessorId,
+                messageType,
+                messageIdentifier,
+                originPolicyId,
+                originPolicyVersion,
+                false);
+    }
+
+    public StationMessage(
+            UUID id,
+            String callsignTo,
+            String callsignFrom,
+            WelcomeCenter welcomeCenter,
+            LocalDateTime sentTime,
+            String content,
+            String packetProcessorId,
+            MessageType messageType,
+            String messageIdentifier,
+            UUID originPolicyId,
+            Long originPolicyVersion,
+            boolean standalone) {
+        this.standalone = standalone;
         this.originPolicyId = originPolicyId;
         this.originPolicyVersion = originPolicyVersion;
         this.messageIdentifier = messageIdentifier;

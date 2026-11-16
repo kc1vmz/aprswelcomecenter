@@ -89,6 +89,11 @@ class ScopedTransmissionTest {
         assertThat(pendingA.get().getAsBoolean()).isTrue();
         center.setCommunicationInstanceIds(Set.of());
         assertThat(pendingA.get().getAsBoolean()).isFalse();
+        when(workers.get(a).health()).thenReturn("CONNECTED");
+        manager.sendUntracked(a.toString(), "N1TEST", "N2TEST", "Standalone", () -> true, () -> {}, true);
+        assertThat(pendingA.get().getAsBoolean()).isTrue();
+        when(workers.get(a).health()).thenReturn("STOPPED");
+        assertThat(pendingA.get().getAsBoolean()).isFalse();
         manager.stop();
     }
 }

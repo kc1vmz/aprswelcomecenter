@@ -151,6 +151,32 @@ class MessageDeliveryServiceTest {
     }
 
     @Test
+    void standaloneRouteSurvivesRestartAndRetriesWithoutSenderCenterRestriction() {
+        when(manager.sendUntracked(any(), any(), any(), any(), any(), any(), eq(true)))
+                .thenAnswer(call -> {
+                    wires.add(call.getArgument(3));
+                    guards.add(call.getArgument(4));
+                    callbacks.add(call.getArgument(5));
+                    return true;
+                });
+        var m = new StationMessage(
+                null, "KC1VMZ-4", "WC1", null, null, "Hello", route, MessageType.MESSAGE, null, null, null, true);
+        identifiers.prepare(m);
+        service.send(route, "WC1", "KC1VMZ-4", MessageIdentifierService.wireContent(m), () -> true, () -> {});
+        write(0);
+        var restarted =
+                new MessageDeliveryService(jdbc, transactions, managers, centers, policies, connections, ignored);
+        restarted.start();
+        due(m);
+        restarted.tick(Instant.now());
+        write(1);
+        assertThat(wires).hasSize(2);
+        assertThat(wires.get(1)).isEqualTo(wires.get(0));
+        verify(manager, times(2)).sendUntracked(eq(route), eq("WC1"), eq("KC1VMZ-4"), any(), any(), any(), eq(true));
+        verify(manager, never()).sendUntracked(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
     void carriageReturnAckStopsAlreadyQueuedRetryAndReplyAckWorks() {
         var m = message();
         write(0);
