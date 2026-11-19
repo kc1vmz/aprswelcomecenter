@@ -57,6 +57,26 @@ class LiquibaseMigrationTest {
     }
 
     @Test
+    void informationResponseLanguageDefaultsAndSurvivesRepeatedMigration() throws Exception {
+        var ds = database();
+        try (var connection = ds.getConnection()) {
+            legacy(connection);
+        }
+        migrate(ds);
+        try (var connection = ds.getConnection();
+                var statement = connection.createStatement()) {
+            assertThat(scalar(connection, "select information_response_language from application_settings"))
+                    .isEqualTo("en");
+            statement.execute("update application_settings set information_response_language='xx'");
+        }
+        migrate(ds);
+        try (var connection = ds.getConnection()) {
+            assertThat(scalar(connection, "select information_response_language from application_settings"))
+                    .isEqualTo("xx");
+        }
+    }
+
+    @Test
     void loggingDefaultsOffOnUpgradeAndKeepsSavedChoice() throws Exception {
         var ds = database();
         try (var c = ds.getConnection();
@@ -195,7 +215,7 @@ class LiquibaseMigrationTest {
         migrate(ds);
         try (Connection c = ds.getConnection()) {
             assertThat(scalar(c, "select status from welcome_centers")).isEqualTo("CLOSED");
-            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("29");
+            assertThat(scalar(c, "select count(*) from databasechangelog")).isEqualTo("30");
             assertThat(scalar(c, "select communication_mode from welcome_centers"))
                     .isEqualTo("SELECTED");
         }

@@ -26,6 +26,7 @@ import com.kc1vmz.aprswc.database.WelcomeCenterRepository;
 import com.kc1vmz.aprswc.database.WelcomeRegionRepository;
 import com.kc1vmz.aprswc.enumeration.RegionType;
 import com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus;
+import com.kc1vmz.aprswc.exceptions.ApiFailure;
 import com.kc1vmz.aprswc.object.ObjectBeacon;
 import com.kc1vmz.aprswc.object.StationPosition;
 import com.kc1vmz.aprswc.object.WelcomeCenter;
@@ -164,7 +165,8 @@ public class WelcomeCenterAccessor {
 
     public Mono<WelcomeCenter> replace(UUID id, WelcomeCenter value) {
         if (value.getStatus() == null)
-            return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is required"));
+            return Mono.error(
+                    new ApiFailure(HttpStatus.BAD_REQUEST, "STATUS_IS_REQUIRED_EF149B", "Status is required"));
         return Mono.fromCallable(() -> transactions.execute(transaction -> {
                     pois.lockNames();
                     WelcomeCenter existing = centers.findForUpdate(id)
@@ -209,8 +211,10 @@ public class WelcomeCenterAccessor {
                     WelcomeCenter existing = centers.findForUpdate(id)
                             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
                     if (existing.getStatus() != change.expectedStatus()) {
-                        throw new ResponseStatusException(
-                                HttpStatus.CONFLICT, "Welcome Center status has changed. Refresh and try again.");
+                        throw new ApiFailure(
+                                HttpStatus.CONFLICT,
+                                "WELCOME_CENTER_STATUS_HAS_CHANGED_REFRESH_AND_69CF97",
+                                "Welcome Center status has changed. Refresh and try again.");
                     }
                     if (existing.getStatus() == change.status()) return existing;
                     var previous = WelcomeCenterSnapshot.of(existing);

@@ -18,6 +18,7 @@
 package com.kc1vmz.aprswc.processor;
 
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
+import com.kc1vmz.aprswc.content.InformationResponseText;
 import com.kc1vmz.aprswc.enumeration.MessageType;
 import com.kc1vmz.aprswc.object.StationMessage;
 import com.kc1vmz.aprswc.object.WelcomeCenter;
@@ -31,7 +32,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -39,14 +39,21 @@ public class WelcomeCenterDailyProcessor {
     private static final Logger log = LoggerFactory.getLogger(WelcomeCenterDailyProcessor.class);
     private static final long PROCESSING_INTERVAL_HOURS = 24;
 
-    @Autowired
-    private WelcomeCenterAccessor welcomeCenterAccessor;
+    private final WelcomeCenterAccessor welcomeCenterAccessor;
+    private final StationMessageQueue stationMessageQueue;
+    private final InformationResponseText informationText;
+    private final ScheduledExecutorService worker;
 
-    @Autowired
-    private StationMessageQueue stationMessageQueue;
-
-    private final ScheduledExecutorService worker =
-            Executors.newSingleThreadScheduledExecutor(runnable -> new Thread(runnable, "WelcomeCenterDailyProcessor"));
+    public WelcomeCenterDailyProcessor(
+            WelcomeCenterAccessor welcomeCenterAccessor,
+            StationMessageQueue stationMessageQueue,
+            InformationResponseText informationText) {
+        this.welcomeCenterAccessor = welcomeCenterAccessor;
+        this.stationMessageQueue = stationMessageQueue;
+        this.informationText = informationText;
+        this.worker = Executors.newSingleThreadScheduledExecutor(
+                runnable -> new Thread(runnable, "WelcomeCenterDailyProcessor"));
+    }
 
     @PostConstruct
     void start() {
@@ -70,8 +77,7 @@ public class WelcomeCenterDailyProcessor {
 
     void processWelcomeCenter(WelcomeCenter welcomeCenter) {
         if (!welcomeCenter.isOpen()) return;
-        String bulletinContent = String.format(
-                "APRS Welcome Center %s open - send HELP for more commands.", welcomeCenter.getCallsign());
+        String bulletinContent = informationText.format("center.daily", welcomeCenter.getCallsign());
         StationMessage stationMessage = new StationMessage(
                 UUID.randomUUID(),
                 "BLN0",

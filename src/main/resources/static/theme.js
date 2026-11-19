@@ -13,8 +13,8 @@
         const button = document.getElementById("toggle-theme");
         if (button) {
             const next = theme === "dark" ? "light" : "dark";
-            button.setAttribute("aria-label", `Switch to ${next} mode`);
-            button.title = `Switch to ${next} mode`;
+            button.setAttribute("aria-label", (globalThis.aprswcI18n?.mark(next === "light" ? "theme.light" : "theme.dark") ?? `Switch to ${next} mode`));
+            button.title = (globalThis.aprswcI18n?.mark(next === "light" ? "theme.light" : "theme.dark") ?? `Switch to ${next} mode`);
         }
     }
 

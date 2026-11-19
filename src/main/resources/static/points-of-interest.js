@@ -26,30 +26,31 @@
             ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
         if (!response.ok) {
             const detail = await response.json().catch(() => ({}));
-            const error = new Error(detail.message || `Request failed (${response.status}).`);
+            const error = globalThis.aprswcI18n?.apiError(detail, response.status) ?? new Error(detail.message || (globalThis.aprswcI18n?.mark("request-failed-0.f9db954a", [response.status]) ?? `Request failed (${response.status}).`));
             error.status = response.status;
+            error.code = detail.code;
             throw error;
         }
         return response.status === 204 ? null : response.json();
     }
     async function refresh() {
         const sequence = ++loadSequence;
-        $("#poi-list-message").textContent = "Loading...";
+        $("#poi-list-message").textContent = (globalThis.aprswcI18n?.mark("loading.47d2a515") ?? "Loading...");
         try {
             const result = await api(endpoint());
             if (sequence !== loadSequence) return;
             rows = result;
             renderOverview();
-            $("#poi-list-message").textContent = `${rows.length} ${rows.length === 1 ? "point" : "points"} of interest in this Welcome Center.`;
+            $("#poi-list-message").textContent = (globalThis.aprswcI18n?.plural("poi.count", rows.length) ?? `${rows.length} ${rows.length === 1 ? "point" : "points"} of interest in this Welcome Center.`);
             $("#poi-list").innerHTML = rows.map(p => `<article class="card poi-summary">
                 <div class="poi-summary-details">
-                <strong>${escapeHtml(p.name)} (${escapeHtml(p.status)})</strong>
-                ${p.downReasons.length ? `<p>${escapeHtml(p.downReasons.join("; "))}</p>` : ""}
+                <strong>${escapeHtml(p.name)} (${escapeHtml(globalThis.aprswcI18n?.label(p.status) ?? p.status)})</strong>
+                ${p.downReasons.length ? `<p>${escapeHtml(p.downReasons.map(reason => globalThis.aprswcI18n?.label(reason) ?? reason).join("; "))}</p>` : ""}
                 ${p.description ? `<p>${escapeHtml(p.description)}</p>` : ""}
                 <p>${escapeHtml(p.latitude)}, ${escapeHtml(p.longitude)}</p>
                 </div>
-                <div class="card-actions"><button type="button" class="secondary" data-poi-edit="${p.id}">Edit</button>
-                <button type="button" class="danger" data-poi-delete="${p.id}">Delete</button></div></article>`).join("");
+                <div class="card-actions"><button type="button" class="secondary" data-poi-edit="${p.id}">${(globalThis.aprswcI18n?.mark("edit.464c4ffd") ?? `Edit`)}</button>
+                <button type="button" class="danger" data-poi-delete="${p.id}">${(globalThis.aprswcI18n?.mark("delete.e2d0a549") ?? `Delete`)}</button></div></article>`).join("");
         } catch (error) {
             if (sequence !== loadSequence) return;
             rows = [];
@@ -67,16 +68,16 @@
             form.elements[key].value = p?.[key] ?? ({ symbolCode: "c", symbolTableId: "/" }[key] || "");
         aprsSymbolPicker.load(form, "symbolTableId");
         form.elements.temporarilyUnavailable.checked = p?.temporarilyUnavailable || false;
-        $("#poi-edit-title").textContent = p ? `Edit ${p.name}` : "Create Point of Interest";
+        $("#poi-edit-title").textContent = p ? (globalThis.aprswcI18n?.mark("edit-0.fdd9d505", [p.name]) ?? `Edit ${p.name}`) : (globalThis.aprswcI18n?.mark("create-point-of-interest.6909b184") ?? "Create Point of Interest");
         $("#poi-edit-message").textContent = "";
         $("#poi-save").disabled = false;
         $("#poi-edit-dialog").showModal();
     }
     async function stale(error, message, submit) {
         message.textContent = error.message;
-        if (error.status === 404 || (error.status === 409 && /changed|refresh/i.test(error.message))) {
+        if (error.status === 404 || (error.status === 409 && ["POI_CHANGED", "POI_CENTER_CHANGED"].includes(error.code))) {
             submit.disabled = true;
-            message.textContent += " Close this dialog and review the refreshed list before trying again.";
+            message.textContent += (globalThis.aprswcI18n?.mark("close-this-dialog-and-review-the-refreshed-list-.607d5f69") ?? " Close this dialog and review the refreshed list before trying again.");
             await refresh();
             await refreshWelcomeCenters().catch(() => {});
             return true;
@@ -121,7 +122,7 @@
         busy = true;
         const submit = $("#poi-save"), message = $("#poi-edit-message"), form = event.target;
         submit.disabled = true;
-        message.textContent = "Saving...";
+        message.textContent = (globalThis.aprswcI18n?.mark("saving.dc85af8f") ?? "Saving...");
         let conflict = false;
         const body = { version: editing?.version, temporarilyUnavailable: form.elements.temporarilyUnavailable.checked };
         for (const key of ["name", "description", "latitude", "longitude", "symbolCode", "symbolTableId"])
@@ -139,10 +140,10 @@
         busy = true;
         const submit = $("#poi-delete-confirm"), message = $("#poi-delete-message");
         submit.disabled = true;
-        message.textContent = "Deleting...";
+        message.textContent = (globalThis.aprswcI18n?.mark("deleting.685ecb98") ?? "Deleting...");
         let conflict = false;
         try {
-            await api(`${endpoint()}/${deleting.id}?version=${deleting.version}`, "DELETE");
+            await api((`${endpoint()}/${deleting.id}?version=${deleting.version}`), "DELETE");
             $("#poi-delete-dialog").close();
             deleting = null;
             await refresh();
@@ -153,7 +154,7 @@
         if (busy) return;
         selectedPoint = null;
         $("#poi-use-location").disabled = true;
-        $("#poi-map-message").textContent = "Select a point on the map.";
+        $("#poi-map-message").textContent = (globalThis.aprswcI18n?.mark("select-a-point-on-the-map.e7236886") ?? "Select a point on the map.");
         $("#poi-map-dialog").showModal();
         if (!map) {
             map = L.map("poi-location-map").setView([20, 0], 2);
@@ -191,7 +192,7 @@
         busy = true;
         try {
             const converted = await api("/api/v1/coordinates/aprs", "POST", [selectedPoint]);
-            if (!converted[0]?.latitude || !converted[0]?.longitude) throw new Error("Unable to convert location.");
+            if (!converted[0]?.latitude || !converted[0]?.longitude) throw new Error((globalThis.aprswcI18n?.mark("unable-to-convert-location.e771edbd") ?? "Unable to convert location."));
             $("#poi-form").elements.latitude.value = converted[0].latitude;
             $("#poi-form").elements.longitude.value = converted[0].longitude;
             $("#poi-map-dialog").close();

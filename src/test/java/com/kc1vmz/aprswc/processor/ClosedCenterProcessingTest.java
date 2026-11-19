@@ -22,7 +22,9 @@ import static org.mockito.Mockito.*;
 import com.kc1vmz.aprswc.accessor.*;
 import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
 import com.kc1vmz.aprswc.communication.MessageIdentifierService;
+import com.kc1vmz.aprswc.content.InformationResponseText;
 import com.kc1vmz.aprswc.content.PolicyContentService;
+import com.kc1vmz.aprswc.database.ApplicationSettingsRepository;
 import com.kc1vmz.aprswc.enumeration.*;
 import com.kc1vmz.aprswc.object.*;
 import java.util.List;
@@ -68,7 +70,8 @@ class ClosedCenterProcessingTest {
 
     @Test
     void dailyAnnouncementsSkipClosedCentersAndRecheckBeforeSending() {
-        var daily = new WelcomeCenterDailyProcessor();
+        var daily = new WelcomeCenterDailyProcessor(
+                null, null, new InformationResponseText(mock(ApplicationSettingsRepository.class)));
         var queue = mock(StationMessageQueue.class);
         ReflectionTestUtils.setField(daily, "stationMessageQueue", queue);
         var center = center();
@@ -158,7 +161,7 @@ class ClosedCenterProcessingTest {
     @Test
     void pendingCommandsAreDiscardedWhileClosedWithoutChangingIgnoreList() {
         var processor = new StationCommandProcessor(
-                null, null, null, null, null, null, new PolicyContentService(null, null), null);
+                null, null, null, null, null, null, new PolicyContentService(null, null), null, null);
         var centers = mock(WelcomeCenterAccessor.class);
         var messages = mock(StationMessageQueue.class);
         var ignores = mock(IgnoreStationAccessor.class);

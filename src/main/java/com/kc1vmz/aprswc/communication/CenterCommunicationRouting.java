@@ -18,13 +18,13 @@
 package com.kc1vmz.aprswc.communication;
 
 import com.kc1vmz.aprswc.database.*;
+import com.kc1vmz.aprswc.exceptions.ApiFailure;
 import com.kc1vmz.aprswc.object.WelcomeCenter;
 import java.util.*;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class CenterCommunicationRouting {
@@ -55,25 +55,34 @@ public class CenterCommunicationRouting {
 
     public void validate(WelcomeCenter center) {
         if (!Set.of("ALL", "SELECTED").contains(Objects.toString(center.getCommunicationMode(), "")))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Select ALL or SELECTED communication methods");
+            throw new ApiFailure(
+                    HttpStatus.BAD_REQUEST,
+                    "SELECT_ALL_OR_SELECTED_COMMUNICATION_METHODS_68297F",
+                    "Select ALL or SELECTED communication methods");
         if (center.getCommunicationInstanceIds() == null
                 || center.getCommunicationInstanceIds().stream().anyMatch(Objects::isNull))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Communication instance IDs are required");
+            throw new ApiFailure(
+                    HttpStatus.BAD_REQUEST,
+                    "COMMUNICATION_INSTANCE_IDS_ARE_REQUIRED_E455D2",
+                    "Communication instance IDs are required");
         if ("ALL".equals(center.getCommunicationMode())) {
             center.setCommunicationInstanceIds(new HashSet<>());
             return;
         }
         if (instances.findAllById(center.getCommunicationInstanceIds()).size()
                 != center.getCommunicationInstanceIds().size())
-            throw new ResponseStatusException(
+            throw new ApiFailure(
                     HttpStatus.CONFLICT,
+                    "A_SELECTED_COMMUNICATION_METHOD_WAS_DELETED_R_25D2D4",
                     "A selected communication method was deleted. Refresh and review the selection.");
     }
 
     public void update(WelcomeCenter existing, WelcomeCenter value) {
         if (existing.getRoutingVersion() != value.getRoutingVersion())
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, "Communication selection changed. Refresh and review the Welcome Center.");
+            throw new ApiFailure(
+                    HttpStatus.CONFLICT,
+                    "COMMUNICATION_SELECTION_CHANGED_REFRESH_AND_R_7FCBAB",
+                    "Communication selection changed. Refresh and review the Welcome Center.");
         validate(value);
         var previous = CommunicationScope.of(existing);
         boolean changed = !existing.getCommunicationMode().equals(value.getCommunicationMode())

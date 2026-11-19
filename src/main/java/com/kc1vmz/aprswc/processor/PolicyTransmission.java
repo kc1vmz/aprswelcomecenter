@@ -19,6 +19,7 @@ package com.kc1vmz.aprswc.processor;
 
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
+import com.kc1vmz.aprswc.exceptions.ApiFailure;
 import com.kc1vmz.aprswc.object.CommunicationPolicy;
 import java.util.Locale;
 import org.springframework.http.HttpStatus;
@@ -52,7 +53,10 @@ public final class PolicyTransmission {
         if (address == null) address = "BLN1";
         address = address.trim().toUpperCase(Locale.ROOT);
         if (!address.matches("BLN(?:[0-9A-Z][A-Z0-9-]{0,5})?"))
-            throw invalid("Use BLN, or BLN plus a 0-9/A-Z ID and up to five letters, digits or hyphens");
+            throw new ApiFailure(
+                    HttpStatus.BAD_REQUEST,
+                    "USE_BLN_OR_BLN_PLUS_A_0_9_A_Z_ID_AND_UP_TO_FI_C79CFE",
+                    "Use BLN, or BLN plus a 0-9/A-Z ID and up to five letters, digits or hyphens");
         p.setBulletinAddress(address);
     }
 
@@ -67,8 +71,11 @@ public final class PolicyTransmission {
                                 || c == '|'
                                 || c == '~'
                                 || (p.getMessageType() != MessageType.STATUS_REPORT && c == '{')))
-            throw invalid(
-                    "Message must contain 1-" + max + " printable ASCII characters without reserved APRS characters");
+            throw new ApiFailure(
+                    HttpStatus.BAD_REQUEST,
+                    "MESSAGE_LENGTH",
+                    "Message must contain 1-" + max + " printable ASCII characters without reserved APRS characters",
+                    max);
     }
 
     private static ResponseStatusException invalid(String text) {

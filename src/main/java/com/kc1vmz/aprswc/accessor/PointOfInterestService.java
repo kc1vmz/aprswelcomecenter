@@ -20,6 +20,7 @@ package com.kc1vmz.aprswc.accessor;
 import com.kc1vmz.aprswc.communication.CommunicationScope;
 import com.kc1vmz.aprswc.constants.AprsSymbols;
 import com.kc1vmz.aprswc.database.*;
+import com.kc1vmz.aprswc.exceptions.ApiFailure;
 import com.kc1vmz.aprswc.object.*;
 import java.math.BigDecimal;
 import java.util.*;
@@ -111,31 +112,42 @@ public class PointOfInterestService {
     public void validateCenterName(String callsign) {
         if (callsign != null
                 && pois.findByNameIgnoreCase(callsign.toUpperCase(Locale.ROOT)).isPresent())
-            throw error(HttpStatus.CONFLICT, "Callsign conflicts with a Point of Interest object name");
+            throw new ApiFailure(
+                    HttpStatus.CONFLICT,
+                    "CALLSIGN_CONFLICTS_WITH_A_POINT_OF_INTEREST_O_70A58D",
+                    "Callsign conflicts with a Point of Interest object name");
     }
 
     public static void validateSender(String callsign) {
         if (callsign == null || !callsign.toUpperCase(Locale.ROOT).matches("[A-Z0-9]{1,6}(-([0-9]|1[0-5]))?"))
-            throw error(
+            throw new ApiFailure(
                     HttpStatus.BAD_REQUEST,
+                    "WELCOME_CENTER_CALLSIGN_MUST_HAVE_1_6_LETTERS_CBE065",
                     "Welcome Center callsign must have 1-6 letters/digits and an optional SSID of 0-15 to transmit POIs");
     }
 
     private WelcomeCenter center(UUID id) {
         return centers.findForUpdate(id)
-                .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Welcome Center no longer exists"));
+                .orElseThrow(() -> new ApiFailure(
+                        HttpStatus.NOT_FOUND,
+                        "WELCOME_CENTER_NO_LONGER_EXISTS_4ACFC5",
+                        "Welcome Center no longer exists"));
     }
 
     private PointOfInterest owned(UUID centerId, UUID id) {
         return pois.findById(id)
                 .filter(p -> p.getWelcomeCenter().getId().equals(centerId))
-                .orElseThrow(
-                        () -> error(HttpStatus.NOT_FOUND, "Point of Interest no longer exists in this Welcome Center"));
+                .orElseThrow(() -> new ApiFailure(
+                        HttpStatus.NOT_FOUND,
+                        "POINT_OF_INTEREST_NO_LONGER_EXISTS_IN_THIS_WE_9593C5",
+                        "Point of Interest no longer exists in this Welcome Center"));
     }
 
     @Transactional(readOnly = true)
     public List<View> list(UUID centerId) {
-        if (!centers.existsById(centerId)) throw error(HttpStatus.NOT_FOUND, "Welcome Center no longer exists");
+        if (!centers.existsById(centerId))
+            throw new ApiFailure(
+                    HttpStatus.NOT_FOUND, "WELCOME_CENTER_NO_LONGER_EXISTS_4ACFC5", "Welcome Center no longer exists");
         return pois.findByWelcomeCenterIdOrderByName(centerId).stream()
                 .map(this::view)
                 .toList();
@@ -182,25 +194,34 @@ public class PointOfInterestService {
         validateSender(center.getCallsign());
         var p = id == null ? new PointOfInterest() : owned(centerId, id);
         if (id != null && (edit.version() == null || edit.version() != p.getVersion()))
-            throw error(
-                    HttpStatus.CONFLICT, "Point of Interest or Welcome Center changed. Refresh and reopen the editor.");
+            throw new ApiFailure(
+                    HttpStatus.CONFLICT,
+                    "POI_CENTER_CHANGED",
+                    "Point of Interest or Welcome Center changed. Refresh and reopen the editor.");
         Snapshot previous = id == null ? null : snapshot(p);
         String name = Objects.toString(edit.name(), "").trim();
         if (name.matches("[A-Za-z0-9]{1,9}")) {
             name = name.toUpperCase(Locale.ROOT);
         } else if (name.length() > 9 || !name.matches("[0-9]{3}\\.[0-9]{1,3}(-[A-Za-z0-9]{0,2})?")) {
-            throw error(
+            throw new ApiFailure(
                     HttpStatus.BAD_REQUEST,
+                    "NAME_MUST_BE_1_9_LETTERS_DIGITS_OR_A_FREQUENC_451954",
                     "Name must be 1-9 letters/digits or a frequency such as 146.52-ab (9 characters maximum)");
         }
         if (centers.findByCallsignIgnoreCase(name).isPresent()
                 || pois.findByNameIgnoreCase(name)
                         .filter(other -> !other.getId().equals(id))
                         .isPresent())
-            throw error(HttpStatus.CONFLICT, "Object name is already used by a POI or Welcome Center");
+            throw new ApiFailure(
+                    HttpStatus.CONFLICT,
+                    "OBJECT_NAME_IS_ALREADY_USED_BY_A_POI_OR_WELCO_E5739D",
+                    "Object name is already used by a POI or Welcome Center");
         String description = Objects.toString(edit.description(), "");
         if (description.length() > 40 || !description.chars().allMatch(c -> c >= 32 && c <= 126))
-            throw error(HttpStatus.BAD_REQUEST, "Description must be at most 40 printable ASCII characters");
+            throw new ApiFailure(
+                    HttpStatus.BAD_REQUEST,
+                    "DESCRIPTION_MUST_BE_AT_MOST_40_PRINTABLE_ASCI_AC4C0D",
+                    "Description must be at most 40 printable ASCII characters");
         AprsSymbols.validate(
                 edit.symbolTableId(),
                 edit.symbolCode(),
@@ -229,7 +250,8 @@ public class PointOfInterestService {
         center(centerId);
         var p = owned(centerId, id);
         if (p.getVersion() != version)
-            throw error(HttpStatus.CONFLICT, "Point of Interest changed. Refresh and try again.");
+            throw new ApiFailure(
+                    HttpStatus.CONFLICT, "POI_CHANGED", "Point of Interest changed. Refresh and try again.");
         var previous = snapshot(p);
         pois.delete(p);
         pois.flush();
@@ -307,8 +329,9 @@ public class PointOfInterestService {
                 throw new IllegalArgumentException();
             return value;
         } catch (RuntimeException failure) {
-            throw error(
+            throw new ApiFailure(
                     HttpStatus.BAD_REQUEST,
+                    latitude ? "INVALID_LATITUDE" : "INVALID_LONGITUDE",
                     (latitude ? "Latitude" : "Longitude") + " must be valid APRS notation or decimal degrees");
         }
     }

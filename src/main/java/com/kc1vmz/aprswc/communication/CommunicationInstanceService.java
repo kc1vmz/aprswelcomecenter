@@ -18,6 +18,7 @@
 package com.kc1vmz.aprswc.communication;
 
 import com.kc1vmz.aprswc.database.CommunicationInstanceRepository;
+import com.kc1vmz.aprswc.exceptions.ApiFailure;
 import com.kc1vmz.aprswc.object.CommunicationInstance;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,9 +84,15 @@ public class CommunicationInstanceService {
             } else {
                 var old = repository
                         .findById(id)
-                        .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Communication instance no longer exists"));
+                        .orElseThrow(() -> new ApiFailure(
+                                HttpStatus.NOT_FOUND,
+                                "COMMUNICATION_INSTANCE_NO_LONGER_EXISTS_A1FFAA",
+                                "Communication instance no longer exists"));
                 if (value.getVersion() != old.getVersion())
-                    throw error(HttpStatus.CONFLICT, "Configuration changed. Refresh and try again.");
+                    throw new ApiFailure(
+                            HttpStatus.CONFLICT,
+                            "CONFIGURATION_CHANGED_REFRESH_AND_TRY_AGAIN_CEA08F",
+                            "Configuration changed. Refresh and try again.");
                 value.setId(id);
                 if (value.getPasscode() == null || value.getPasscode().isBlank()) value.setPasscode(old.getPasscode());
             }
@@ -102,7 +109,10 @@ public class CommunicationInstanceService {
                                     && c.getType().endsWith("_SERIAL")
                                     && SerialDeviceIdentity.identity(value.getSerialDevice())
                                             .equals(SerialDeviceIdentity.identity(c.getSerialDevice()))))
-                throw error(HttpStatus.CONFLICT, "Another ACTIVE instance already owns this serial device.");
+                throw new ApiFailure(
+                        HttpStatus.CONFLICT,
+                        "ANOTHER_ACTIVE_INSTANCE_ALREADY_OWNS_THIS_SER_DCBECB",
+                        "Another ACTIVE instance already owns this serial device.");
             return repository.saveAndFlush(value);
         });
         manager.reconcile(); // TransactionTemplate has committed before the runtime changes.
@@ -116,9 +126,15 @@ public class CommunicationInstanceService {
             routing.lockConfiguration();
             var value = repository
                     .findById(id)
-                    .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Communication instance no longer exists"));
+                    .orElseThrow(() -> new ApiFailure(
+                            HttpStatus.NOT_FOUND,
+                            "COMMUNICATION_INSTANCE_NO_LONGER_EXISTS_A1FFAA",
+                            "Communication instance no longer exists"));
             if (value.getVersion() != expectedVersion)
-                throw error(HttpStatus.CONFLICT, "Configuration changed. Refresh and try again.");
+                throw new ApiFailure(
+                        HttpStatus.CONFLICT,
+                        "CONFIGURATION_CHANGED_REFRESH_AND_TRY_AGAIN_CEA08F",
+                        "Configuration changed. Refresh and try again.");
             routing.beforeInstanceDeleted(id);
             repository.delete(value);
             repository.flush();
@@ -131,12 +147,16 @@ public class CommunicationInstanceService {
     }
 
     private static void required(String value, String field) {
-        if (value == null || value.isBlank()) throw error(HttpStatus.BAD_REQUEST, field + " is required");
+        if (value == null || value.isBlank())
+            throw new ApiFailure(HttpStatus.BAD_REQUEST, "FIELD_REQUIRED", field + " is required", field);
     }
 
     private static void validate(CommunicationInstance c) {
         if (c.getTransmitSpacingMs() == null || c.getTransmitSpacingMs() < 0)
-            throw error(HttpStatus.BAD_REQUEST, "Transmit spacing must be a nonnegative integer in milliseconds");
+            throw new ApiFailure(
+                    HttpStatus.BAD_REQUEST,
+                    "TRANSMIT_SPACING_MUST_BE_A_NONNEGATIVE_INTEGE_25799B",
+                    "Transmit spacing must be a nonnegative integer in milliseconds");
         if ("KENWOOD_SERIAL".equals(c.getType())) {
             required(c.getUsername(), "Kenwood MYCALL");
             c.setUsername(c.getUsername().trim().toUpperCase(Locale.ROOT));
@@ -152,19 +172,24 @@ public class CommunicationInstanceService {
                     c.setDigiPath(String.join(",", path));
                 }
             } catch (IllegalArgumentException invalid) {
-                throw error(HttpStatus.BAD_REQUEST, "Invalid Kenwood MYCALL or digipeater path");
+                throw new ApiFailure(
+                        HttpStatus.BAD_REQUEST,
+                        "INVALID_KENWOOD_MYCALL_OR_DIGIPEATER_PATH_769503",
+                        "Invalid Kenwood MYCALL or digipeater path");
             }
             if ((c.getInitCommand1() != null && !c.getInitCommand1().isBlank())
                     || (c.getInitCommand2() != null && !c.getInitCommand2().isBlank()))
-                throw error(
+                throw new ApiFailure(
                         HttpStatus.BAD_REQUEST,
+                        "KENWOOD_INITIALIZATION_IS_AUTOMATIC_LEAVE_INI_40D910",
                         "Kenwood initialization is automatic; leave initialization commands blank");
         }
         if (!Set.of("APRS_IS", "KISS_TCP", "KISS_SERIAL", "TNC2_TCP", "TNC2_SERIAL", "KENWOOD_SERIAL")
                 .contains(Objects.toString(c.getType(), "")))
-            throw error(HttpStatus.BAD_REQUEST, "Invalid communication type");
+            throw new ApiFailure(
+                    HttpStatus.BAD_REQUEST, "INVALID_COMMUNICATION_TYPE_5B538B", "Invalid communication type");
         if (!Set.of("ACTIVE", "PAUSED").contains(Objects.toString(c.getState(), "")))
-            throw error(HttpStatus.BAD_REQUEST, "Invalid state");
+            throw new ApiFailure(HttpStatus.BAD_REQUEST, "INVALID_STATE_9D8203", "Invalid state");
         for (String s : new String[] {
             c.getHost(),
             c.getUsername(),
@@ -176,8 +201,9 @@ public class CommunicationInstanceService {
             c.getInitCommand2()
         })
             if (s != null && (s.length() > 255 || s.chars().anyMatch(ch -> ch < 32 || ch > 126)))
-                throw error(
+                throw new ApiFailure(
                         HttpStatus.BAD_REQUEST,
+                        "CONFIGURATION_FIELDS_MUST_CONTAIN_AT_MOST_255_7636EC",
                         "Configuration fields must contain at most 255 printable ASCII characters");
         if (("KISS_SERIAL".equals(c.getType()))
                 || ("TNC2_SERIAL".equals(c.getType()))
@@ -185,14 +211,14 @@ public class CommunicationInstanceService {
             required(c.getSerialDevice(), "Serial device");
             c.setSerialDevice(c.getSerialDevice().trim());
             if (c.getBaudRate() == null || c.getBaudRate() < 1 || c.getBaudRate() > 4000000)
-                throw error(HttpStatus.BAD_REQUEST, "Invalid baud rate");
+                throw new ApiFailure(HttpStatus.BAD_REQUEST, "INVALID_BAUD_RATE_63763E", "Invalid baud rate");
             c.setHost(null);
             c.setPort(null);
         } else {
             required(c.getHost(), "Host");
             c.setHost(c.getHost().trim());
             if (c.getPort() == null || c.getPort() < 1 || c.getPort() > 65535)
-                throw error(HttpStatus.BAD_REQUEST, "Invalid TCP port");
+                throw new ApiFailure(HttpStatus.BAD_REQUEST, "INVALID_TCP_PORT_21A8A4", "Invalid TCP port");
             c.setSerialDevice(null);
             c.setBaudRate(null);
             c.setInitCommand1(null);
@@ -203,7 +229,10 @@ public class CommunicationInstanceService {
             required(c.getPasscode(), "Passcode");
             if (!c.getUsername().matches("[A-Za-z0-9-]{1,10}")
                     || !c.getPasscode().matches("-?[0-9]+"))
-                throw error(HttpStatus.BAD_REQUEST, "Invalid APRS-IS username or passcode");
+                throw new ApiFailure(
+                        HttpStatus.BAD_REQUEST,
+                        "INVALID_APRS_IS_USERNAME_OR_PASSCODE_692EDB",
+                        "Invalid APRS-IS username or passcode");
             c.setDigiPath(null);
         } else {
             if (!"KENWOOD_SERIAL".equals(c.getType())) c.setUsername(null);

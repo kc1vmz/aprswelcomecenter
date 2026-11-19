@@ -19,6 +19,7 @@ package com.kc1vmz.aprswc.accessor;
 
 import com.kc1vmz.aprswc.database.WelcomeCenterRepository;
 import com.kc1vmz.aprswc.database.WelcomeCenterWeatherReportRepository;
+import com.kc1vmz.aprswc.exceptions.ApiFailure;
 import com.kc1vmz.aprswc.object.StationPosition;
 import com.kc1vmz.aprswc.object.WelcomeCenter;
 import com.kc1vmz.aprswc.object.WelcomeCenterWeatherReport;
@@ -178,7 +179,7 @@ public class WelcomeCenterWeatherReportAccessor {
 
     private void requireWelcomeCenter(UUID welcomeCenterId) {
         if (welcomeCenterId == null || !welcomeCenters.existsById(welcomeCenterId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Welcome Center not found");
+            throw new ApiFailure(HttpStatus.NOT_FOUND, "WELCOME_CENTER_NOT_FOUND_A06F40", "Welcome Center not found");
         }
     }
 

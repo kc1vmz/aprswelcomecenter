@@ -20,6 +20,7 @@ package com.kc1vmz.aprswc.processor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,7 +30,9 @@ import com.kc1vmz.aprswc.accessor.CommunicationPolicyAccessor;
 import com.kc1vmz.aprswc.accessor.IgnoreStationAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterWeatherReportAccessor;
+import com.kc1vmz.aprswc.content.InformationResponseText;
 import com.kc1vmz.aprswc.content.PolicyContentService;
+import com.kc1vmz.aprswc.database.ApplicationSettingsRepository;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
 import com.kc1vmz.aprswc.object.ApplicationVersion;
@@ -58,7 +61,15 @@ import reactor.core.publisher.Mono;
 @ExtendWith(MockitoExtension.class)
 class StationCommandProcessorTest {
     @Spy
-    private PolicyContentService content = new PolicyContentService(null, null);
+    private InformationResponseText informationText;
+
+    @Spy
+    private PolicyContentService content;
+
+    StationCommandProcessorTest() {
+        informationText = new InformationResponseText(mock(ApplicationSettingsRepository.class));
+        content = new PolicyContentService(null, null);
+    }
 
     @Mock
     private StationMessageQueue stationMessageQueue;

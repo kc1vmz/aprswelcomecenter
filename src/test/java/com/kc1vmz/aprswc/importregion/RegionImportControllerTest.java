@@ -19,6 +19,7 @@ package com.kc1vmz.aprswc.importregion;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.kc1vmz.aprswc.controller.ApiErrorHandler;
 import com.kc1vmz.aprswc.controller.RegionImportController;
 import com.kc1vmz.aprswc.importregion.RegionImportService.ImportSummary;
 import java.time.Duration;
@@ -33,6 +34,7 @@ class RegionImportControllerTest {
     void streamedFolderUploadThenReadAndDelete() throws Exception {
         var service = new RegionImportService();
         var client = WebTestClient.bindToController(new RegionImportController(service))
+                .controllerAdvice(new ApiErrorHandler())
                 .build()
                 .mutate()
                 .responseTimeout(Duration.ofSeconds(30))

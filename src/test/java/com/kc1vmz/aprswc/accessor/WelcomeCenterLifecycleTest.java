@@ -36,7 +36,7 @@ class WelcomeCenterLifecycleTest {
 
     @Test
     void renameOnlyBeaconsWhenStayingOpenAndTransitionsDispatchHooks() {
-        WelcomeCenterLifecycle lifecycle = spy(new WelcomeCenterLifecycle());
+        WelcomeCenterLifecycle lifecycle = spy(new WelcomeCenterLifecycle(null, null, null));
         ObjectBeaconQueue queue = mock(ObjectBeaconQueue.class);
         ReflectionTestUtils.setField(lifecycle, "objectBeaconQueue", queue);
         doNothing().when(lifecycle).onWelcomeCenterClosed(any(), any());

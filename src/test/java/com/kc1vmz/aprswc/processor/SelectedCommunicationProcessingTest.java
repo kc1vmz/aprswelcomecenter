@@ -111,7 +111,7 @@ class SelectedCommunicationProcessingTest {
         when(centers.findOpenById(center.getId())).thenReturn(Mono.just(center));
         var messages = mock(StationMessageQueue.class);
         var commands = new StationCommandProcessor(
-                null, null, null, null, null, null, new PolicyContentService(null, null), null);
+                null, null, null, null, null, null, new PolicyContentService(null, null), null, null);
         var ignores = mock(IgnoreStationAccessor.class);
         ReflectionTestUtils.setField(commands, "welcomeCenterAccessor", centers);
         ReflectionTestUtils.setField(commands, "stationMessageQueue", messages);

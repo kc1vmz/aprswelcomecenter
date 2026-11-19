@@ -70,6 +70,35 @@ p { color: var(--muted); }
     gap: 0.75rem;
 }
 
+.header-actions { align-items: center; flex-wrap: wrap; }
+.language-selector { position: relative; }
+.language-menu {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    z-index: 1100;
+    min-width: 10rem;
+    padding: 0.3rem;
+    border: 1px solid var(--line);
+    border-radius: 0.4rem;
+    background: var(--panel);
+    box-shadow: 0 0.4rem 1rem rgb(0 0 0 / 25%);
+}
+.language-menu[hidden] { display: none; }
+.language-menu button {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    color: var(--ink);
+    background: transparent;
+    white-space: nowrap;
+}
+.language-menu button::before { content: ""; display: inline-block; width: 1.4em; }
+.language-menu button[aria-checked="true"]::before { content: "\2713"; }
+.language-menu button:hover,
+.language-menu button:focus-visible { background: var(--surface); outline: 2px solid var(--accent); }
+
 button {
     padding: 0.7rem 1rem;
     border: 0;

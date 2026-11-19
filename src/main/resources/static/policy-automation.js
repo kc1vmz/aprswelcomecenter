@@ -40,7 +40,7 @@ const policyAutomation = (() => {
         if (typeof updateMessageCharacterCount === "function") updateMessageCharacterCount(form);
         globalThis.policyContent?.update();
         document.querySelector('#policy-delivery-description').textContent = type === 'SHRIEK_HEARD'
-            ? 'Exact, case-sensitive match in a station status or position-report comment once a day while in Welcome Center regions.'
+            ? (globalThis.aprswcI18n?.mark("exact-case-sensitive-match-in-a-station-status-o.a48f4cc5") ?? 'Exact, case-sensitive match in a station status or position-report comment once a day while in Welcome Center regions.')
             : '';
         document.querySelector('#policy-delivery-description').hidden = type !== 'SHRIEK_HEARD';
     }
@@ -59,11 +59,11 @@ const policyAutomation = (() => {
     function summary(policy) {
         const a = policy.automation;
         if (!a) return '';
-        if (policy.communicationEventType === 'SHRIEK_HEARD') return `${a.shriekCode}: once per station per day (${a.timeZone})`;
-        if (policy.communicationEventType === 'SCHEDULED_ONCE') return `One-time: ${a.scheduledAt.replace('T', ' ')} (${a.timeZone})${policy.nextRunAt ? "" : " - processed; view transmission history"}`;
+        if (policy.communicationEventType === 'SHRIEK_HEARD') return (globalThis.aprswcI18n?.mark("0-once-per-station-per-day-1.a946524a", [a.shriekCode, a.timeZone]) ?? `${a.shriekCode}: once per station per day (${a.timeZone})`);
+        if (policy.communicationEventType === 'SCHEDULED_ONCE') return (globalThis.aprswcI18n?.mark("one-time-0-1-2.45312b51", [a.scheduledAt.replace('T', ' '), a.timeZone, policy.nextRunAt ? "" : (globalThis.aprswcI18n?.mark("processed-view-transmission-history.d05785d3") ?? " - processed; view transmission history")]) ?? `One-time: ${a.scheduledAt.replace('T', ' ')} (${a.timeZone})${policy.nextRunAt ? "" : (globalThis.aprswcI18n?.mark("processed-view-transmission-history.d05785d3") ?? " - processed; view transmission history")}`);
         if (policy.communicationEventType === 'SCHEDULED_RECURRING') return a.recurrence === 'HOURLY'
-            ? `Hourly at minute ${a.minute} (${a.timeZone})`
-            : `Daily at ${String(a.hour).padStart(2, '0')}:${String(a.minute).padStart(2, '0')} (${a.timeZone})`;
+            ? (globalThis.aprswcI18n?.mark("hourly-at-minute-0-1.05eeb2ed", [a.minute, a.timeZone]) ?? `Hourly at minute ${a.minute} (${a.timeZone})`)
+            : (globalThis.aprswcI18n?.mark("daily-at-0-1-2.d635d4fe", [String(a.hour).padStart(2, '0'), String(a.minute).padStart(2, '0'), a.timeZone]) ?? `Daily at ${String(a.hour).padStart(2, '0')}:${String(a.minute).padStart(2, '0')} (${a.timeZone})`);
         return '';
     }
     async function load(policy) {
@@ -80,7 +80,7 @@ const policyAutomation = (() => {
         fields.policyMessageType.value = policy?.messageType === 'STATUS_REPORT' ? 'STATUS_REPORT' : 'BULLETIN';
         fields.bulletinAddress.value = policy?.bulletinAddress || 'BLN1';
         update();
-        status.textContent = policy?.nextRunAt ? `Next scheduled: ${new Date(policy.nextRunAt).toLocaleString([], {timeZone: a.timeZone})} (${a.timeZone})` : '';
+        status.textContent = policy?.nextRunAt ? (globalThis.aprswcI18n?.mark("next-scheduled-0-1.e75c8b3f", [new Date(policy.nextRunAt).toLocaleString([], {timeZone: a.timeZone}), a.timeZone]) ?? `Next scheduled: ${new Date(policy.nextRunAt).toLocaleString([], {timeZone: a.timeZone})} (${a.timeZone})`) : '';
         if (!policy?.id || !a.timeZone) return;
         try {
             const response = await fetch(`/api/v1/communication-policies/${policy.id}/executions`);
@@ -89,10 +89,10 @@ const policyAutomation = (() => {
             if (current !== sequence) return;
             const sent = rows.find(row => row.TRANSMITTED_AT);
             const outcome = rows[0]?.OUTCOME;
-            if (outcome) status.textContent += `${status.textContent ? '. ' : ''}Latest occurrence: ${outcome.toLowerCase()}`;
-            if (sent) status.textContent += `. Last transmission: ${new Date(sent.TRANSMITTED_AT).toLocaleString([], {timeZone: a.timeZone})} (${a.timeZone})`;
+            if (outcome) status.textContent += (globalThis.aprswcI18n?.mark("0-latest-occurrence-1.3bbd7843", [status.textContent ? '. ' : '', (globalThis.aprswcI18n?.status("execution", outcome) ?? outcome.toLowerCase())]) ?? `${status.textContent ? '. ' : ''}Latest occurrence: ${(globalThis.aprswcI18n?.status("execution", outcome) ?? outcome.toLowerCase())}`);
+            if (sent) status.textContent += (globalThis.aprswcI18n?.mark("last-transmission-0-1.d7e80e60", [new Date(sent.TRANSMITTED_AT).toLocaleString([], {timeZone: a.timeZone}), a.timeZone]) ?? `. Last transmission: ${new Date(sent.TRANSMITTED_AT).toLocaleString([], {timeZone: a.timeZone})} (${a.timeZone})`);
         } catch {
-            if (current === sequence) status.textContent += ' Transmission history could not be loaded.';
+            if (current === sequence) status.textContent += (globalThis.aprswcI18n?.mark("transmission-history-could-not-be-loaded.41433b0d") ?? ' Transmission history could not be loaded.');
         }
     }
     function transmission() {

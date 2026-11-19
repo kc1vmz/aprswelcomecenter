@@ -23,6 +23,7 @@ import com.kc1vmz.aprswc.accessor.IgnoreStationAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterAccessor;
 import com.kc1vmz.aprswc.accessor.WelcomeCenterWeatherReportAccessor;
 import com.kc1vmz.aprswc.communication.CommunicationScope;
+import com.kc1vmz.aprswc.content.InformationResponseText;
 import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
@@ -89,8 +90,8 @@ public class StationCommandProcessor {
 
     private final CommunicationPolicyAccessor communicationPolicyAccessor;
 
-    private final ExecutorService worker =
-            Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "StationCommandProcessor"));
+    private final ExecutorService worker;
+    private final InformationResponseText informationText;
 
     private final PolicyContentService content;
     private final ApplicationVersionAccessor applicationVersion;
@@ -103,7 +104,10 @@ public class StationCommandProcessor {
             IgnoreStationAccessor ignoreStationAccessor,
             CommunicationPolicyAccessor communicationPolicyAccessor,
             PolicyContentService content,
-            ApplicationVersionAccessor applicationVersion) {
+            ApplicationVersionAccessor applicationVersion,
+            InformationResponseText informationText) {
+        this.informationText = informationText;
+        this.worker = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "StationCommandProcessor"));
         this.queue = queue;
         this.stationMessageQueue = stationMessageQueue;
         this.welcomeCenterWeatherReportAccessor = welcomeCenterWeatherReportAccessor;
@@ -386,11 +390,10 @@ public class StationCommandProcessor {
                 .block();
         String messageText = "";
         if ((summary == null) || (summary.getTemperature() == null)) {
-            messageText = "No current weather summary available";
+            messageText = informationText.format("weather.unavailable");
         } else {
-            messageText = String.format(
-                    Locale.ROOT,
-                    "Temp: %.0fF Hum: %.0f%% Bar: %.0fMb Lum: %.0f",
+            messageText = informationText.format(
+                    "weather.summary",
                     summary.getTemperature(),
                     summary.getHumidity(),
                     summary.getBarometricPressure(),

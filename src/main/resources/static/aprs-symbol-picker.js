@@ -24,9 +24,9 @@ const aprsSymbolPicker = (() => {
         const modes = document.createElement("div");
         modes.className = "kiss-mode-selector";
         modes.setAttribute("role", "group");
-        modes.setAttribute("aria-label", "Symbol table");
+        modes.setAttribute("aria-label", (globalThis.aprswcI18n?.mark("symbol-table.e765c6b0") ?? "Symbol table"));
         host.append(modes);
-        const symbol = field("Symbol", "select");
+        const symbol = field((globalThis.aprswcI18n?.mark("symbol.ba0e4afa") ?? "Symbol"), "select");
         symbol.required = true;
         const option = (control, value, label) => {
             const item = document.createElement("option");
@@ -34,10 +34,10 @@ const aprsSymbolPicker = (() => {
             item.textContent = label;
             control.append(item);
         };
-        option(symbol, "", "Loading APRS symbols...");
+        option(symbol, "", (globalThis.aprswcI18n?.mark("loading-aprs-symbols.75f910b9") ?? "Loading APRS symbols..."));
         try {
             if (!catalog) catalog = fetch("/aprs-symbols.json").then(response => {
-                if (!response.ok) throw new Error("Unable to load APRS symbols");
+                if (!response.ok) throw new Error((globalThis.aprswcI18n?.mark("unable-to-load-aprs-symbols.2898cf20") ?? "Unable to load APRS symbols"));
                 return response.json();
             }).then(data => data.symbols).catch(error => { catalog = null; throw error; });
             const symbols = await catalog;
@@ -46,8 +46,8 @@ const aprsSymbolPicker = (() => {
             let mode = custom ? "custom" : originalTable;
             let selected = originalCode;
             const buttons = [];
-            for (const [value, name] of [["/", "Primary"], ["\\", "Alternate"],
-                ...(custom ? [["custom", "Keep existing custom / overlay"]] : [])]) {
+            for (const [value, name] of [["/", (globalThis.aprswcI18n?.mark("primary.efe10c80") ?? "Primary")], ["\\", (globalThis.aprswcI18n?.mark("alternate.1b99710f") ?? "Alternate")],
+                ...(custom ? [["custom", (globalThis.aprswcI18n?.mark("keep-existing-custom-overlay.b286444d") ?? "Keep existing custom / overlay")]] : [])]) {
                 const button = document.createElement("button");
                 button.type = "button";
                 button.className = "secondary";
@@ -67,11 +67,11 @@ const aprsSymbolPicker = (() => {
                 symbol.replaceChildren();
                 for (const { button, value } of buttons) button.setAttribute("aria-pressed", String(mode === value));
                 if (mode === "custom") {
-                    option(symbol, originalCode, `Existing symbol (${originalTable}${originalCode})`);
+                    option(symbol, originalCode, (globalThis.aprswcI18n?.mark("existing-symbol-0-1.abfc7c44", [originalTable, originalCode]) ?? `Existing symbol (${originalTable}${originalCode})`));
                 } else {
                     const matches = entries(symbols, mode);
-                    option(symbol, "", matches.length ? "Choose a symbol" : "No matching symbols");
-                    for (const item of matches) option(symbol, item.code, `${item.name} (${item.table}${item.code})`);
+                    option(symbol, "", matches.length ? (globalThis.aprswcI18n?.mark("choose-a-symbol.4ecca679") ?? "Choose a symbol") : (globalThis.aprswcI18n?.mark("no-matching-symbols.83ef7adb") ?? "No matching symbols"));
+                    for (const item of matches) option(symbol, item.code, `${globalThis.aprswcI18n?.label(item.name) ?? item.name} (${item.table}${item.code})`);
                     const current = symbols.find(s => s.table === mode && s.code === selected);
                     symbol.value = current ? selected : "";
                 }
@@ -84,7 +84,7 @@ const aprsSymbolPicker = (() => {
         } catch (error) {
             if (loads.get(host) !== sequence) return;
             symbol.replaceChildren();
-            option(symbol, "", "Unable to load symbols - close and reopen to retry");
+            option(symbol, "", (globalThis.aprswcI18n?.mark("unable-to-load-symbols-close-and-reopen-to-retry.b9eda3a9") ?? "Unable to load symbols - close and reopen to retry"));
             // Required empty select prevents saving an editor whose catalog failed to load.
         }
     }

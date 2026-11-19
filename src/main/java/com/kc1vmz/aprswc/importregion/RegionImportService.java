@@ -20,6 +20,7 @@ package com.kc1vmz.aprswc.importregion;
 import static com.kc1vmz.aprswc.importregion.ShapefileReader.check;
 import static com.kc1vmz.aprswc.importregion.ShapefileReader.checkTime;
 
+import com.kc1vmz.aprswc.exceptions.ApiFailure;
 import com.kc1vmz.aprswc.importregion.ShapefileReader.Boundary;
 import com.kc1vmz.aprswc.importregion.ShapefileReader.Feature;
 import com.kc1vmz.aprswc.importregion.ShapefileReader.Layer;
@@ -43,7 +44,6 @@ import java.util.zip.ZipInputStream;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class RegionImportService {
@@ -91,8 +91,10 @@ public class RegionImportService {
 
     public Upload begin() {
         if (!uploads.tryAcquire())
-            throw new ResponseStatusException(
-                    HttpStatus.TOO_MANY_REQUESTS, "Two uploads are already being processed. Try again shortly.");
+            throw new ApiFailure(
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    "TWO_UPLOADS_ARE_ALREADY_BEING_PROCESSED_TRY_A_C9B335",
+                    "Two uploads are already being processed. Try again shortly.");
         return new Upload(uploads);
     }
 
@@ -179,8 +181,10 @@ public class RegionImportService {
     private synchronized ImportSummary save(List<Layer> layers) {
         expire();
         if (sessions.size() >= 4)
-            throw new ResponseStatusException(
-                    HttpStatus.TOO_MANY_REQUESTS, "Four imports are already open. Close one or wait for it to expire.");
+            throw new ApiFailure(
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    "FOUR_IMPORTS_ARE_ALREADY_OPEN_CLOSE_ONE_OR_WA_ABFE94",
+                    "Four imports are already open. Close one or wait for it to expire.");
         UUID id = UUID.randomUUID();
         Instant expiry = clock.instant().plusSeconds(900);
         sessions.put(id, new Session(expiry, List.copyOf(layers)));
@@ -232,7 +236,8 @@ public class RegionImportService {
         Feature feature = layer.features().stream()
                 .filter(f -> f.id() == featureId)
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Feature not found."));
+                .orElseThrow(
+                        () -> new ApiFailure(HttpStatus.NOT_FOUND, "FEATURE_NOT_FOUND_E08DBA", "Feature not found."));
         return ShapefileReader.boundary(layer, feature, System.nanoTime() + 30_000_000_000L);
     }
 
@@ -240,10 +245,12 @@ public class RegionImportService {
         expire();
         Session session = sessions.get(id);
         if (session == null)
-            throw new ResponseStatusException(
-                    HttpStatus.GONE, "Import expired or was closed. Upload the collection again.");
+            throw new ApiFailure(
+                    HttpStatus.GONE,
+                    "IMPORT_EXPIRED_OR_WAS_CLOSED_UPLOAD_THE_COLLE_4700EC",
+                    "Import expired or was closed. Upload the collection again.");
         if (layerId < 0 || layerId >= session.layers.size())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Layer not found.");
+            throw new ApiFailure(HttpStatus.NOT_FOUND, "LAYER_NOT_FOUND_A1198B", "Layer not found.");
         return session.layers.get(layerId);
     }
 

@@ -6,7 +6,7 @@ const centerCommunications = (() => {
         $("#center-communication-options").hidden = !selected;
         $("#center-communication-warning").textContent = selected
             && !$("#center-communication-options").querySelector("input:checked")
-            ? "No communication methods selected. This Welcome Center will not communicate." : "";
+            ? (globalThis.aprswcI18n?.mark("no-communication-methods-selected-this-welcome-c.9dfcd2a2") ?? "No communication methods selected. This Welcome Center will not communicate.") : "";
     }
     async function load(center) {
         const request = ++sequence;
@@ -15,7 +15,7 @@ const centerCommunications = (() => {
         $("#center-communication-mode").value = center?.communicationMode || "ALL";
         version = center?.routingVersion || 0;
         $("#center-communication-options").replaceChildren();
-        $("#center-communication-message").textContent = "Loading communication methods...";
+        $("#center-communication-message").textContent = (globalThis.aprswcI18n?.mark("loading-communication-methods.51079dfb") ?? "Loading communication methods...");
         update();
         try {
             const instances = await requestJson("/api/v1/communication-instances");
@@ -31,19 +31,19 @@ const centerCommunications = (() => {
                 checkbox.type = "checkbox";
                 checkbox.dataset.instanceId = c.id;
                 checkbox.checked = selected.has(c.id);
-                label.append(checkbox, document.createTextNode(`${c.label} (${c.state})`));
+                label.append(checkbox, document.createTextNode(`${c.label} (${globalThis.aprswcI18n?.label(c.state) ?? c.state})`));
                 $("#center-communication-options").append(label);
             }
             const missing = [...selected].some(id => !available.has(id));
             ready = !missing;
             $("#center-communication-message").textContent = missing
-                ? "A selected method was deleted. Refresh methods and review the selection before saving."
-                : instances.length ? "" : "No communication methods configured.";
+                ? (globalThis.aprswcI18n?.mark("a-selected-method-was-deleted-refresh-methods-an.794447db") ?? "A selected method was deleted. Refresh methods and review the selection before saving.")
+                : instances.length ? "" : (globalThis.aprswcI18n?.mark("no-communication-methods-configured.77cdfc55") ?? "No communication methods configured.");
             $("#save-center").disabled = !ready;
             update();
         } catch (error) {
             if (request !== sequence) return;
-            $("#center-communication-message").textContent = "Communication methods could not be loaded. Refresh methods to try again.";
+            $("#center-communication-message").textContent = (globalThis.aprswcI18n?.mark("communication-methods-could-not-be-loaded-refres.d8622255") ?? "Communication methods could not be loaded. Refresh methods to try again.");
         }
     }
     async function refresh() {
@@ -53,7 +53,7 @@ const centerCommunications = (() => {
         } catch (error) {
             ready = false;
             $("#save-center").disabled = true;
-            $("#center-communication-message").textContent = "This Welcome Center could not be refreshed. Close and reopen the editor.";
+            $("#center-communication-message").textContent = (globalThis.aprswcI18n?.mark("this-welcome-center-could-not-be-refreshed-close.1a41b08e") ?? "This Welcome Center could not be refreshed. Close and reopen the editor.");
         }
     }
     $("#center-communication-mode").addEventListener("change", update);

@@ -181,4 +181,7 @@ ALTER TABLE application_settings DROP COLUMN IF EXISTS kiss_port;
             ALTER TABLE message_deliveries ADD COLUMN standalone BOOLEAN DEFAULT FALSE NOT NULL;
         </sql>
     </changeSet>
+    <changeSet id="030-information-response-language" author="aprswc">
+        <sql>ALTER TABLE application_settings ADD COLUMN information_response_language VARCHAR(8) DEFAULT 'en' NOT NULL;</sql>
+    </changeSet>
 </databaseChangeLog>

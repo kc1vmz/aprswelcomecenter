@@ -58,7 +58,7 @@
         form = regionForm;
         initializeMap();
         if (!map) {
-            message("The map library could not be loaded. Manual coordinate entry is still available.", true);
+            message((globalThis.aprswcI18n?.mark("the-map-library-could-not-be-loaded-manual-coord.e95c9b76") ?? "The map library could not be loaded. Manual coordinate entry is still available."), true);
             return;
         }
         clearShape(false);
@@ -93,12 +93,12 @@
 
     function setType(type) {
         const button = document.querySelector("#draw-region-shape");
-        button.textContent = type === "POLYGON" ? "Draw Polygon" : type === "CIRCLE" ? "Draw Circle" : "Draw Rectangle";
+        button.textContent = type === "POLYGON" ? (globalThis.aprswcI18n?.mark("draw-polygon.9e24b72d") ?? "Draw Polygon") : type === "CIRCLE" ? (globalThis.aprswcI18n?.mark("draw-circle.43a5dd37") ?? "Draw Circle") : (globalThis.aprswcI18n?.mark("draw-rectangle.d45277e3") ?? "Draw Rectangle");
         document.querySelector("#polygon-tools").hidden = type !== "POLYGON";
         if (form && shape && shape.regionType !== type) {
             clearShape();
             polygonPoints = []; polygonClosed = false; form.polygonVertices = [];
-            message("Region type changed. Draw a new boundary or enter its coordinates manually.");
+            message((globalThis.aprswcI18n?.mark("region-type-changed-draw-a-new-boundary-or-enter.eb3f5997") ?? "Region type changed. Draw a new boundary or enter its coordinates manually."));
         }
     }
 
@@ -122,14 +122,14 @@
         if (drawingType === "POLYGON") {
             polygonPoints = []; polygonClosed = false; form.polygonVertices = [];
             map.doubleClickZoom.disable();
-            message("Click vertices, then click the starting marker to close. Maximum 1000 vertices; no date-line crossings or holes.");
+            message((globalThis.aprswcI18n?.mark("click-vertices-then-click-the-starting-marker-to.e84cd7ac") ?? "Click vertices, then click the starting marker to close. Maximum 1000 vertices; no date-line crossings or holes."));
             return;
         }
         firstPoint = null;
         map.getContainer().style.cursor = "crosshair";
         message(drawingType === "CIRCLE"
-            ? "Click the circle center, then click a point on its boundary."
-            : "Click one rectangle corner, then click the opposite corner.");
+            ? (globalThis.aprswcI18n?.mark("click-the-circle-center-then-click-a-point-on-it.37fcfd25") ?? "Click the circle center, then click a point on its boundary.")
+            : (globalThis.aprswcI18n?.mark("click-one-rectangle-corner-then-click-the-opposi.de32d523") ?? "Click one rectangle corner, then click the opposite corner."));
     }
 
     async function handleMapClick(event) {
@@ -137,7 +137,7 @@
             return;
         }
         if (drawingType === "POLYGON") {
-            if (polygonPoints.length >= 1000) { message("Maximum 1000 vertices.", true); return; }
+            if (polygonPoints.length >= 1000) { message((globalThis.aprswcI18n?.mark("maximum-1000-vertices.c8001a18") ?? "Maximum 1000 vertices."), true); return; }
             polygonPoints.push(event.latlng);
             renderPolygon();
             return;
@@ -146,8 +146,8 @@
             firstPoint = event.latlng;
             addTemporaryHandle(firstPoint);
             message(drawingType === "CIRCLE"
-                ? "Now click a point on the circle boundary."
-                : "Now click the opposite rectangle corner.");
+                ? (globalThis.aprswcI18n?.mark("now-click-a-point-on-the-circle-boundary.5727e11b") ?? "Now click a point on the circle boundary.")
+                : (globalThis.aprswcI18n?.mark("now-click-the-opposite-rectangle-corner.0aef17b6") ?? "Now click the opposite rectangle corner."));
             return;
         }
 
@@ -193,11 +193,11 @@
         }
         if (showMessage && form?.elements.type.value === "POLYGON") {
             polygonPoints = []; polygonClosed = false; form.polygonVertices = [];
-            message("Polygon cleared. Draw a new boundary before saving.");
+            message((globalThis.aprswcI18n?.mark("polygon-cleared-draw-a-new-boundary-before-savin.d1150b6e") ?? "Polygon cleared. Draw a new boundary before saving."));
             return;
         }
         if (showMessage) {
-            message("Map shape cleared. Manual coordinate values were not changed.");
+            message((globalThis.aprswcI18n?.mark("map-shape-cleared-manual-coordinate-values-were-.bd2a82c5") ?? "Map shape cleared. Manual coordinate values were not changed."));
         }
     }
 
@@ -275,7 +275,7 @@
                 { longitude: form.elements.bottomRightLongitude.value, latitude: form.elements.bottomRightLatitude.value }
             ];
         if (requests.some(item => !item.longitude || !item.latitude)) {
-            message("Enter all coordinates manually or use Draw on the map.");
+            message((globalThis.aprswcI18n?.mark("enter-all-coordinates-manually-or-use-draw-on-th.f6abd635") ?? "Enter all coordinates manually or use Draw on the map."));
             return;
         }
         try {
@@ -286,13 +286,13 @@
             });
             if (!form || revision !== geometryRevision || form.elements.type.value !== type) return;
             if (converted.some(item => !item.valid)) {
-                message("One or more manual coordinates are invalid.", true);
+                message((globalThis.aprswcI18n?.mark("one-or-more-manual-coordinates-are-invalid.17d5bc93") ?? "One or more manual coordinates are invalid."), true);
                 return;
             }
             if (type === "CIRCLE") {
                 const radius = diameterRadiusMeters(form.elements.diameter.value, form.elements.unit.value);
                 if (radius <= 0) {
-                    message("Enter a circle diameter greater than zero.", true);
+                    message((globalThis.aprswcI18n?.mark("enter-a-circle-diameter-greater-than-zero.24d5472d") ?? "Enter a circle diameter greater than zero."), true);
                     return;
                 }
                 createCircle(L.latLng(converted[0].latitude, converted[0].longitude), radius, true);
@@ -301,9 +301,9 @@
                     [converted[0].latitude, converted[0].longitude],
                     [converted[1].latitude, converted[1].longitude]), true);
             }
-            message("Map boundary updated from the manual values.");
+            message((globalThis.aprswcI18n?.mark("map-boundary-updated-from-the-manual-values.09d8f11f") ?? "Map boundary updated from the manual values."));
         } catch (error) {
-            message("The manual coordinates could not be displayed on the map.", true);
+            message((globalThis.aprswcI18n?.mark("the-manual-coordinates-could-not-be-displayed-on.394e47dc") ?? "The manual coordinates could not be displayed on the map."), true);
         }
     }
 
@@ -332,7 +332,7 @@
             });
             if (!form || !shape || revision !== geometryRevision) return;
             if (converted.some(item => !item.longitude || !item.latitude)) {
-                message("The selected map boundary is outside valid APRS coordinate ranges.", true);
+                message((globalThis.aprswcI18n?.mark("the-selected-map-boundary-is-outside-valid-aprs-.dccf2828") ?? "The selected map boundary is outside valid APRS coordinate ranges."), true);
                 return;
             }
             if (shape.regionType === "CIRCLE") {
@@ -346,9 +346,9 @@
                 form.elements.bottomRightLongitude.value = converted[1].longitude;
                 form.elements.bottomRightLatitude.value = converted[1].latitude;
             }
-            message("Manual coordinate values updated from the map boundary.");
+            message((globalThis.aprswcI18n?.mark("manual-coordinate-values-updated-from-the-map-bo.987cc339") ?? "Manual coordinate values updated from the map boundary."));
         } catch (error) {
-            message("The map boundary could not be converted to APRS coordinates.", true);
+            message((globalThis.aprswcI18n?.mark("the-map-boundary-could-not-be-converted-to-aprs-.1908cfd3") ?? "The map boundary could not be converted to APRS coordinates."), true);
         }
     }
 
@@ -357,17 +357,17 @@
     }
 
     function polygonError() {
-        if (!polygonClosed || drawingType === "POLYGON") return "Finish the polygon boundary before saving.";
+        if (!polygonClosed || drawingType === "POLYGON") return (globalThis.aprswcI18n?.mark("finish-the-polygon-boundary-before-saving.61aebe90") ?? "Finish the polygon boundary before saving.");
         return validatePolygon(polygonPoints);
     }
 
     // Mirrors server validation in projected metres, matching Leaflet's straight segments.
     function validatePolygon(vertices) {
-        if (vertices.length < 3 || vertices.length > 1000) return "Polygon requires 3 to 1000 vertices.";
+        if (vertices.length < 3 || vertices.length > 1000) return (globalThis.aprswcI18n?.mark("polygon-requires-3-to-1000-vertices.332ef834") ?? "Polygon requires 3 to 1000 vertices.");
         if (vertices.some(v => !Number.isFinite(v.lat) || !Number.isFinite(v.lng) || Math.abs(v.lat) > 85.0511287798066 || Math.abs(v.lng) > 180))
-            return "Polygon coordinates exceed supported map limits.";
+            return (globalThis.aprswcI18n?.mark("polygon-coordinates-exceed-supported-map-limits.7b286510") ?? "Polygon coordinates exceed supported map limits.");
         if (Math.max(...vertices.map(v => v.lng)) - Math.min(...vertices.map(v => v.lng)) >= 180)
-            return "Polygon must span less than 180 degrees and cannot cross the date line.";
+            return (globalThis.aprswcI18n?.mark("polygon-must-span-less-than-180-degrees-and-cann.9b6e432b") ?? "Polygon must span less than 180 degrees and cannot cross the date line.");
         const points = vertices.map(v => L.Projection.SphericalMercator.project(v));
         const eps = 0.000001;
         const cross = (a,b,p) => (b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x);
@@ -378,26 +378,26 @@
         for (let i=0; i<points.length; i++) {
             const a=points[i], b=points[(i+1)%points.length], c=points[(i+2)%points.length];
             area += cross(points[0],a,b);
-            if (on(a,b,c)||on(b,c,a)) return "Polygon edges must not overlap.";
+            if (on(a,b,c)||on(b,c,a)) return (globalThis.aprswcI18n?.mark("polygon-edges-must-not-overlap.f384dc3e") ?? "Polygon edges must not overlap.");
             for (let j=i+1; j<points.length; j++) {
-                if (Math.hypot(a.x-points[j].x,a.y-points[j].y)<=eps) return "Polygon vertices must be distinct.";
+                if (Math.hypot(a.x-points[j].x,a.y-points[j].y)<=eps) return (globalThis.aprswcI18n?.mark("polygon-vertices-must-be-distinct.b13ac12b") ?? "Polygon vertices must be distinct.");
                 if (j===i+1 || (i===0 && j===points.length-1)) continue;
-                if (intersects(a,b,points[j],points[(j+1)%points.length])) return "Polygon edges must not cross or touch.";
+                if (intersects(a,b,points[j],points[(j+1)%points.length])) return (globalThis.aprswcI18n?.mark("polygon-edges-must-not-cross-or-touch.344b0b18") ?? "Polygon edges must not cross or touch.");
             }
         }
-        return Math.abs(area)<=eps*eps ? "Polygon must have nonzero area." : null;
+        return Math.abs(area)<=eps*eps ? (globalThis.aprswcI18n?.mark("polygon-must-have-nonzero-area.38ad198d") ?? "Polygon must have nonzero area.") : null;
     }
 
     function renderPolygon() {
         if (shape) shape.remove();
         handles.forEach(h => h.remove()); handles = [];
-        if (!polygonPoints.length) { shape = null; form.polygonVertices = []; message("Click the map to add the first vertex."); return; }
+        if (!polygonPoints.length) { shape = null; form.polygonVertices = []; message((globalThis.aprswcI18n?.mark("click-the-map-to-add-the-first-vertex.0c09ec9e") ?? "Click the map to add the first vertex.")); return; }
         shape = (polygonClosed ? L.polygon(polygonPoints, { smoothFactor: 0 }) : L.polyline(polygonPoints)).addTo(map);
         shape.regionType = "POLYGON";
         polygonPoints.forEach((point,index) => {
             const marker = L.marker(point, { draggable: polygonClosed, icon: index === 0
                 ? L.divIcon({ className: "", html: '<div class="region-map-handle" style="background:#d97706;border-radius:50%"></div>', iconSize: [18,18] }) : handleIcon(),
-                title: index === 0 ? "Starting vertex: click to finish" : "Vertex: right-click to delete" }).addTo(map);
+                title: index === 0 ? (globalThis.aprswcI18n?.mark("starting-vertex-click-to-finish.b7b6f479") ?? "Starting vertex: click to finish") : (globalThis.aprswcI18n?.mark("vertex-right-click-to-delete.77f66dd1") ?? "Vertex: right-click to delete") }).addTo(map);
             marker.on("click", () => { if (index === 0 && !polygonClosed) finishPolygon(); });
             marker.on("drag", () => { polygonPoints[index] = marker.getLatLng(); shape.setLatLngs(polygonPoints); });
             marker.on("dragend", renderPolygon);
@@ -415,7 +415,7 @@
                 const next = polygonPoints[(index+1)%polygonPoints.length];
                 const a = map.project(point, 0), b = map.project(next, 0);
                 const middle = map.unproject(L.point((a.x+b.x)/2,(a.y+b.y)/2),0);
-                const insert = L.marker(middle, { icon: handleIcon(), opacity: 0.45, title: "Click to insert a vertex" }).addTo(map);
+                const insert = L.marker(middle, { icon: handleIcon(), opacity: 0.45, title: (globalThis.aprswcI18n?.mark("click-to-insert-a-vertex.e35b0334") ?? "Click to insert a vertex") }).addTo(map);
                 insert.on("click", () => {
                     if (polygonPoints.length >= 1000) return;
                     polygonPoints.splice(index+1,0,middle); renderPolygon();
@@ -426,7 +426,7 @@
         form.polygonVertices = polygonPoints.map(p => ({ latitude: p.lat, longitude: p.lng }));
         const error = polygonPoints.length >= 3 ? validatePolygon(polygonPoints) : null;
         shape.setStyle({ color: error ? "#c62828" : "#1677d2" });
-        message(error || (polygonClosed ? "Drag vertices to adjust. Click faded midpoint handles to insert; right-click vertices or focus a vertex and press Delete to remove." : "Click more vertices, then the starting marker or Finish boundary."), Boolean(error));
+        message(error || (polygonClosed ? (globalThis.aprswcI18n?.mark("drag-vertices-to-adjust-click-faded-midpoint-han.37d5eb7b") ?? "Drag vertices to adjust. Click faded midpoint handles to insert; right-click vertices or focus a vertex and press Delete to remove.") : (globalThis.aprswcI18n?.mark("click-more-vertices-then-the-starting-marker-or-.d450ca44") ?? "Click more vertices, then the starting marker or Finish boundary.")), Boolean(error));
     }
 
     function finishPolygon() {
@@ -452,7 +452,7 @@
     document.querySelector("#clear-region-shape").addEventListener("click", () => clearShape());
 
     function importBoundary(vertices) {
-        if (!form || !map) throw new Error("Open the region editor with a working map before importing.");
+        if (!form || !map) throw new Error((globalThis.aprswcI18n?.mark("open-the-region-editor-with-a-working-map-before.3961c580") ?? "Open the region editor with a working map before importing."));
         const points = vertices.map(v => L.latLng(v.latitude, v.longitude));
         const error = validatePolygon(points);
         if (error) throw new Error(error);

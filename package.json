@@ -1,0 +1,11 @@
+{
+  "name": "aprs-welcome-center-ui-tests",
+  "private": true,
+  "scripts": {
+    "test": "node --test src/test/js/*.test.cjs tests/*.test.cjs"
+  },
+  "devDependencies": {
+    "acorn": "8.19.0",
+    "jsdom": "31.0.1"
+  }
+}

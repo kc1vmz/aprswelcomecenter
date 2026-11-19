@@ -25,6 +25,7 @@ import com.kc1vmz.aprswc.communication.AprsMessageProtocol;
 import com.kc1vmz.aprswc.communication.CommunicationInstanceManager;
 import com.kc1vmz.aprswc.communication.MessageIdentifierService;
 import com.kc1vmz.aprswc.enumeration.MessageType;
+import com.kc1vmz.aprswc.exceptions.ApiFailure;
 import com.kc1vmz.aprswc.object.Station;
 import com.kc1vmz.aprswc.object.StationMessage;
 import com.kc1vmz.aprswc.object.StationPacket;
@@ -43,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 
 @Component
 public class StationMessageProcessor {
@@ -243,14 +243,18 @@ public class StationMessageProcessor {
                 || message.getCallsignTo().isBlank()
                 || message.getContent() == null
                 || message.getContent().isBlank())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A sender, recipient and message are required.");
+            throw new ApiFailure(
+                    HttpStatus.BAD_REQUEST,
+                    "A_SENDER_RECIPIENT_AND_MESSAGE_ARE_REQUIRED_BA9B43",
+                    "A sender, recipient and message are required.");
         message.setStandalone(true);
         if (message.getPacketProcessorId() == null
                 || message.getPacketProcessorId().isBlank())
             message.setPacketProcessorId(determinePacketProcessor(message, null));
         if (!communications.connectedRoutes(null).contains(message.getPacketProcessorId()))
-            throw new ResponseStatusException(
+            throw new ApiFailure(
                     HttpStatus.CONFLICT,
+                    "NO_CONNECTED_COMMUNICATION_PATH_IS_AVAILABLE__7B6625",
                     "No connected communication path is available for this selection. Choose another path.");
     }
 

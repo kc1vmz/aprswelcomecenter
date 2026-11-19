@@ -41,6 +41,47 @@ class ApplicationSettingsControllerTest {
     }
 
     @Test
+    void informationLanguageDefaultsToEnglishAndPersistsValidatedChanges() {
+        var settings = new ApplicationSettings(null, null, ApplicationSettings.DEFAULT_TINY_TOPICS_SERVER_URL);
+        settings = repository.save(settings);
+        client.get()
+                .uri("/api/v1/application-settings/" + settings.getId())
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.informationResponseLanguage")
+                .isEqualTo("en");
+        for (String language : new String[] {"xx", "es", "fr"}) {
+            settings.setInformationResponseLanguage(language);
+            client.put()
+                    .uri("/api/v1/application-settings/" + settings.getId())
+                    .bodyValue(settings)
+                    .exchange()
+                    .expectStatus()
+                    .isOk()
+                    .expectBody()
+                    .jsonPath("$.informationResponseLanguage")
+                    .isEqualTo(language);
+            client.get()
+                    .uri("/api/v1/application-settings/" + settings.getId())
+                    .exchange()
+                    .expectStatus()
+                    .isOk()
+                    .expectBody()
+                    .jsonPath("$.informationResponseLanguage")
+                    .isEqualTo(language);
+        }
+        settings.setInformationResponseLanguage("unsupported");
+        client.put()
+                .uri("/api/v1/application-settings/" + settings.getId())
+                .bodyValue(settings)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+    }
+
+    @Test
     void loggingDefaultsOffAndCanBePersistentlyToggledWithoutChangingOtherSettings() {
         client.get()
                 .uri("/api/v1/application-settings/packet-logging")

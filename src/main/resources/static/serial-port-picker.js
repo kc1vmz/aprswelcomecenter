@@ -18,10 +18,10 @@
       }
       input.value = selected;
       const current = ports.find(p => p.device === input.value);
-      status.textContent = error || (!loaded ? 'Loading ports from the application server…'
-        : input.value && !current?.detected ? 'Not currently detected.'
+      status.textContent = error || (!loaded ? (globalThis.aprswcI18n?.mark("loading-ports-from-the-application-server.69eeae59") ?? 'Loading ports from the application server…')
+        : input.value && !current?.detected ? (globalThis.aprswcI18n?.mark("not-currently-detected.58c13126") ?? 'Not currently detected.')
         : ports.some(p => p.detected) ? ''
-        : 'No serial ports detected.');
+        : (globalThis.aprswcI18n?.mark("no-serial-ports-detected.a57304df") ?? 'No serial ports detected.'));
       status.hidden = !status.textContent;
     }
     async function load() {
@@ -32,10 +32,10 @@
         if (!response.ok || response.redirected) throw new Error();
         const result = await response.json();
         if (request !== generation) return;
-        ports = result.ports; error = result.error ? 'Unable to discover serial ports.' : null;
+        ports = result.ports; error = result.error ? (globalThis.aprswcI18n?.mark("unable-to-discover-serial-ports.778a4b7b") ?? 'Unable to discover serial ports.') : null;
       } catch {
         if (request !== generation) return;
-        error = 'Unable to discover serial ports.';
+        error = (globalThis.aprswcI18n?.mark("unable-to-discover-serial-ports.778a4b7b") ?? 'Unable to discover serial ports.');
       } finally {
         if (request === generation) { loaded = true; render(); }
       }
@@ -49,7 +49,7 @@
       baud.replaceChildren();
       for (const rate of [...new Set([...rates, selected])].sort((a,b) => a-b)) {
         const option = document.createElement('option'); option.value = String(rate);
-        option.textContent = String(rate) + (rates.includes(rate) ? '' : ' (saved value)');
+        option.textContent = String(rate) + (rates.includes(rate) ? '' : (globalThis.aprswcI18n?.mark("saved-value.1c871619") ?? ' (saved value)'));
         baud.append(option);
       }
       baud.value = String(selected);

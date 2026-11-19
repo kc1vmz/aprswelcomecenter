@@ -23,7 +23,7 @@
     function clearSelection() {
         selection = null;
         field("use").disabled = true;
-        field("details").textContent = "Select a feature to preview and validate its boundary.";
+        field("details").textContent = (globalThis.aprswcI18n?.mark("select-a-feature-to-preview-and-validate-its-bou.adcf67bf") ?? "Select a feature to preview and validate its boundary.");
         if (boundaryLayer) { boundaryLayer.remove(); boundaryLayer = null; }
     }
 
@@ -47,7 +47,7 @@
         reset();
         dialog.showModal();
         if (typeof L === "undefined") {
-            message("The map library is unavailable. Reload the page before importing a boundary.", true);
+            message((globalThis.aprswcI18n?.mark("the-map-library-is-unavailable-reload-the-page-b.12be601d") ?? "The map library is unavailable. Reload the page before importing a boundary."), true);
             return;
         }
         if (!map) {
@@ -69,24 +69,24 @@
         reset();
         const current = ++generation;
         if (files.length > 256 || files.reduce((sum, file) => sum + file.size, 0) > 64 * 1024 * 1024) {
-            message("Choose at most 256 files totaling 64 MiB or less.", true);
+            message((globalThis.aprswcI18n?.mark("choose-at-most-256-files-totaling-64-mib-or-less.d495d6e6") ?? "Choose at most 256 files totaling 64 MiB or less."), true);
             return;
         }
         const body = new FormData();
         files.forEach(file => body.append("files", file, file.webkitRelativePath || file.name));
         field("zip").disabled = true;
         field("folder").disabled = true;
-        message("Reading shapefile collection...");
+        message((globalThis.aprswcI18n?.mark("reading-shapefile-collection.6344d7be") ?? "Reading shapefile collection..."));
         try {
             const result = await requestJson("/api/v1/region-imports", { method: "POST", body });
             if (current !== generation || !dialog.open) { discard(result.id); return; }
             session = result;
             field("layer").replaceChildren(...result.layers.map(layer => new Option(
-                `${layer.name} (${layer.featureCount} features)`, String(layer.id))));
+                (globalThis.aprswcI18n?.plural("import.features", layer.featureCount, [layer.name, layer.featureCount]) ?? `${layer.name} (${layer.featureCount} features)`), String(layer.id))));
             field("controls").hidden = false;
             layerChanged();
         } catch (error) {
-            if (current === generation) message(error.message || "The collection could not be read.", true);
+            if (current === generation) message(error.message || (globalThis.aprswcI18n?.mark("the-collection-could-not-be-read.b01e6689") ?? "The collection could not be read."), true);
         } finally {
             if (dialog.open && (current === generation || session)) {
                 field("zip").disabled = false;
@@ -97,7 +97,7 @@
 
     function layerChanged() {
         const layer = session.layers.find(item => String(item.id) === field("layer").value);
-        field("label").replaceChildren(new Option("Record number", ""), ...layer.fields.map(name => new Option(name, name)));
+        field("label").replaceChildren(new Option((globalThis.aprswcI18n?.mark("record-number.262fca96") ?? "Record number"), ""), ...layer.fields.map(name => new Option(name, name)));
         field("label").value = ["NAME", "TOWN", "NAMELSAD", "NAME10", "NAME20", "GEOID"]
             .find(name => layer.fields.includes(name)) || "";
         field("layer-info").textContent = [layer.sourceCrs, layer.warning, layer.problem].filter(Boolean).join(" | ");
@@ -117,7 +117,7 @@
         const layerId = field("layer").value;
         const params = new URLSearchParams({ query: field("search").value, label: field("label").value,
             offset: String(offset), limit: String(pageSize) });
-        message("Loading features...");
+        message((globalThis.aprswcI18n?.mark("loading-features.88ce40fd") ?? "Loading features..."));
         try {
             const page = await requestJson(`/api/v1/region-imports/${session.id}/layers/${layerId}/features?${params}`);
             if (current !== generation || !dialog.open) return;
@@ -127,20 +127,20 @@
                 const button = document.createElement("button");
                 button.type = "button";
                 button.className = "secondary";
-                button.textContent = item.name || `Feature ${item.id + 1}`;
+                button.textContent = item.name || (globalThis.aprswcI18n?.mark("feature-0.1a12371a", [item.id + 1]) ?? `Feature ${item.id + 1}`);
                 button.addEventListener("click", () => selectFeature(item, layerId));
                 name.append(button);
                 row.append(name);
                 const status = document.createElement("td");
-                status.textContent = item.problem || "Select to validate";
+                status.textContent = item.problem || (globalThis.aprswcI18n?.mark("select-to-validate.ad56d075") ?? "Select to validate");
                 row.append(status);
                 field("results").append(row);
             });
             field("page").textContent = page.total
-                ? `${offset + 1}-${Math.min(offset + pageSize, page.total)} of ${page.total}` : "No matching features";
+                ? (globalThis.aprswcI18n?.mark("0-1-of-2.c3e9bbd1", [offset + 1, Math.min(offset + pageSize, page.total), page.total]) ?? `${offset + 1}-${Math.min(offset + pageSize, page.total)} of ${page.total}`) : (globalThis.aprswcI18n?.mark("no-matching-features.f879703f") ?? "No matching features");
             field("previous").disabled = offset === 0;
             field("next").disabled = offset + pageSize >= page.total;
-            message("Choose a feature. The upload expires after 15 minutes; no region is saved until you use Create Region or Save Changes.");
+            message((globalThis.aprswcI18n?.mark("choose-a-feature-the-upload-expires-after-15-min.c0411f62") ?? "Choose a feature. The upload expires after 15 minutes; no region is saved until you use Create Region or Save Changes."));
         } catch (error) {
             if (current === generation) message(error.message, true);
         }
@@ -149,7 +149,7 @@
     async function selectFeature(item, layerId) {
         const current = ++generation;
         clearSelection();
-        message(`Reading ${item.name || "selected feature"}...`);
+        message((globalThis.aprswcI18n?.mark("reading-0.a966db17", [item.name || (globalThis.aprswcI18n?.mark("selected-feature.51607c84") ?? "selected feature")]) ?? `Reading ${item.name || (globalThis.aprswcI18n?.mark("selected-feature.51607c84") ?? "selected feature")}...`));
         try {
             const result = await requestJson(`/api/v1/region-imports/${session.id}/layers/${layerId}/features/${item.id}`);
             if (current !== generation || !dialog.open) return;
@@ -161,10 +161,10 @@
                 map.fitBounds(boundaryLayer.getBounds(), { padding: [20, 20], maxZoom: 16 });
             }
             if (result.problem) { message(result.problem, true); return; }
-            if (result.rings.length !== 1 || !map) { message("No usable polygon preview is available.", true); return; }
+            if (result.rings.length !== 1 || !map) { message((globalThis.aprswcI18n?.mark("no-usable-polygon-preview-is-available.c8d5fb23") ?? "No usable polygon preview is available."), true); return; }
             selection = { name: item.name, vertices: result.rings[0] };
             field("use").disabled = false;
-            message(`${item.name || "Boundary"}: ${result.vertices} vertices. Validated and ready to load into the region editor.`);
+            message((globalThis.aprswcI18n?.mark("0-1-vertices-validated-and-ready-to-load-into-th.6fa4b657", [item.name || (globalThis.aprswcI18n?.mark("boundary.fcf4b1a7") ?? "Boundary"), result.vertices]) ?? `${item.name || (globalThis.aprswcI18n?.mark("boundary.fcf4b1a7") ?? "Boundary")}: ${result.vertices} vertices. Validated and ready to load into the region editor.`));
         } catch (error) {
             if (current === generation) message(error.message, true);
         }

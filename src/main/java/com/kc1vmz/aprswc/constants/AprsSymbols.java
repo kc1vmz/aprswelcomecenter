@@ -18,12 +18,12 @@
 package com.kc1vmz.aprswc.constants;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kc1vmz.aprswc.exceptions.ApiFailure;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 /** The same bundled catalog is used by the text chooser and API validation. */
 public final class AprsSymbols {
@@ -52,7 +52,9 @@ public final class AprsSymbols {
                 || code == null
                 || code.length() != 1
                 || !SYMBOLS.contains(table + code))
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Choose a named APRS symbol from the Primary or Alternate table");
+            throw new ApiFailure(
+                    HttpStatus.BAD_REQUEST,
+                    "CHOOSE_A_NAMED_APRS_SYMBOL_FROM_THE_PRIMARY_O_99660A",
+                    "Choose a named APRS symbol from the Primary or Alternate table");
     }
 }

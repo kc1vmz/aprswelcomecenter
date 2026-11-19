@@ -3,23 +3,27 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>APRS Welcome Center</title>
+    <title data-i18n="aprs-welcome-center.907bcd00">APRS Welcome Center</title>
     <link rel="icon" href="/favicon.ico?v=20260918-1" type="image/x-icon">
     <link rel="icon" href="/favicon.svg?v=20260918-1" type="image/svg+xml">
-    <script src="/theme.js?v=20260918-2"></script>
+    <script src="/i18n-catalogs.js?v=20261119-i18n2"></script>
+    <script src="/i18n-es.js?v=20261119-i18n2"></script>
+    <script src="/i18n-fr.js?v=20261119-i18n2"></script>
+    <script src="/i18n.js?v=20261119-i18n2"></script>
+    <script src="/theme.js?v=20261119-i18n2"></script>
     <link rel="stylesheet" href="/webjars/leaflet/1.9.4/leaflet.css">
-    <link rel="stylesheet" href="/app.css?v=20261112-1">
+    <link rel="stylesheet" href="/app.css?v=20261119-i18n2">
 </head>
 <body>
     <header>
         <div>
-            <h1>APRS Welcome Center</h1>
-            <p class="main-subheader">Making your part of the world more inviting on APRS!</p>
+            <h1><span data-i18n="aprs-welcome-center.907bcd00">APRS Welcome Center</span></h1>
+            <p class="main-subheader"><span data-i18n="making-your-part-of-the-world-more-inviting-on-a.fffc3e73">Making your part of the world more inviting on APRS!</span></p>
         </div>
         <div class="header-actions">
-            <button id="new-center">New Welcome Center</button>
+            <button id="new-center"><span data-i18n="new-welcome-center.57306447">New Welcome Center</span></button>
             <button id="open-communication-settings" class="secondary gear-button" aria-label="Communication Settings"
-                    title="Communication Settings">
+                    title="Communication Settings" data-i18n-aria-label="communication-settings.ceb96cf1" data-i18n-title="communication-settings.ceb96cf1">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M11 14.8V22h2v-7.2a3 3 0 1 0-2 0ZM12 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/>
                     <path d="M7.8 16.2a6 6 0 0 1 0-8.4L6.4 6.4a8 8 0 0 0 0 11.2l1.4-1.4Zm8.4 0 1.4 1.4a8 8 0 0 0
@@ -28,7 +32,7 @@
                         0-17L19.1 5a10 10 0 0 1 0 14.1Z"/>
                 </svg>
             </button>
-            <button id="open-settings" class="secondary gear-button" aria-label="Application settings" title="Settings">
+            <button id="open-settings" class="secondary gear-button" aria-label="Application settings" title="Settings" data-i18n-aria-label="application-settings.41af7c1f" data-i18n-title="settings.74a883a0">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path
                         d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.5-2.5 1a8 8 0 0 0-1.7-1L15 3.3h-4L10.6 6a8 8
@@ -36,7 +40,7 @@
                             a8 8 0 0 0 1.7-1l2.5 1 2-3.5-2.2-1.5ZM13 15.5A3.5 3.5 0 1 1 13 8a3.5 3.5 0 0 1 0 7.5Z"/>
                 </svg>
             </button>
-            <button type="button" id="toggle-theme" class="secondary gear-button" aria-label="Switch to light mode" title="Switch to light mode">
+            <button type="button" id="toggle-theme" class="secondary gear-button" aria-label="Switch to light mode" title="Switch to light mode" data-i18n-aria-label="switch-to-light-mode.bfa0cab9" data-i18n-title="switch-to-light-mode.bfa0cab9">
                 <svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="12" cy="12" r="4"/>
                     <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>
@@ -45,7 +49,27 @@
                     <path d="M20.5 13A8.5 8.5 0 0 1 11 3.5 8.5 8.5 0 1 0 20.5 13Z"/>
                 </svg>
             </button>
-            <button id="open-about" class="secondary gear-button" aria-label="About APRS Welcome Center" title="About">
+            <div class="language-selector">
+                <button type="button" id="ui-language" class="secondary gear-button" aria-label="Language" title="Language"
+                        data-i18n-aria-label="language.a4fe6526" data-i18n-title="language.a4fe6526"
+                        aria-haspopup="menu" aria-expanded="false" aria-controls="ui-language-menu">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <circle cx="8" cy="7" r="3"/>
+                        <path d="M2 21v-3a6 6 0 0 1 12 0v3H2Z"/>
+                        <path d="M14 7h3m-2-4 3-2m-3 10 3 2m2-9a5 5 0 0 1 0 6"
+                              fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <div id="ui-language-menu" class="language-menu" role="menu" aria-labelledby="ui-language" hidden>
+                    <button type="button" role="menuitemradio" aria-checked="true" data-language="en" lang="en" tabindex="-1">English</button>
+                    <!-- Uncomment to re-enable the development language in the menu.
+                    <button type="button" role="menuitemradio" aria-checked="false" data-language="xx" lang="en" tabindex="-1">xxEnglish</button>
+                    -->
+                    <button type="button" role="menuitemradio" aria-checked="false" data-language="es" lang="es" tabindex="-1">Espa&#241;ol</button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-language="fr" lang="fr" tabindex="-1">Fran&#231;ais</button>
+                </div>
+            </div>
+            <button id="open-about" class="secondary gear-button" aria-label="About APRS Welcome Center" title="About" data-i18n-aria-label="about-aprs-welcome-center.8e5123ec" data-i18n-title="about.4efca0d1">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/>
                     <circle cx="12" cy="6.5" r="1.5"/>
@@ -56,57 +80,57 @@
     </header>
     <main>
         <section>
-            <h2 id="welcome-centers-heading">Welcome Centers<span id="welcome-centers-heading-count"></span></h2>
-            <div id="centers" class="cards" tabindex="0" role="region" aria-labelledby="welcome-centers-heading"><p>Loading…</p></div>
+            <h2 id="welcome-centers-heading"><span data-i18n="welcome-centers.99480c22">Welcome Centers</span><span id="welcome-centers-heading-count"></span></h2>
+            <div id="centers" class="cards" tabindex="0" role="region" aria-labelledby="welcome-centers-heading"><p><span data-i18n="loading.ba3bbbe1">Loading…</span></p></div>
         </section>
         <section>
             <div class="station-list-heading">
-                <h2 id="stations-heading">Stations<span id="stations-heading-count"></span> <span id="station-options-summary" role="status" aria-live="polite"></span></h2>
-                <button type="button" id="open-station-options" class="secondary">Sort &amp; filter</button>
+                <h2 id="stations-heading"><span data-i18n="stations.9d3d204f">Stations</span><span id="stations-heading-count"></span> <span id="station-options-summary" role="status" aria-live="polite"></span></h2>
+                <button type="button" id="open-station-options" class="secondary"><span data-i18n="sort-filter.c113df86">Sort &amp; filter</span></button>
             </div>
-            <div id="stations" class="cards" tabindex="0" role="region" aria-labelledby="stations-heading"><p>Loading…</p></div>
+            <div id="stations" class="cards" tabindex="0" role="region" aria-labelledby="stations-heading"><p><span data-i18n="loading.ba3bbbe1">Loading…</span></p></div>
         </section>
     </main>
     <dialog id="center-status-dialog" aria-labelledby="center-status-title">
         <form id="center-status-form">
             <div class="dialog-heading">
-                <h2 id="center-status-title">Change Welcome Center state?</h2>
-                <button type="button" id="close-center-status" class="icon-button" aria-label="Close">&times;</button>
+                <h2 id="center-status-title"><span data-i18n="change-welcome-center-state.271cc2a8">Change Welcome Center state?</span></h2>
+                <button type="button" id="close-center-status" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">&times;</button>
             </div>
             <p id="center-status-question"></p>
             <p id="center-status-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-center-status" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-center-status">Confirm</button>
+                <button type="button" id="cancel-center-status" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-center-status"><span data-i18n="confirm.eebdd24a">Confirm</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="station-options-dialog" aria-labelledby="station-options-title">
         <form id="station-options-form">
             <div class="dialog-heading">
-                <h2 id="station-options-title">Sort &amp; filter stations</h2>
-                <button type="button" id="close-station-options" class="icon-button" aria-label="Close">&times;</button>
+                <h2 id="station-options-title"><span data-i18n="sort-filter-stations.cc980035">Sort &amp; filter stations</span></h2>
+                <button type="button" id="close-station-options" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">&times;</button>
             </div>
             <div class="form-grid">
-                <label>Sort by<select id="station-sort" name="sort">
-                    <option value="callsign">Callsign (A-Z)</option>
-                    <option value="callsignDesc">Callsign (Z-A)</option>
-                    <option value="lastHeard">Last heard (newest first)</option>
-                    <option value="lastHeardAsc">Last heard (oldest first)</option>
+                <label><span data-i18n="sort-by.c9129025">Sort by</span><select id="station-sort" name="sort">
+                    <option value="callsign" data-i18n="callsign-a-z.097abff4">Callsign (A-Z)</option>
+                    <option value="callsignDesc" data-i18n="callsign-z-a.5063a54a">Callsign (Z-A)</option>
+                    <option value="lastHeard" data-i18n="last-heard-newest-first.6d9ce2f3">Last heard (newest first)</option>
+                    <option value="lastHeardAsc" data-i18n="last-heard-oldest-first.ae36c6ca">Last heard (oldest first)</option>
                 </select></label>
-                <label>Heard within<select id="station-hours" name="hours">
-                    <option value="0">All</option>
-                    <option value="1">Last hour</option>
-                    <option value="3">Last 3 hours</option>
-                    <option value="6">Last 6 hours</option>
-                    <option value="24">Last 24 hours</option>
-                    <option value="48">Last 48 hours</option>
+                <label><span data-i18n="heard-within.41d4fb75">Heard within</span><select id="station-hours" name="hours">
+                    <option value="0" data-i18n="all.a52ace42">All</option>
+                    <option value="1" data-i18n="last-hour.a8dfe9d8">Last hour</option>
+                    <option value="3" data-i18n="last-3-hours.789604cb">Last 3 hours</option>
+                    <option value="6" data-i18n="last-6-hours.04a0373d">Last 6 hours</option>
+                    <option value="24" data-i18n="last-24-hours.5c37cf8f">Last 24 hours</option>
+                    <option value="48" data-i18n="last-48-hours.d7d3871c">Last 48 hours</option>
                 </select></label>
             </div>
-            <p>Last heard is based on stored packets. Stations without packet history appear under All.</p>
+            <p><span data-i18n="last-heard-is-based-on-stored-packets-stations-w.9e668880">Last heard is based on stored packets. Stations without packet history appear under All.</span></p>
             <div class="form-actions">
-                <button type="button" id="cancel-station-options" class="secondary">Cancel</button>
-                <button type="submit">Apply</button>
+                <button type="button" id="cancel-station-options" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit"><span data-i18n="apply.31e392d1">Apply</span></button>
             </div>
         </form>
     </dialog>
@@ -114,28 +138,28 @@
         <div class="dialog-content welcome-introduction">
             <div class="dialog-heading">
                 <div>
-                    <h2>Show you APRS friends some love when they are nearby!</h2>
+                    <h2><span data-i18n="show-you-aprs-friends-some-love-when-they-are-ne.113e0c4b">Show you APRS friends some love when they are nearby!</span></h2>
                 </div>
-                <button type="button" id="close-welcome" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-welcome" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <p>
-                <strong>APRS Welcome Center</strong> allows you to reach out to those around you and make APRS more
-                informative and exciting. Put those GPS beacons to work!
+                <strong><span data-i18n="aprs-welcome-center.907bcd00">APRS Welcome Center</span></strong> <span data-i18n="allows-you-to-reach-out-to-those-around-you-and-.79101b6b">allows you to reach out to those around you and make APRS more
+                informative and exciting. Put those GPS beacons to work!</span>
             </p>
-            <p>To get started:</p>
+            <p><span data-i18n="to-get-started.8dce3ce4">To get started:</span></p>
             <ol>
-                <li>Create a welcome center and define the geographical area it handles.</li>
+                <li><span data-i18n="create-a-welcome-center-and-define-the-geographi.05f6d857">Create a welcome center and define the geographical area it handles.</span></li>
                 <li>
-                    Create a communication plan to determine what information is sent to those entering and exiting
-                    that geographical area.
+                    <span data-i18n="create-a-communication-plan-to-determine-what-in.e1febf81">Create a communication plan to determine what information is sent to those entering and exiting
+                    that geographical area.</span>
                 </li>
             </ol>
             <p>
-                Providing useful and smart information is a great way for you to maximize the impact of APRS!
+                <span data-i18n="providing-useful-and-smart-information-is-a-grea.19a0fa95">Providing useful and smart information is a great way for you to maximize the impact of APRS!</span>
             </p>
             <div class="form-actions">
-                <button type="button" id="open-software-details" class="secondary">Software details</button>
-                <button type="button" id="dismiss-welcome">Close</button>
+                <button type="button" id="open-software-details" class="secondary"><span data-i18n="software-details.0657bbca">Software details</span></button>
+                <button type="button" id="dismiss-welcome"><span data-i18n="close.7d9eb7ac">Close</span></button>
             </div>
         </div>
     </dialog>
@@ -143,16 +167,16 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>About APRS Welcome Center</h2>
-                    <p>Application information</p>
+                    <h2><span data-i18n="about-aprs-welcome-center.8e5123ec">About APRS Welcome Center</span></h2>
+                    <p><span data-i18n="application-information.bc0a7c23">Application information</span></p>
                 </div>
-                <button type="button" id="close-about" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-about" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <p id="about-message" class="form-message" role="status" aria-live="polite"></p>
             <dl id="about-details" class="about-details"></dl>
             <div class="form-actions">
-                <button type="button" id="open-license" class="secondary">License</button>
-                <button type="button" id="dismiss-about">Close</button>
+                <button type="button" id="open-license" class="secondary"><span data-i18n="license.c011d609">License</span></button>
+                <button type="button" id="dismiss-about"><span data-i18n="close.7d9eb7ac">Close</span></button>
             </div>
         </div>
     </dialog>
@@ -160,15 +184,15 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>License</h2>
-                    <p>APRS Welcome Center license agreement</p>
+                    <h2><span data-i18n="license.c011d609">License</span></h2>
+                    <p><span data-i18n="aprs-welcome-center-license-agreement.597686af">APRS Welcome Center license agreement</span></p>
                 </div>
-                <button type="button" id="close-license" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-license" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <p id="license-message" class="form-message" role="status" aria-live="polite"></p>
             <pre id="license-text" class="license-text"></pre>
             <div class="form-actions">
-                <button type="button" id="dismiss-license">Close</button>
+                <button type="button" id="dismiss-license"><span data-i18n="close.7d9eb7ac">Close</span></button>
             </div>
         </div>
     </dialog>
@@ -176,51 +200,51 @@
         <form id="center-form">
             <div class="dialog-heading">
                 <div>
-                    <h2 id="dialog-title">Create Welcome Center</h2>
-                    <p>Fields marked with * are required.</p>
+                    <h2 id="dialog-title"><span data-i18n="create-welcome-center.325ea174">Create Welcome Center</span></h2>
+                    <p><span data-i18n="fields-marked-with-are-required.5a1419b9">Fields marked with * are required.</span></p>
                 </div>
-                <button type="button" id="close-dialog" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-dialog" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="form-grid">
-                <label>Name<input name="name" autocomplete="organization"></label>
-                <label>Callsign *<input name="callsign" maxlength="10" required autocomplete="off"></label>
+                <label><span data-i18n="name.dcd1d522">Name</span><input name="name" autocomplete="organization"></label>
+                <label><span data-i18n="callsign.bec25a25">Callsign *</span><input name="callsign" maxlength="10" required autocomplete="off"></label>
                 <input type="hidden" name="symbolCode" value="c"><input type="hidden" name="symbolId" value="/">
-                <fieldset class="full-width"><legend>APRS symbol</legend><div data-symbol-picker></div></fieldset>
-                <label>Status *<select name="status" required><option value="OPEN" selected>Open</option><option value="CLOSED">Closed</option></select></label>
-                <label class="full-width">Description<textarea name="description" rows="3"></textarea></label>
-                <label>Owner name<input name="ownerName" autocomplete="name"></label>
-                <label>Owner callsign<input name="ownerCallsign" maxlength="10"></label>
-                <label>Organization name<input name="organizationName" autocomplete="organization"></label>
-                <label>Organization callsign<input name="organizationCallsign" maxlength="10"></label>
-                <label>Contact name<input name="contactName" autocomplete="name"></label>
-                <label>Contact callsign<input name="contactCallsign" maxlength="10"></label>
+                <fieldset class="full-width"><legend><span data-i18n="aprs-symbol.9daffb61">APRS symbol</span></legend><div data-symbol-picker></div></fieldset>
+                <label><span data-i18n="status.ff498ea0">Status *</span><select name="status" required><option value="OPEN" selected data-i18n="open.ed077f3d">Open</option><option value="CLOSED" data-i18n="closed.c21ead06">Closed</option></select></label>
+                <label class="full-width"><span data-i18n="description.526e0087">Description</span><textarea name="description" rows="3"></textarea></label>
+                <label><span data-i18n="owner-name.0c19629c">Owner name</span><input name="ownerName" autocomplete="name"></label>
+                <label><span data-i18n="owner-callsign.5c136f90">Owner callsign</span><input name="ownerCallsign" maxlength="10"></label>
+                <label><span data-i18n="organization-name.9a807d52">Organization name</span><input name="organizationName" autocomplete="organization"></label>
+                <label><span data-i18n="organization-callsign.4eb3847a">Organization callsign</span><input name="organizationCallsign" maxlength="10"></label>
+                <label><span data-i18n="contact-name.ddec0fc3">Contact name</span><input name="contactName" autocomplete="name"></label>
+                <label><span data-i18n="contact-callsign.7a8c7756">Contact callsign</span><input name="contactCallsign" maxlength="10"></label>
                 <fieldset class="full-width">
-                    <legend>Communication methods</legend>
-                    <label>Use<select id="center-communication-mode" name="communicationMode">
-                        <option value="ALL">All communication methods</option>
-                        <option value="SELECTED">Selected communication methods</option>
+                    <legend><span data-i18n="communication-methods.e3282a99">Communication methods</span></legend>
+                    <label><span data-i18n="use.c36d819e">Use</span><select id="center-communication-mode" name="communicationMode">
+                        <option value="ALL" data-i18n="all-communication-methods.4f2171b1">All communication methods</option>
+                        <option value="SELECTED" data-i18n="selected-communication-methods.50fb753b">Selected communication methods</option>
                     </select></label>
                     <div id="center-communication-options" hidden></div>
                     <p id="center-communication-warning" class="form-message" role="status"></p>
                     <p id="center-communication-message" class="form-message" role="status"></p>
-                    <button type="button" id="refresh-center-communications" class="secondary">Refresh methods</button>
+                    <button type="button" id="refresh-center-communications" class="secondary"><span data-i18n="refresh-methods.2ae0db7f">Refresh methods</span></button>
                 </fieldset>
                 <fieldset class="full-width location-fields">
-                    <legend>Location</legend>
+                    <legend><span data-i18n="location.15b61974">Location</span></legend>
                     <div class="form-grid">
-                        <label>Longitude<input name="longitude" autocomplete="off"></label>
-                        <label>Latitude<input name="latitude" autocomplete="off"></label>
+                        <label><span data-i18n="longitude.6d80458f">Longitude</span><input name="longitude" autocomplete="off"></label>
+                        <label><span data-i18n="latitude.238a676d">Latitude</span><input name="latitude" autocomplete="off"></label>
                     </div>
-                    <button type="button" id="select-center-location" class="secondary">Select from map</button>
+                    <button type="button" id="select-center-location" class="secondary"><span data-i18n="select-from-map.7318ae73">Select from map</span></button>
                 </fieldset>
             </div>
             <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
                 <button type="button" id="delete-center-from-details" class="danger details-delete" hidden>
-                    Delete Welcome Center
+                    <span data-i18n="delete-welcome-center.413cd39f">Delete Welcome Center</span>
                 </button>
-                <button type="button" id="cancel-center" class="secondary">Cancel</button>
-                <button type="submit" id="save-center">Create Welcome Center</button>
+                <button type="button" id="cancel-center" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="save-center"><span data-i18n="create-welcome-center.325ea174">Create Welcome Center</span></button>
             </div>
         </form>
     </dialog>
@@ -228,18 +252,18 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>Select Welcome Center Location</h2>
-                    <p>Choose a point on the map.</p>
+                    <h2><span data-i18n="select-welcome-center-location.d1c9283b">Select Welcome Center Location</span></h2>
+                    <p><span data-i18n="choose-a-point-on-the-map.3dd7be43">Choose a point on the map.</span></p>
                 </div>
-                <button type="button" id="close-center-location" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-center-location" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
-            <div id="center-location-map" aria-label="Interactive welcome center location map"></div>
+            <div id="center-location-map" aria-label="Interactive welcome center location map" data-i18n-aria-label="interactive-welcome-center-location-map.bf881393"></div>
             <p id="center-location-message" class="map-message" role="status" aria-live="polite">
-                Select a point on the map.
+                <span data-i18n="select-a-point-on-the-map.e7236886">Select a point on the map.</span>
             </p>
             <div class="form-actions">
-                <button type="button" id="cancel-center-location" class="secondary">Cancel</button>
-                <button type="button" id="use-center-location" disabled>Use selected location</button>
+                <button type="button" id="cancel-center-location" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="button" id="use-center-location" disabled><span data-i18n="use-selected-location.d344b89c">Use selected location</span></button>
             </div>
         </div>
     </dialog>
@@ -247,16 +271,16 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>Welcome Center Messages <span id="welcome-center-message-count">(0)</span></h2>
+                    <h2><span data-i18n="welcome-center-messages.00ceaf3f">Welcome Center Messages</span> <span id="welcome-center-message-count">(0)</span></h2>
                     <p id="welcome-center-messages-label"></p>
                 </div>
                 <div class="dialog-heading-actions">
-                    <button type="button" id="refresh-welcome-center-messages" class="secondary">Refresh</button>
-                    <button type="button" id="open-send-welcome-center-message">Send Message</button>
+                    <button type="button" id="refresh-welcome-center-messages" class="secondary"><span data-i18n="refresh.0e916101">Refresh</span></button>
+                    <button type="button" id="open-send-welcome-center-message"><span data-i18n="send-message.0fe0571f">Send Message</span></button>
                     <button type="button" id="delete-welcome-center-messages" class="danger" disabled>
-                        Delete Messages
+                        <span data-i18n="delete-messages.040944df">Delete Messages</span>
                     </button>
-                    <button type="button" id="close-welcome-center-messages" class="icon-button" aria-label="Close">×</button>
+                    <button type="button" id="close-welcome-center-messages" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
                 </div>
             </div>
             <p id="welcome-center-messages-message" class="form-message" role="status" aria-live="polite"></p>
@@ -266,12 +290,12 @@
     <dialog id="welcome-center-closed-message-dialog" aria-labelledby="welcome-center-closed-message-title">
         <form method="dialog">
             <div class="dialog-heading">
-                <h2 id="welcome-center-closed-message-title">Welcome Center Closed</h2>
-                <button type="submit" class="icon-button" aria-label="Close">×</button>
+                <h2 id="welcome-center-closed-message-title"><span data-i18n="welcome-center-closed.5fca0c98">Welcome Center Closed</span></h2>
+                <button type="submit" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
-            <p>Messages can only be sent when the welcome center is open.</p>
+            <p><span data-i18n="messages-can-only-be-sent-when-the-welcome-cente.8061c6fc">Messages can only be sent when the welcome center is open.</span></p>
             <div class="form-actions">
-                <button type="submit" autofocus>Close</button>
+                <button type="submit" autofocus><span data-i18n="close.7d9eb7ac">Close</span></button>
             </div>
         </form>
     </dialog>
@@ -280,41 +304,41 @@
         <form id="send-welcome-center-message-form">
             <div class="dialog-heading">
                 <div>
-                    <h2>Send message from Welcome Center</h2>
-                    <p>Send a message to all stations in this welcome center's regions.</p>
+                    <h2><span data-i18n="send-message-from-welcome-center.ef0de513">Send message from Welcome Center</span></h2>
+                    <p><span data-i18n="send-a-message-to-all-stations-in-this-welcome-c.f6b77342">Send a message to all stations in this welcome center's regions.</span></p>
                 </div>
-                <button type="button" id="close-send-welcome-center-message" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-send-welcome-center-message" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="form-grid">
-                <label>From<input name="callsignFrom" maxlength="10" readonly></label>
-                <label class="full-width">Message<input name="content" maxlength="64"
-                    placeholder="Type a message less than 64 characters" aria-describedby="welcome-center-message-character-count" required>
-                    <small id="welcome-center-message-character-count" class="message-character-count">0 characters entered</small></label>
+                <label><span data-i18n="from.21819769">From</span><input name="callsignFrom" maxlength="10" readonly></label>
+                <label class="full-width"><span data-i18n="message.2f77668a">Message</span><input name="content" maxlength="64"
+                    placeholder="Type a message less than 64 characters" aria-describedby="welcome-center-message-character-count" required data-i18n-placeholder="type-a-message-less-than-64-characters.dfe63b6c">
+                    <small id="welcome-center-message-character-count" class="message-character-count"><span data-i18n="0-characters-entered.263acea5">0 characters entered</span></small></label>
             </div>
             <p id="send-welcome-center-message-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-send-welcome-center-message" class="secondary">Cancel</button>
-                <button type="submit">Send</button>
+                <button type="button" id="cancel-send-welcome-center-message" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit"><span data-i18n="send.f6f4688f">Send</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="confirm-send-welcome-center-message-dialog">
         <form id="confirm-send-welcome-center-message-form">
             <div class="dialog-heading">
-                <div><h2>Send Message?</h2><p>Confirm the outgoing Welcome Center message.</p></div>
+                <div><h2><span data-i18n="send-message.12976007">Send Message?</span></h2><p><span data-i18n="confirm-the-outgoing-welcome-center-message.e2b84554">Confirm the outgoing Welcome Center message.</span></p></div>
                 <button type="button" id="close-confirm-send-welcome-center-message" class="icon-button"
-                    aria-label="Close">×</button>
+                    aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Send from <strong id="confirm-welcome-center-message-from"></strong> for
+                <p><span data-i18n="send-from.e35897f1">Send from</span> <strong id="confirm-welcome-center-message-from"></strong> <span data-i18n="for.10c22bcf">for</span>
                     <strong id="confirm-welcome-center-message-center"></strong>?</p>
                 <strong id="confirm-welcome-center-message-content"></strong>
             </div>
             <p id="confirm-send-welcome-center-message-message" class="form-message" role="status"
                 aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-confirm-send-welcome-center-message" class="secondary">Go Back</button>
-                <button type="submit" id="confirm-send-welcome-center-message">Send Message</button>
+                <button type="button" id="cancel-confirm-send-welcome-center-message" class="secondary"><span data-i18n="go-back.b8d99df1">Go Back</span></button>
+                <button type="submit" id="confirm-send-welcome-center-message"><span data-i18n="send-message.0fe0571f">Send Message</span></button>
             </div>
         </form>
     </dialog>
@@ -322,34 +346,34 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>Station</h2>
-                    <p>Station properties and Welcome Center associations.</p>
+                    <h2><span data-i18n="station.115ccf96">Station</span></h2>
+                    <p><span data-i18n="station-properties-and-welcome-center-associatio.376f9b19">Station properties and Welcome Center associations.</span></p>
                 </div>
                 <div class="dialog-heading-actions">
-                    <button type="button" id="close-station" class="icon-button" aria-label="Close">×</button>
+                    <button type="button" id="close-station" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
                 </div>
             </div>
             <p id="station-message" class="form-message" role="status" aria-live="polite"></p>
             <section class="station-detail-section">
-                <h3>Properties</h3>
+                <h3><span data-i18n="properties.ae43692b">Properties</span></h3>
                 <div id="station-properties" class="station-properties"></div>
             </section>
             <section class="station-detail-section">
-                <h3>Welcome Centers</h3>
+                <h3><span data-i18n="welcome-centers.99480c22">Welcome Centers</span></h3>
                 <div id="station-dialog-welcome-centers"></div>
             </section>
             <section class="station-detail-section">
-                <h3>Location</h3>
-                <div id="station-location-map" aria-label="Latest station location"></div>
+                <h3><span data-i18n="location.15b61974">Location</span></h3>
+                <div id="station-location-map" aria-label="Latest station location" data-i18n-aria-label="latest-station-location.1e120a0f"></div>
                 <p id="station-location-message" class="map-message" role="status" aria-live="polite"></p>
             </section>
             <section class="station-detail-section station-detail-actions">
-                <button type="button" id="view-station-packets" class="secondary" disabled>Packets</button>
-                <button type="button" id="view-station-messages" class="secondary" disabled>Messages</button>
-                <button type="button" id="view-station-positions" class="secondary" disabled>Positions</button>
-                <button type="button" id="view-station-weather" class="secondary" disabled>Weather</button>
-                <button type="button" id="ignore-station" class="secondary" disabled>Ignore</button>
-                <button type="button" id="delete-station" class="danger" disabled>Delete Station</button>
+                <button type="button" id="view-station-packets" class="secondary" disabled><span data-i18n="packets.0d34e734">Packets</span></button>
+                <button type="button" id="view-station-messages" class="secondary" disabled><span data-i18n="messages.04d7b483">Messages</span></button>
+                <button type="button" id="view-station-positions" class="secondary" disabled><span data-i18n="positions.fa18433b">Positions</span></button>
+                <button type="button" id="view-station-weather" class="secondary" disabled><span data-i18n="weather.a0bba638">Weather</span></button>
+                <button type="button" id="ignore-station" class="secondary" disabled><span data-i18n="ignore.fce77c34">Ignore</span></button>
+                <button type="button" id="delete-station" class="danger" disabled><span data-i18n="delete-station.14fb1d78">Delete Station</span></button>
             </section>
         </div>
     </dialog>
@@ -357,13 +381,13 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>Station Message <span id="station-message-count">(0)</span></h2>
+                    <h2><span data-i18n="station-message.37578116">Station Message</span> <span id="station-message-count">(0)</span></h2>
                     <p id="station-messages-callsign"></p>
                 </div>
                 <div class="dialog-heading-actions">
-                    <button type="button" id="open-send-station-message">Send Message</button>
-                    <button type="button" id="delete-station-messages" class="danger" disabled>Delete Messages</button>
-                    <button type="button" id="close-station-messages" class="icon-button" aria-label="Close">×</button>
+                    <button type="button" id="open-send-station-message"><span data-i18n="send-message.0fe0571f">Send Message</span></button>
+                    <button type="button" id="delete-station-messages" class="danger" disabled><span data-i18n="delete-messages.040944df">Delete Messages</span></button>
+                    <button type="button" id="close-station-messages" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
                 </div>
             </div>
             <p id="station-messages-message" class="form-message" role="status" aria-live="polite"></p>
@@ -373,56 +397,56 @@
     <dialog id="delete-messages-dialog">
         <form id="delete-messages-form">
             <div class="dialog-heading">
-                <div><h2>Delete Messages?</h2><p>This action cannot be undone.</p></div>
-                <button type="button" id="close-delete-messages" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="delete-messages.763dcd0a">Delete Messages?</span></h2><p><span data-i18n="this-action-cannot-be-undone.3d6a4526">This action cannot be undone.</span></p></div>
+                <button type="button" id="close-delete-messages" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Delete all messages for <strong id="delete-messages-scope-label"></strong>?</p>
+                <p><span data-i18n="delete-all-messages-for.a4396d3a">Delete all messages for</span> <strong id="delete-messages-scope-label"></strong>?</p>
             </div>
             <p id="delete-messages-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-delete-messages" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-delete-messages" class="danger-solid">Delete Messages</button>
+                <button type="button" id="cancel-delete-messages" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-delete-messages" class="danger-solid"><span data-i18n="delete-messages.040944df">Delete Messages</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="send-station-message-dialog">
         <form id="send-station-message-form">
             <div class="dialog-heading">
-                <div><h2>Send message to station</h2><p>Send a message to this station.</p></div>
-                <button type="button" id="close-send-station-message" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="send-message-to-station.dc9b00dd">Send message to station</span></h2><p><span data-i18n="send-a-message-to-this-station.6355cbe8">Send a message to this station.</span></p></div>
+                <button type="button" id="close-send-station-message" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="form-grid">
-                <label>To<input id="station-message-to" name="callsignTo" disabled></label>
-                <label>From<input name="callsignFrom" maxlength="10" placeholder="Your callsign" required></label>
-                <label class="full-width">Communication path<select name="packetProcessorId"><option value="">Use last heard</option></select></label>
-                <label class="full-width">Message<input name="content" maxlength="64"
-                    placeholder="Type a message less than 64 characters" aria-describedby="station-message-character-count" required>
-                    <small id="station-message-character-count" class="message-character-count">0 characters entered</small></label>
+                <label><span data-i18n="to.f4b06ef6">To</span><input id="station-message-to" name="callsignTo" disabled></label>
+                <label><span data-i18n="from.21819769">From</span><input name="callsignFrom" maxlength="10" placeholder="Your callsign" required data-i18n-placeholder="your-callsign.a95c7880"></label>
+                <label class="full-width"><span data-i18n="communication-path.b439ee6f">Communication path</span><select name="packetProcessorId"><option value="" data-i18n="use-last-heard.ec652192">Use last heard</option></select></label>
+                <label class="full-width"><span data-i18n="message.2f77668a">Message</span><input name="content" maxlength="64"
+                    placeholder="Type a message less than 64 characters" aria-describedby="station-message-character-count" required data-i18n-placeholder="type-a-message-less-than-64-characters.dfe63b6c">
+                    <small id="station-message-character-count" class="message-character-count"><span data-i18n="0-characters-entered.263acea5">0 characters entered</span></small></label>
             </div>
             <p id="send-station-message-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-send-station-message" class="secondary">Cancel</button>
-                <button type="submit">Send</button>
+                <button type="button" id="cancel-send-station-message" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit"><span data-i18n="send.f6f4688f">Send</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="confirm-send-station-message-dialog">
         <form id="confirm-send-station-message-form">
             <div class="dialog-heading">
-                <div><h2>Send Message?</h2><p>Confirm the outgoing station message.</p></div>
-                <button type="button" id="close-confirm-send-station-message" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="send-message.12976007">Send Message?</span></h2><p><span data-i18n="confirm-the-outgoing-station-message.b6ccd1d0">Confirm the outgoing station message.</span></p></div>
+                <button type="button" id="close-confirm-send-station-message" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Send from <strong id="confirm-station-message-from"></strong> to
+                <p><span data-i18n="send-from.e35897f1">Send from</span> <strong id="confirm-station-message-from"></strong> <span data-i18n="to.663ea1bf">to</span>
                     <strong id="confirm-station-message-to"></strong>?</p>
-                <p>Communication path: <strong id="confirm-station-message-path"></strong></p>
+                <p><span data-i18n="communication-path.d6f33eab">Communication path:</span> <strong id="confirm-station-message-path"></strong></p>
                 <strong id="confirm-station-message-content"></strong>
             </div>
             <p id="confirm-send-station-message-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-confirm-send-station-message" class="secondary">Go Back</button>
-                <button type="submit" id="confirm-send-station-message">Send Message</button>
+                <button type="button" id="cancel-confirm-send-station-message" class="secondary"><span data-i18n="go-back.b8d99df1">Go Back</span></button>
+                <button type="submit" id="confirm-send-station-message"><span data-i18n="send-message.0fe0571f">Send Message</span></button>
             </div>
         </form>
     </dialog>
@@ -430,14 +454,14 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>Station Positions <span id="station-position-count">(0)</span></h2>
+                    <h2><span data-i18n="station-positions.f957ac1e">Station Positions</span> <span id="station-position-count">(0)</span></h2>
                     <p id="station-positions-callsign"></p>
                 </div>
                 <div class="dialog-heading-actions">
                     <button type="button" id="delete-station-positions" class="danger" disabled>
-                        Delete Positions
+                        <span data-i18n="delete-positions.e965badf">Delete Positions</span>
                     </button>
-                    <button type="button" id="close-station-positions" class="icon-button" aria-label="Close">×</button>
+                    <button type="button" id="close-station-positions" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
                 </div>
             </div>
             <p id="station-positions-message" class="form-message" role="status" aria-live="polite"></p>
@@ -448,14 +472,14 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>Station Weather <span id="station-weather-report-count">(0)</span></h2>
+                    <h2><span data-i18n="station-weather.e8354ac1">Station Weather</span> <span id="station-weather-report-count">(0)</span></h2>
                     <p id="station-weather-callsign"></p>
                 </div>
                 <div class="dialog-heading-actions">
                     <button type="button" id="delete-station-weather-reports" class="danger" disabled>
-                        Delete Weather Reports
+                        <span data-i18n="delete-weather-reports.123b2375">Delete Weather Reports</span>
                     </button>
-                    <button type="button" id="close-station-weather" class="icon-button" aria-label="Close">×</button>
+                    <button type="button" id="close-station-weather" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
                 </div>
             </div>
             <p id="station-weather-message" class="form-message" role="status" aria-live="polite"></p>
@@ -465,20 +489,20 @@
     <dialog id="delete-station-weather-reports-dialog">
         <form id="delete-station-weather-reports-form">
             <div class="dialog-heading">
-                <div><h2>Delete Weather Reports?</h2><p>This action cannot be undone.</p></div>
+                <div><h2><span data-i18n="delete-weather-reports.c3135c58">Delete Weather Reports?</span></h2><p><span data-i18n="this-action-cannot-be-undone.3d6a4526">This action cannot be undone.</span></p></div>
                 <button type="button" id="close-delete-station-weather-reports" class="icon-button"
-                    aria-label="Close">×</button>
+                    aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Delete all weather reports for this station?</p>
+                <p><span data-i18n="delete-all-weather-reports-for-this-station.a117aac9">Delete all weather reports for this station?</span></p>
                 <strong id="delete-station-weather-reports-callsign"></strong>
             </div>
             <p id="delete-station-weather-reports-message" class="form-message" role="status"
                 aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-delete-station-weather-reports" class="secondary">Cancel</button>
+                <button type="button" id="cancel-delete-station-weather-reports" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
                 <button type="submit" id="confirm-delete-station-weather-reports" class="danger-solid">
-                    Delete Weather Reports
+                    <span data-i18n="delete-weather-reports.123b2375">Delete Weather Reports</span>
                 </button>
             </div>
         </form>
@@ -486,18 +510,18 @@
     <dialog id="delete-station-positions-dialog">
         <form id="delete-station-positions-form">
             <div class="dialog-heading">
-                <div><h2>Delete Positions?</h2><p>This action cannot be undone.</p></div>
-                <button type="button" id="close-delete-station-positions" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="delete-positions.67a2f90d">Delete Positions?</span></h2><p><span data-i18n="this-action-cannot-be-undone.3d6a4526">This action cannot be undone.</span></p></div>
+                <button type="button" id="close-delete-station-positions" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Delete all position records for this station?</p>
+                <p><span data-i18n="delete-all-position-records-for-this-station.605f24cb">Delete all position records for this station?</span></p>
                 <strong id="delete-station-positions-callsign"></strong>
             </div>
             <p id="delete-station-positions-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-delete-station-positions" class="secondary">Cancel</button>
+                <button type="button" id="cancel-delete-station-positions" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
                 <button type="submit" id="confirm-delete-station-positions" class="danger-solid">
-                    Delete Positions
+                    <span data-i18n="delete-positions.e965badf">Delete Positions</span>
                 </button>
             </div>
         </form>
@@ -505,48 +529,48 @@
     <dialog id="confirm-ignore-station-dialog">
         <form id="confirm-ignore-station-form">
             <div class="dialog-heading">
-                <div><h2>Ignore Station?</h2><p>The station will no longer appear in the main station list.</p></div>
-                <button type="button" id="close-confirm-ignore-station" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="ignore-station.46f6e057">Ignore Station?</span></h2><p><span data-i18n="the-station-will-no-longer-appear-in-the-main-st.4382f9eb">The station will no longer appear in the main station list.</span></p></div>
+                <button type="button" id="close-confirm-ignore-station" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Add this callsign to the ignored station list?</p>
+                <p><span data-i18n="add-this-callsign-to-the-ignored-station-list.0a42a046">Add this callsign to the ignored station list?</span></p>
                 <strong id="confirm-ignore-station-callsign"></strong>
             </div>
             <p id="confirm-ignore-station-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-ignore-station" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-ignore-station">Ignore Station</button>
+                <button type="button" id="cancel-ignore-station" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-ignore-station"><span data-i18n="ignore-station.acacf86b">Ignore Station</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="station-ignored-dialog">
         <div class="dialog-content">
             <div class="dialog-heading">
-                <div><h2>Station Ignored</h2><p>The station was added to the ignored stations list.</p></div>
-                <button type="button" id="close-station-ignored" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="station-ignored.4bc3d8cd">Station Ignored</span></h2><p><span data-i18n="the-station-was-added-to-the-ignored-stations-li.c94ee63a">The station was added to the ignored stations list.</span></p></div>
+                <button type="button" id="close-station-ignored" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>To stop ignoring this station, open Communication Settings and remove it from the ignored stations list.</p>
+                <p><span data-i18n="to-stop-ignoring-this-station-open-communication.64c84afc">To stop ignoring this station, open Communication Settings and remove it from the ignored stations list.</span></p>
             </div>
             <div class="form-actions">
-                <button type="button" id="dismiss-station-ignored">OK</button>
+                <button type="button" id="dismiss-station-ignored"><span data-i18n="ok.565339bc">OK</span></button>
             </div>
         </div>
     </dialog>
     <dialog id="confirm-delete-station-dialog">
         <form id="confirm-delete-station-form">
             <div class="dialog-heading">
-                <div><h2>Delete Station?</h2><p>This action cannot be undone.</p></div>
-                <button type="button" id="close-confirm-delete-station" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="delete-station.1fe6c69c">Delete Station?</span></h2><p><span data-i18n="this-action-cannot-be-undone.3d6a4526">This action cannot be undone.</span></p></div>
+                <button type="button" id="close-confirm-delete-station" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Delete this station, all of its position records, and all packets from its callsign?</p>
+                <p><span data-i18n="delete-this-station-all-of-its-position-records-.f2432853">Delete this station, all of its position records, and all packets from its callsign?</span></p>
                 <strong id="confirm-delete-station-callsign"></strong>
             </div>
             <p id="confirm-delete-station-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-delete-station" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-delete-station" class="danger-solid">Delete Station</button>
+                <button type="button" id="cancel-delete-station" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-delete-station" class="danger-solid"><span data-i18n="delete-station.14fb1d78">Delete Station</span></button>
             </div>
         </form>
     </dialog>
@@ -554,25 +578,25 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>Stations</h2>
+                    <h2><span data-i18n="stations.9d3d204f">Stations</span></h2>
                     <p id="welcome-center-stations-label"></p>
                 </div>
-                <button type="button" id="close-welcome-center-stations" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-welcome-center-stations" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <p class="welcome-center-station-count">
-                Stations listed: <strong id="welcome-center-station-count">0</strong>
+                <span data-i18n="stations-listed.c262a1f8">Stations listed:</span> <strong id="welcome-center-station-count">0</strong>
             </p>
-            <div class="station-view-mode" role="group" aria-label="Station position view mode">
+            <div class="station-view-mode" role="group" aria-label="Station position view mode" data-i18n-aria-label="station-position-view-mode.74a24e3c">
                 <button type="button" id="show-welcome-center-stations-map" class="secondary" aria-pressed="true">
-                    Map
+                    <span data-i18n="map.be176b00">Map</span>
                 </button>
                 <button type="button" id="show-welcome-center-stations-list" class="secondary" aria-pressed="false">
-                    List
+                    <span data-i18n="list.6f202f54">List</span>
                 </button>
             </div>
             <p id="welcome-center-stations-message" class="form-message" role="status" aria-live="polite"></p>
-            <div id="welcome-center-stations-map" aria-label="Map of stations currently within the Welcome Center"></div>
-            <p id="station-map-legend" class="map-message">Blue markers: stations. Purple markers: Points of Interest.</p>
+            <div id="welcome-center-stations-map" aria-label="Map of stations currently within the Welcome Center" data-i18n-aria-label="map-of-stations-currently-within-the-welcome-cen.1041aa6a"></div>
+            <p id="station-map-legend" class="map-message"><span data-i18n="blue-markers-stations-purple-markers-points-of-i.b3475045">Blue markers: stations. Purple markers: Points of Interest.</span></p>
             <div id="welcome-center-stations-list" class="welcome-center-station-list" hidden></div>
         </div>
     </dialog>
@@ -580,20 +604,20 @@
         <form id="delete-form">
             <div class="dialog-heading">
                 <div>
-                    <h2>Delete Welcome Center</h2>
-                    <p>This action cannot be undone.</p>
+                    <h2><span data-i18n="delete-welcome-center.413cd39f">Delete Welcome Center</span></h2>
+                    <p><span data-i18n="this-action-cannot-be-undone.3d6a4526">This action cannot be undone.</span></p>
                 </div>
-                <button type="button" id="close-delete-dialog" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-delete-dialog" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Are you sure you want to delete this Welcome Center?</p>
+                <p><span data-i18n="are-you-sure-you-want-to-delete-this-welcome-cen.85a710da">Are you sure you want to delete this Welcome Center?</span></p>
                 <span id="delete-center-callsign" class="tag"></span>
                 <strong id="delete-center-name"></strong>
             </div>
             <p id="delete-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-delete" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-delete" class="danger-solid">Delete Welcome Center</button>
+                <button type="button" id="cancel-delete" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-delete" class="danger-solid"><span data-i18n="delete-welcome-center.413cd39f">Delete Welcome Center</span></button>
             </div>
         </form>
     </dialog>
@@ -601,20 +625,20 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>Manage Regions</h2>
+                    <h2><span data-i18n="manage-regions.92604fdb">Manage Regions</span></h2>
                     <p id="regions-center-label"></p>
                 </div>
-                <button type="button" id="close-regions-dialog" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-regions-dialog" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="toolbar">
-                <button type="button" id="new-region">New Region</button>
+                <button type="button" id="new-region"><span data-i18n="new-region.fb69503d">New Region</span></button>
             </div>
-            <div id="regions-map" aria-label="Map of Welcome Center regions"></div>
+            <div id="regions-map" aria-label="Map of Welcome Center regions" data-i18n-aria-label="map-of-welcome-center-regions.b67fcfb6"></div>
             <p id="regions-map-message" class="map-message" role="status" aria-live="polite"></p>
             <p id="regions-message" class="form-message" role="status" aria-live="polite"></p>
             <div id="regions-list" class="cards"></div>
             <div class="form-actions">
-                <button type="button" id="close-regions-footer" class="secondary">Close</button>
+                <button type="button" id="close-regions-footer" class="secondary"><span data-i18n="close.7d9eb7ac">Close</span></button>
             </div>
         </div>
     </dialog>
@@ -622,119 +646,119 @@
         <form id="region-form">
             <div class="dialog-heading">
                 <div>
-                    <h2 id="region-dialog-title">Create Region</h2>
-                    <p>Define a rectangular, circular, or polygonal APRS welcome area.</p>
+                    <h2 id="region-dialog-title"><span data-i18n="create-region.595eff26">Create Region</span></h2>
+                    <p><span data-i18n="define-a-rectangular-circular-or-polygonal-aprs-.ae931af9">Define a rectangular, circular, or polygonal APRS welcome area.</span></p>
                 </div>
-                <button type="button" id="close-region-editor" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-region-editor" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="form-grid">
-                <label>Name<input name="name"></label>
+                <label><span data-i18n="name.dcd1d522">Name</span><input name="name"></label>
                 <label>
-                    Region type
+                    <span data-i18n="region-type.d511a47b">Region type</span>
                     <select name="type" id="region-type">
-                        <option value="RECTANGLE">Rectangle</option>
-                        <option value="POLYGON">Polygon</option>
-                        <option value="CIRCLE">Circle</option>
+                        <option value="RECTANGLE" data-i18n="rectangle.03069962">Rectangle</option>
+                        <option value="POLYGON" data-i18n="polygon.0ef705dd">Polygon</option>
+                        <option value="CIRCLE" data-i18n="circle.b93d3bce">Circle</option>
                     </select>
                 </label>
-                <label class="full-width">Description<textarea name="description" rows="1"></textarea></label>
+                <label class="full-width"><span data-i18n="description.526e0087">Description</span><textarea name="description" rows="1"></textarea></label>
             </div>
-            <div class="region-input-mode" role="group" aria-label="Region boundary entry mode">
-                <button type="button" id="import-region-boundary" class="secondary">Import Coordinates</button>
+            <div class="region-input-mode" role="group" aria-label="Region boundary entry mode" data-i18n-aria-label="region-boundary-entry-mode.28e040e6">
+                <button type="button" id="import-region-boundary" class="secondary"><span data-i18n="import-coordinates.68d60f1c">Import Coordinates</span></button>
                 <button type="button" id="use-map-region-input" class="secondary" aria-pressed="true">
-                    Define on Map
+                    <span data-i18n="define-on-map.865850a9">Define on Map</span>
                 </button>
                 <button type="button" id="use-manual-region-input" class="secondary" aria-pressed="false">
-                    Enter Coordinates
+                    <span data-i18n="enter-coordinates.78ca97c4">Enter Coordinates</span>
                 </button>
             </div>
             <div id="manual-region-controls" hidden>
                 <fieldset id="rectangle-fields">
-                    <legend>Rectangle coordinates</legend>
+                    <legend><span data-i18n="rectangle-coordinates.dd39d608">Rectangle coordinates</span></legend>
                     <div class="form-grid">
-                        <label>Top-left longitude<input name="topLeftLongitude" type="text"></label>
-                        <label>Top-left latitude<input name="topLeftLatitude" type="text"></label>
-                        <label>Bottom-right longitude<input name="bottomRightLongitude" type="text"></label>
-                        <label>Bottom-right latitude<input name="bottomRightLatitude" type="text"></label>
+                        <label><span data-i18n="top-left-longitude.07de2ec7">Top-left longitude</span><input name="topLeftLongitude" type="text"></label>
+                        <label><span data-i18n="top-left-latitude.6fa5aa56">Top-left latitude</span><input name="topLeftLatitude" type="text"></label>
+                        <label><span data-i18n="bottom-right-longitude.8f0bd29a">Bottom-right longitude</span><input name="bottomRightLongitude" type="text"></label>
+                        <label><span data-i18n="bottom-right-latitude.f5189bee">Bottom-right latitude</span><input name="bottomRightLatitude" type="text"></label>
                     </div>
                 </fieldset>
                 <fieldset id="circle-fields" hidden>
-                    <legend>Circle geometry</legend>
+                    <legend><span data-i18n="circle-geometry.31bbcd20">Circle geometry</span></legend>
                     <div class="form-grid">
-                        <label>Center longitude<input name="centerLongitude" type="text"></label>
-                        <label>Center latitude<input name="centerLatitude" type="text"></label>
-                        <label>Diameter<input name="diameter" type="number" min="0" step="1"></label>
+                        <label><span data-i18n="center-longitude.574a8e4e">Center longitude</span><input name="centerLongitude" type="text"></label>
+                        <label><span data-i18n="center-latitude.beb9661a">Center latitude</span><input name="centerLatitude" type="text"></label>
+                        <label><span data-i18n="diameter.54a71934">Diameter</span><input name="diameter" type="number" min="0" step="1"></label>
                         <label>
-                            Unit
+                            <span data-i18n="unit.4e545960">Unit</span>
                             <select name="unit">
-                                <option value="FEET">Feet</option>
-                                <option value="MILES">Miles</option>
-                                <option value="METERS">Meters</option>
-                                <option value="KILOMETERS">Kilometers</option>
+                                <option value="FEET" data-i18n="feet.c59e96ab">Feet</option>
+                                <option value="MILES" data-i18n="miles.a1161f64">Miles</option>
+                                <option value="METERS" data-i18n="meters.efd2ff93">Meters</option>
+                                <option value="KILOMETERS" data-i18n="kilometers.357025c9">Kilometers</option>
                             </select>
                         </label>
                     </div>
                 </fieldset>
             </div>
             <fieldset id="map-region-controls" class="region-map-editor-panel">
-                <legend>Define on map</legend>
-                <p class="field-help">Draw or adjust the region boundary visually. Drag the map's bottom-right corner to change its height; drag the dialog's bottom-right corner to widen it.</p>
+                <legend><span data-i18n="define-on-map.a385eaae">Define on map</span></legend>
+                <p class="field-help"><span data-i18n="draw-or-adjust-the-region-boundary-visually-drag.7e5ac363">Draw or adjust the region boundary visually. Drag the map's bottom-right corner to change its height; drag the dialog's bottom-right corner to widen it.</span></p>
                 <div class="toolbar region-map-toolbar">
-                    <button type="button" id="draw-region-shape" class="secondary">Draw Rectangle</button>
+                    <button type="button" id="draw-region-shape" class="secondary"><span data-i18n="draw-rectangle.d45277e3">Draw Rectangle</span></button>
                     <span id="polygon-tools" hidden>
-                        <button type="button" id="finish-polygon" class="secondary">Finish boundary</button>
-                        <button type="button" id="undo-polygon" class="secondary">Undo point</button>
-                        <button type="button" id="cancel-polygon" class="secondary">Cancel drawing</button>
+                        <button type="button" id="finish-polygon" class="secondary"><span data-i18n="finish-boundary.bc0caf4c">Finish boundary</span></button>
+                        <button type="button" id="undo-polygon" class="secondary"><span data-i18n="undo-point.ff8cf43b">Undo point</span></button>
+                        <button type="button" id="cancel-polygon" class="secondary"><span data-i18n="cancel-drawing.d0c99052">Cancel drawing</span></button>
                     </span>
-                    <button type="button" id="clear-region-shape" class="secondary">Clear Map Shape</button>
+                    <button type="button" id="clear-region-shape" class="secondary"><span data-i18n="clear-map-shape.13179bb2">Clear Map Shape</span></button>
                 </div>
                 <div class="region-map-resizer">
-                    <div id="region-editor-map" aria-label="Interactive region boundary editor"></div>
+                    <div id="region-editor-map" aria-label="Interactive region boundary editor" data-i18n-aria-label="interactive-region-boundary-editor.b5cb16dd"></div>
                 </div>
                 <p id="region-editor-map-message" class="map-message" role="status" aria-live="polite"></p>
             </fieldset>
             <p id="region-form-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-region" class="secondary">Cancel</button>
-                <button type="submit" id="save-region">Create Region</button>
+                <button type="button" id="cancel-region" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="save-region"><span data-i18n="create-region.595eff26">Create Region</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="region-import-dialog" class="wide-dialog" aria-labelledby="region-import-title">
         <div class="dialog-content">
             <div class="dialog-heading">
-                <div><h2 id="region-import-title">Import Region Coordinates</h2>
-                    <p>Choose a shapefile collection, preview a feature, then load its boundary into the region editor.</p></div>
-                <button type="button" id="region-import-close" class="icon-button" aria-label="Close import">&times;</button>
+                <div><h2 id="region-import-title"><span data-i18n="import-region-coordinates.a42fab93">Import Region Coordinates</span></h2>
+                    <p><span data-i18n="choose-a-shapefile-collection-preview-a-feature-.5e797a2a">Choose a shapefile collection, preview a feature, then load its boundary into the region editor.</span></p></div>
+                <button type="button" id="region-import-close" class="icon-button" aria-label="Close import" data-i18n-aria-label="close-import.e68710b4">&times;</button>
             </div>
             <div class="form-grid">
-                <label>Upload ZIP<input id="region-import-zip" type="file" accept=".zip"></label>
-                <label>Choose folder<input id="region-import-folder" type="file" webkitdirectory multiple></label>
+                <label><span data-i18n="upload-zip.1fe1e242">Upload ZIP</span><input id="region-import-zip" type="file" accept=".zip"></label>
+                <label><span data-i18n="choose-folder.3db74100">Choose folder</span><input id="region-import-folder" type="file" webkitdirectory multiple></label>
             </div>
-            <p class="field-help">Include matching .shp, .shx, .dbf and .prj files, plus .cpg if available. Maximum upload: 64 MiB. Single polygons with up to 1000 vertices are supported; holes and multiple components cannot be imported.</p>
+            <p class="field-help"><span data-i18n="include-matching-shp-shx-dbf-and-prj-files-plus-.dbdf8955">Include matching .shp, .shx, .dbf and .prj files, plus .cpg if available. Maximum upload: 64 MiB. Single polygons with up to 1000 vertices are supported; holes and multiple components cannot be imported.</span></p>
             <div id="region-import-controls" hidden>
                 <div class="form-grid">
-                    <label>Layer<select id="region-import-layer"></select></label>
-                    <label>Feature name field<select id="region-import-label"></select></label>
-                    <label class="full-width">Search attributes<input id="region-import-search" type="search" maxlength="200" placeholder="For example, Acton"></label>
+                    <label><span data-i18n="layer.ac9ffcb2">Layer</span><select id="region-import-layer"></select></label>
+                    <label><span data-i18n="feature-name-field.0576997a">Feature name field</span><select id="region-import-label"></select></label>
+                    <label class="full-width"><span data-i18n="search-attributes.a469e421">Search attributes</span><input id="region-import-search" type="search" maxlength="200" placeholder="For example, Acton" data-i18n-placeholder="for-example-acton.2f35b74c"></label>
                 </div>
                 <p id="region-import-layer-info" class="field-help"></p>
                 <div class="region-import-table">
-                    <table><thead><tr><th>Feature</th><th>Import status</th></tr></thead>
+                    <table><thead><tr><th><span data-i18n="feature.3d377ae9">Feature</span></th><th><span data-i18n="import-status.72c9a256">Import status</span></th></tr></thead>
                         <tbody id="region-import-results"></tbody></table>
                 </div>
                 <div class="toolbar">
-                    <button type="button" id="region-import-previous" class="secondary" disabled>Previous</button>
+                    <button type="button" id="region-import-previous" class="secondary" disabled><span data-i18n="previous.a57b08a4">Previous</span></button>
                     <span id="region-import-page" aria-live="polite"></span>
-                    <button type="button" id="region-import-next" class="secondary" disabled>Next</button>
+                    <button type="button" id="region-import-next" class="secondary" disabled><span data-i18n="next.1ff57a29">Next</span></button>
                 </div>
             </div>
-            <div id="region-import-map" aria-label="Imported boundary preview"></div>
-            <details><summary>Selected feature attributes</summary><pre id="region-import-details"></pre></details>
+            <div id="region-import-map" aria-label="Imported boundary preview" data-i18n-aria-label="imported-boundary-preview.eab6f5ca"></div>
+            <details><summary><span data-i18n="selected-feature-attributes.a58da32c">Selected feature attributes</span></summary><pre id="region-import-details"></pre></details>
             <p id="region-import-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="region-import-cancel" class="secondary">Cancel</button>
-                <button type="button" id="region-import-use" disabled>Use boundary</button>
+                <button type="button" id="region-import-cancel" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="button" id="region-import-use" disabled><span data-i18n="use-boundary.eb163c6f">Use boundary</span></button>
             </div>
         </div>
     </dialog>
@@ -742,29 +766,29 @@
         <form id="delete-region-form">
             <div class="dialog-heading">
                 <div>
-                    <h2>Delete Region</h2>
-                    <p>This action cannot be undone.</p>
+                    <h2><span data-i18n="delete-region.4bed228f">Delete Region</span></h2>
+                    <p><span data-i18n="this-action-cannot-be-undone.3d6a4526">This action cannot be undone.</span></p>
                 </div>
-                <button type="button" id="close-delete-region" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-delete-region" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Are you sure you want to delete this Region?</p>
+                <p><span data-i18n="are-you-sure-you-want-to-delete-this-region.77080f11">Are you sure you want to delete this Region?</span></p>
                 <strong id="delete-region-name"></strong>
             </div>
             <p id="delete-region-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-delete-region" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-delete-region" class="danger-solid">Delete Region</button>
+                <button type="button" id="cancel-delete-region" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-delete-region" class="danger-solid"><span data-i18n="delete-region.4bed228f">Delete Region</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="plan-dialog" class="wide-dialog">
         <div class="dialog-content">
             <div class="dialog-heading">
-                <div><h2>Communication Plan</h2><p id="plan-center-label"></p></div>
-                <button type="button" id="close-plan-dialog" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="communication-plan.a095c8dd">Communication Plan</span></h2><p id="plan-center-label"></p></div>
+                <button type="button" id="close-plan-dialog" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
-            <div class="toolbar"><button type="button" id="new-policy">New Communication Policy</button></div>
+            <div class="toolbar"><button type="button" id="new-policy"><span data-i18n="new-communication-policy.04ceae8a">New Communication Policy</span></button></div>
             <p id="plan-message" class="form-message" role="status" aria-live="polite"></p>
             <div id="policies-list" class="cards"></div>
         </div>
@@ -773,86 +797,86 @@
         <form id="policy-form">
             <div class="dialog-heading">
                 <div>
-                    <h2 id="policy-dialog-title">Create Communication Policy</h2>
-                    <p>Configure when and how this Welcome Center communicates.</p>
+                    <h2 id="policy-dialog-title"><span data-i18n="create-communication-policy.b792a3f6">Create Communication Policy</span></h2>
+                    <p><span data-i18n="configure-when-and-how-this-welcome-center-commu.c36dda11">Configure when and how this Welcome Center communicates.</span></p>
                 </div>
-                <button type="button" id="close-policy-editor" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-policy-editor" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="form-grid">
                 <label class="full-width">
-                    When communication occurs
+                    <span data-i18n="when-communication-occurs.8a2f9c43">When communication occurs</span>
                     <select name="communicationEventType">
-                        <option value="ENTER_REGION">Enter region</option>
-                        <option value="EXIT_REGION">Exit region</option>
-                        <option value="ON_REQUEST">On demand</option>
-                        <option value="SCHEDULED_ONCE">Scheduled (One-time)</option>
-                        <option value="SCHEDULED_RECURRING">Scheduled (Recurring)</option>
-                        <option value="SHRIEK_HEARD">When shriek heard</option>
+                        <option value="ENTER_REGION" data-i18n="enter-region.be24b4ba">Enter region</option>
+                        <option value="EXIT_REGION" data-i18n="exit-region.60e19c77">Exit region</option>
+                        <option value="ON_REQUEST" data-i18n="on-demand.7be15cd1">On demand</option>
+                        <option value="SCHEDULED_ONCE" data-i18n="scheduled-one-time.67ea930f">Scheduled (One-time)</option>
+                        <option value="SCHEDULED_RECURRING" data-i18n="scheduled-recurring.50b86a96">Scheduled (Recurring)</option>
+                        <option value="SHRIEK_HEARD" data-i18n="when-shriek-heard.d458e377">When shriek heard</option>
                     </select>
                 </label>
                 <label id="policy-category-field" class="full-width" hidden>
-                    Associated command
+                    <span data-i18n="associated-command.b586ab86">Associated command</span>
                     <select name="categoryId" id="policy-category"></select>
                 </label>
                 <div id="policy-automation-fields" class="full-width" hidden>
-                    <label data-policy-trigger="SCHEDULED_ONCE">Send at<input name="scheduledAt" type="datetime-local"></label>
-                    <div data-policy-trigger="SCHEDULED_RECURRING"><input type="hidden" name="recurrence" value="HOURLY"><div class="kiss-mode-selector" role="group" aria-label="Repeat"><button type="button" class="secondary" data-policy-recurrence="HOURLY">Hourly</button><button type="button" class="secondary" data-policy-recurrence="DAILY">Daily</button></div></div>
-                    <label id="policy-time-field">Time<input name="scheduleTime" type="time" step="60" value="08:00"></label>
-                    <label id="policy-minute-field">Minute of each hour<input name="scheduleMinute" type="number" min="0" max="59" value="0"></label>
-                    <label data-policy-trigger="SHRIEK_HEARD">Shriek code<input name="shriekCode" maxlength="12" placeholder="!WC1!"></label>
-                    <label id="policy-time-zone-field">Time zone<select name="timeZone" id="policy-time-zones"></select></label>
+                    <label data-policy-trigger="SCHEDULED_ONCE"><span data-i18n="send-at.12e76f12">Send at</span><input name="scheduledAt" type="datetime-local"></label>
+                    <div data-policy-trigger="SCHEDULED_RECURRING"><input type="hidden" name="recurrence" value="HOURLY"><div class="kiss-mode-selector" role="group" aria-label="Repeat" data-i18n-aria-label="repeat.b6b7a006"><button type="button" class="secondary" data-policy-recurrence="HOURLY"><span data-i18n="hourly.eab0cd8f">Hourly</span></button><button type="button" class="secondary" data-policy-recurrence="DAILY"><span data-i18n="daily.b36c2611">Daily</span></button></div></div>
+                    <label id="policy-time-field"><span data-i18n="time.33b93476">Time</span><input name="scheduleTime" type="time" step="60" value="08:00"></label>
+                    <label id="policy-minute-field"><span data-i18n="minute-of-each-hour.fc793fb4">Minute of each hour</span><input name="scheduleMinute" type="number" min="0" max="59" value="0"></label>
+                    <label data-policy-trigger="SHRIEK_HEARD"><span data-i18n="shriek-code.9db7def3">Shriek code</span><input name="shriekCode" maxlength="12" placeholder="!WC1!" data-i18n-placeholder="wc1.a07da328"></label>
+                    <label id="policy-time-zone-field"><span data-i18n="time-zone.b9fe1464">Time zone</span><select name="timeZone" id="policy-time-zones"></select></label>
                     <p id="policy-delivery-description"></p>
                 </div>
                 <fieldset id="policy-transmission-fields" class="full-width" hidden>
-                    <legend>Transmission</legend>
+                    <legend><span data-i18n="transmission.3e101342">Transmission</span></legend>
                     <input type="hidden" name="policyMessageType" value="BULLETIN">
-                    <div class="kiss-mode-selector" role="group" aria-label="Send as">
-                        <button type="button" class="secondary" data-policy-transmission="BULLETIN">Bulletin</button>
-                        <button type="button" class="secondary" data-policy-transmission="STATUS_REPORT">Status Report</button>
+                    <div class="kiss-mode-selector" role="group" aria-label="Send as" data-i18n-aria-label="send-as.400c7366">
+                        <button type="button" class="secondary" data-policy-transmission="BULLETIN"><span data-i18n="bulletin.b0cc9b72">Bulletin</span></button>
+                        <button type="button" class="secondary" data-policy-transmission="STATUS_REPORT"><span data-i18n="status-report.fdfe6827">Status Report</span></button>
                     </div>
-                    <label id="policy-bulletin-address-field">Bulletin address
-                        <input name="bulletinAddress" maxlength="9" value="BLN1" placeholder="BLN1, BLNA-WEB or BLN" pattern="[Bb][Ll][Nn]([0-9A-Za-z][A-Za-z0-9-]{0,5})?">
+                    <label id="policy-bulletin-address-field"><span data-i18n="bulletin-address.24546c08">Bulletin address</span>
+                        <input name="bulletinAddress" maxlength="9" value="BLN1" placeholder="BLN1, BLNA-WEB or BLN" pattern="[Bb][Ll][Nn]([0-9A-Za-z][A-Za-z0-9-]{0,5})?" data-i18n-placeholder="bln1-blna-web-or-bln.008b14db">
                     </label>
-                    <small>Sent on eligible connections. Missed occurrences are skipped. Closed Welcome Centers do not send.</small>
+                    <small><span data-i18n="sent-on-eligible-connections-missed-occurrences-.ac213640">Sent on eligible connections. Missed occurrences are skipped. Closed Welcome Centers do not send.</span></small>
                 </fieldset>
-                <fieldset class="full-width"><legend>Message content</legend>
+                <fieldset class="full-width"><legend><span data-i18n="message-content.148103de">Message content</span></legend>
                 <div class="form-grid">
-                <div class="full-width kiss-mode-selector" role="group" aria-label="Content source">
-                    <button type="button" class="secondary" data-policy-content="TEXT" aria-pressed="true">Text</button>
-                    <button type="button" class="secondary" data-policy-content="TINYTOPICS" aria-pressed="false">TinyTopics</button>
+                <div class="full-width kiss-mode-selector" role="group" aria-label="Content source" data-i18n-aria-label="content-source.459b8d5e">
+                    <button type="button" class="secondary" data-policy-content="TEXT" aria-pressed="true"><span data-i18n="text.71988c4d">Text</span></button>
+                    <button type="button" class="secondary" data-policy-content="TINYTOPICS" aria-pressed="false"><span data-i18n="tinytopics.9f21684d">TinyTopics</span></button>
                 </div>
                 <div id="policy-topic-fields" class="full-width" hidden>
-                    <label>Topic<select id="policy-topic" disabled><option value="">No topics available</option></select></label>
+                    <label><span data-i18n="topic.7e61847d">Topic</span><select id="policy-topic" disabled><option value="" data-i18n="no-topics-available.39778324">No topics available</option></select></label>
                     <p id="policy-topic-message" class="form-message" role="status"></p>
                     <div id="policy-topic-parameters" class="form-grid"></div>
                 </div>
-                <label id="policy-text-field" class="full-width">Message text<textarea name="messageText" rows="1" aria-describedby="policy-message-character-count"></textarea>
-                    <small id="policy-message-character-count" class="message-character-count">0 characters entered</small></label>
+                <label id="policy-text-field" class="full-width"><span data-i18n="message-text.05c1b444">Message text</span><textarea name="messageText" rows="1" aria-describedby="policy-message-character-count"></textarea>
+                    <small id="policy-message-character-count" class="message-character-count"><span data-i18n="0-characters-entered.263acea5">0 characters entered</span></small></label>
                 <div id="policy-content-history" class="full-width"></div>
                 </div></fieldset>
                 <p id="policy-execution-status" class="full-width form-message" role="status"></p>
             </div>
             <p id="policy-form-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-policy" class="secondary">Cancel</button>
-                <button type="submit" id="save-policy">Create Communication Policy</button>
+                <button type="button" id="cancel-policy" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="save-policy"><span data-i18n="create-communication-policy.b792a3f6">Create Communication Policy</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="delete-policy-dialog">
         <form id="delete-policy-form">
             <div class="dialog-heading">
-                <div><h2>Delete Communication Policy</h2><p>This action cannot be undone.</p></div>
-                <button type="button" id="close-delete-policy" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="delete-communication-policy.55e050f4">Delete Communication Policy</span></h2><p><span data-i18n="this-action-cannot-be-undone.3d6a4526">This action cannot be undone.</span></p></div>
+                <button type="button" id="close-delete-policy" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Are you sure you want to delete this Communication Policy?</p>
+                <p><span data-i18n="are-you-sure-you-want-to-delete-this-communicati.15c32418">Are you sure you want to delete this Communication Policy?</span></p>
                 <strong id="delete-policy-name"></strong>
             </div>
             <p id="delete-policy-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-delete-policy" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-delete-policy" class="danger-solid">Delete Policy</button>
+                <button type="button" id="cancel-delete-policy" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-delete-policy" class="danger-solid"><span data-i18n="delete-policy.72db1812">Delete Policy</span></button>
             </div>
         </form>
     </dialog>
@@ -860,12 +884,12 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>Communication Categories</h2>
-                    <p>Categories organize the policies in a Communication Plan.</p>
+                    <h2><span data-i18n="communication-categories.4249f0ea">Communication Categories</span></h2>
+                    <p><span data-i18n="categories-organize-the-policies-in-a-communicat.992cd113">Categories organize the policies in a Communication Plan.</span></p>
                 </div>
-                <button type="button" id="close-categories" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-categories" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
-            <div class="toolbar"><button type="button" id="new-category">New Category</button></div>
+            <div class="toolbar"><button type="button" id="new-category"><span data-i18n="new-category.3a0878e4">New Category</span></button></div>
             <p id="categories-message" class="form-message" role="status" aria-live="polite"></p>
             <div id="categories-list" class="cards"></div>
         </div>
@@ -873,34 +897,34 @@
     <dialog id="category-editor-dialog">
         <form id="category-form">
             <div class="dialog-heading">
-                <div><h2 id="category-dialog-title">Create Category</h2><p>Category names must be unique.</p></div>
-                <button type="button" id="close-category-editor" class="icon-button" aria-label="Close">×</button>
+                <div><h2 id="category-dialog-title"><span data-i18n="create-category.4b4a9857">Create Category</span></h2><p><span data-i18n="category-names-must-be-unique.fa035340">Category names must be unique.</span></p></div>
+                <button type="button" id="close-category-editor" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="form-grid">
-                <label>Name<input name="name" required></label>
-                <label class="full-width">Description<textarea name="description" rows="4"></textarea></label>
+                <label><span data-i18n="name.dcd1d522">Name</span><input name="name" required></label>
+                <label class="full-width"><span data-i18n="description.526e0087">Description</span><textarea name="description" rows="4"></textarea></label>
             </div>
             <p id="category-form-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-category" class="secondary">Cancel</button>
-                <button type="submit" id="save-category">Create Category</button>
+                <button type="button" id="cancel-category" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="save-category"><span data-i18n="create-category.4b4a9857">Create Category</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="delete-category-dialog">
         <form id="delete-category-form">
             <div class="dialog-heading">
-                <div><h2>Delete Category</h2><p>This action cannot be undone.</p></div>
-                <button type="button" id="close-delete-category" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="delete-category.88418cb1">Delete Category</span></h2><p><span data-i18n="this-action-cannot-be-undone.3d6a4526">This action cannot be undone.</span></p></div>
+                <button type="button" id="close-delete-category" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Are you sure you want to delete this Communication Category?</p>
+                <p><span data-i18n="are-you-sure-you-want-to-delete-this-communicati.e513671b">Are you sure you want to delete this Communication Category?</span></p>
                 <strong id="delete-category-name"></strong>
             </div>
             <p id="delete-category-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-delete-category" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-delete-category" class="danger-solid">Delete Category</button>
+                <button type="button" id="cancel-delete-category" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-delete-category" class="danger-solid"><span data-i18n="delete-category.88418cb1">Delete Category</span></button>
             </div>
         </form>
     </dialog>
@@ -908,20 +932,20 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2 id="packets-title">Station Packets</h2>
-                    <p>Received and sent APRS packets.</p>
+                    <h2 id="packets-title"><span data-i18n="station-packets.49d38779">Station Packets</span></h2>
+                    <p><span data-i18n="received-and-sent-aprs-packets.e9c512e7">Received and sent APRS packets.</span></p>
                 </div>
-                <button type="button" id="close-packets" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-packets" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="toolbar">
-                <button type="button" id="refresh-packets" class="secondary" disabled>Refresh</button>
-                <button type="button" id="download-station-packets" class="secondary">Download CSV</button>
-                <button type="button" id="delete-all-packets" class="danger">Delete All Packets</button>
+                <button type="button" id="refresh-packets" class="secondary" disabled><span data-i18n="refresh.0e916101">Refresh</span></button>
+                <button type="button" id="download-station-packets" class="secondary"><span data-i18n="download-csv.a4023b89">Download CSV</span></button>
+                <button type="button" id="delete-all-packets" class="danger"><span data-i18n="delete-all-packets.352772ca">Delete All Packets</span></button>
             </div>
             <p id="packets-logging-status" class="form-message" role="status" aria-live="polite"></p>
             <div class="packet-list-heading">
                 <p id="packets-message" class="form-message" role="status" aria-live="polite"></p>
-                <label>Direction <select id="packet-direction-filter"><option value="ALL">All</option><option value="RX">Received</option><option value="TX">Sent</option></select></label>
+                <label><span data-i18n="direction.9c8a9579">Direction</span> <select id="packet-direction-filter"><option value="ALL" data-i18n="all.a52ace42">All</option><option value="RX" data-i18n="received.49f19bee">Received</option><option value="TX" data-i18n="sent.c16bc82b">Sent</option></select></label>
             </div>
             <div id="packets-list" class="packet-list"></div>
         </div>
@@ -930,20 +954,20 @@
         <div class="dialog-content">
             <div class="dialog-heading">
                 <div>
-                    <h2>Weather</h2>
+                    <h2><span data-i18n="weather.a0bba638">Weather</span></h2>
                     <p id="weather-center-label"></p>
                 </div>
-                <button type="button" id="close-weather" class="icon-button" aria-label="Close">×</button>
+                <button type="button" id="close-weather" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <p id="weather-message" class="form-message" role="status" aria-live="polite"></p>
             <section class="weather-section">
-                <h3 id="weather-summary-heading">Weather averages as of</h3>
+                <h3 id="weather-summary-heading"><span data-i18n="weather-averages-as-of.8b880766">Weather averages as of</span></h3>
                 <div id="weather-summary" class="weather-summary"></div>
             </section>
             <section class="weather-section">
                 <div class="weather-section-heading">
-                    <h3>Weather Reports <span id="weather-report-count">(0)</span></h3>
-                    <button type="button" id="download-weather-reports" class="secondary">Download CSV</button>
+                    <h3><span data-i18n="weather-reports.88bf06a2">Weather Reports</span> <span id="weather-report-count">(0)</span></h3>
+                    <button type="button" id="download-weather-reports" class="secondary"><span data-i18n="download-csv.a4023b89">Download CSV</span></button>
                 </div>
                 <div id="weather-reports-list" class="weather-reports-list"></div>
             </section>
@@ -952,154 +976,166 @@
     <dialog id="delete-all-packets-dialog">
         <form id="delete-all-packets-form">
             <div class="dialog-heading">
-                <div><h2>Delete All Station Packets?</h2><p>This action cannot be undone.</p></div>
-                <button type="button" id="close-delete-all-packets" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="delete-all-station-packets.82848c4e">Delete All Station Packets?</span></h2><p><span data-i18n="this-action-cannot-be-undone.3d6a4526">This action cannot be undone.</span></p></div>
+                <button type="button" id="close-delete-all-packets" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Every persisted Station Packet will be permanently deleted.</p>
-                <strong>Delete all packets?</strong>
+                <p><span data-i18n="every-persisted-station-packet-will-be-permanent.a499f9fd">Every persisted Station Packet will be permanently deleted.</span></p>
+                <strong><span data-i18n="delete-all-packets.c553a5e8">Delete all packets?</span></strong>
             </div>
             <p id="delete-all-packets-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-delete-all-packets" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-delete-all-packets" class="danger-solid">Delete All Packets</button>
+                <button type="button" id="cancel-delete-all-packets" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-delete-all-packets" class="danger-solid"><span data-i18n="delete-all-packets.352772ca">Delete All Packets</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="communication-confirm-dialog" aria-labelledby="communication-confirm-title">
         <form id="communication-confirm-form">
             <div class="dialog-heading">
-                <h2 id="communication-confirm-title">Confirm connection change</h2>
-                <button type="button" id="close-communication-confirm" class="icon-button" aria-label="Close">&times;</button>
+                <h2 id="communication-confirm-title"><span data-i18n="confirm-connection-change.7269f066">Confirm connection change</span></h2>
+                <button type="button" id="close-communication-confirm" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">&times;</button>
             </div>
             <p id="communication-confirm-description"></p>
             <p id="communication-confirm-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-communication-change" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-communication-change">Confirm</button>
+                <button type="button" id="cancel-communication-change" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-communication-change"><span data-i18n="confirm.eebdd24a">Confirm</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="communication-dialog">
         <form data-serial-port-url="/api/v1/communication-instances/serialPorts" id="communication-form">
-            <div class="dialog-heading"><h2>Communication instance</h2><button type="button" id="close-communication" class="icon-button" aria-label="Close">&times;</button></div>
+            <div class="dialog-heading"><h2><span data-i18n="communication-instance.049cc9a5">Communication instance</span></h2><button type="button" id="close-communication" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">&times;</button></div>
             <div class="form-grid">
-                <label>Type<select name="type" required><option value="APRS_IS">APRS-IS</option><option value="KISS_TCP">KISS TCP</option><option value="KISS_SERIAL">KISS Serial</option><option value="TNC2_TCP">TNC2 TCP</option><option value="TNC2_SERIAL">TNC2 Serial</option><option value="KENWOOD_SERIAL">Kenwood Serial</option></select></label>
-                <label>State<select name="state" required><option value="ACTIVE">Active</option><option value="PAUSED">Paused</option></select></label>
-                <label data-connection-types="APRS_IS KISS_TCP TNC2_TCP">Host<input name="host" maxlength="255" required></label>
-                <label data-connection-types="APRS_IS KISS_TCP TNC2_TCP">TCP port<input name="port" type="number" min="1" max="65535" required></label>
-                <label data-connection-types="APRS_IS KENWOOD_SERIAL"><span id="communication-username-label">Login Callsign</span><input name="username" maxlength="10" required></label>
-                <label data-connection-types="APRS_IS">Passcode<input name="passcode" type="password" autocomplete="new-password" maxlength="255"><small>Leave blank when editing to keep the existing passcode.</small></label>
-                <label data-connection-types="APRS_IS">Filter<input name="filter" maxlength="255"></label>
-                <div data-connection-types="KISS_SERIAL TNC2_SERIAL KENWOOD_SERIAL"><label>Serial device<select name="serialDevice" aria-describedby="serial-port-status" required></select></label><small id="serial-port-status" data-serial-status role="status"></small></div>
-<label data-connection-types="KISS_SERIAL TNC2_SERIAL KENWOOD_SERIAL">Baud rate<select name="baudRate" required><option value="9600">9600</option></select></label>
-                <label data-connection-types="KISS_SERIAL TNC2_SERIAL">Initialization command 1<input name="initCommand1" maxlength="255"></label>
-                <label data-connection-types="KISS_SERIAL TNC2_SERIAL">Initialization command 2<input name="initCommand2" maxlength="255"></label>
-                <label data-connection-types="KISS_TCP KISS_SERIAL TNC2_TCP TNC2_SERIAL KENWOOD_SERIAL">Digipeater path<input name="digiPath" maxlength="255" placeholder="WIDE1-1,WIDE2-1"></label>
-                <label data-connection-types="KISS_TCP KISS_SERIAL TNC2_TCP TNC2_SERIAL KENWOOD_SERIAL">Transmit spacing (milliseconds)<input name="transmitSpacingMs" type="number" min="0" max="2147483647" step="1" value="1000" required></label>
+                <label><span data-i18n="type.baaddf70">Type</span><select name="type" required><option value="APRS_IS" data-i18n="aprs-is.5b12a61e">APRS-IS</option><option value="KISS_TCP" data-i18n="kiss-tcp.333fdfd1">KISS TCP</option><option value="KISS_SERIAL" data-i18n="kiss-serial.86547bc5">KISS Serial</option><option value="TNC2_TCP" data-i18n="tnc2-tcp.cd4e0843">TNC2 TCP</option><option value="TNC2_SERIAL" data-i18n="tnc2-serial.c2cdc96f">TNC2 Serial</option><option value="KENWOOD_SERIAL" data-i18n="kenwood-serial.adb206ac">Kenwood Serial</option></select></label>
+                <label><span data-i18n="state.a3b50c47">State</span><select name="state" required><option value="ACTIVE" data-i18n="active.92340695">Active</option><option value="PAUSED" data-i18n="paused.e159b061">Paused</option></select></label>
+                <label data-connection-types="APRS_IS KISS_TCP TNC2_TCP"><span data-i18n="host.4a823118">Host</span><input name="host" maxlength="255" required></label>
+                <label data-connection-types="APRS_IS KISS_TCP TNC2_TCP"><span data-i18n="tcp-port.08f669e4">TCP port</span><input name="port" type="number" min="1" max="65535" required></label>
+                <label data-connection-types="APRS_IS KENWOOD_SERIAL"><span id="communication-username-label"><span data-i18n="login-callsign.0c21b6b3">Login Callsign</span></span><input name="username" maxlength="10" required></label>
+                <label data-connection-types="APRS_IS"><span data-i18n="passcode.56c37125">Passcode</span><input name="passcode" type="password" autocomplete="new-password" maxlength="255"><small><span data-i18n="leave-blank-when-editing-to-keep-the-existing-pa.4d8af4c3">Leave blank when editing to keep the existing passcode.</span></small></label>
+                <label data-connection-types="APRS_IS"><span data-i18n="filter.638e249f">Filter</span><input name="filter" maxlength="255"></label>
+                <div data-connection-types="KISS_SERIAL TNC2_SERIAL KENWOOD_SERIAL"><label><span data-i18n="serial-device.0480d56f">Serial device</span><select name="serialDevice" aria-describedby="serial-port-status" required></select></label><small id="serial-port-status" data-serial-status role="status"></small></div>
+<label data-connection-types="KISS_SERIAL TNC2_SERIAL KENWOOD_SERIAL"><span data-i18n="baud-rate.9b5637dc">Baud rate</span><select name="baudRate" required><option value="9600">9600</option></select></label>
+                <label data-connection-types="KISS_SERIAL TNC2_SERIAL"><span data-i18n="initialization-command-1.6eddab1e">Initialization command 1</span><input name="initCommand1" maxlength="255"></label>
+                <label data-connection-types="KISS_SERIAL TNC2_SERIAL"><span data-i18n="initialization-command-2.a77378fa">Initialization command 2</span><input name="initCommand2" maxlength="255"></label>
+                <label data-connection-types="KISS_TCP KISS_SERIAL TNC2_TCP TNC2_SERIAL KENWOOD_SERIAL"><span data-i18n="digipeater-path.4429577b">Digipeater path</span><input name="digiPath" maxlength="255" placeholder="WIDE1-1,WIDE2-1" data-i18n-placeholder="wide1-1-wide2-1.bd984e03"></label>
+                <label data-connection-types="KISS_TCP KISS_SERIAL TNC2_TCP TNC2_SERIAL KENWOOD_SERIAL"><span data-i18n="transmit-spacing-milliseconds.f10ad016">Transmit spacing (milliseconds)</span><input name="transmitSpacingMs" type="number" min="0" max="2147483647" step="1" value="1000" required></label>
             </div>
-            <p data-connection-types="KENWOOD_SERIAL">Kenwood packet/command mode. RESET, MYCALL and monitor settings are applied automatically.</p>
+            <p data-connection-types="KENWOOD_SERIAL"><span data-i18n="kenwood-packet-command-mode-reset-mycall-and-mon.5ed87cc6">Kenwood packet/command mode. RESET, MYCALL and monitor settings are applied automatically.</span></p>
             <p id="communication-message" class="form-message" role="status"></p>
-            <div class="form-actions"><button type="button" id="cancel-communication" class="secondary">Cancel</button><button type="submit">Save connection</button></div>
+            <div class="form-actions"><button type="button" id="cancel-communication" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button><button type="submit"><span data-i18n="save-connection.df24ef12">Save connection</span></button></div>
         </form>
     </dialog>
     <dialog id="settings-dialog">
         <form id="settings-form">
             <div class="dialog-heading">
-                <div><h2>Application Settings</h2><p>Configure application settings.</p></div>
-                <button type="button" id="close-settings" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="application-settings.7d907ad7">Application Settings</span></h2><p><span data-i18n="configure-application-settings.0ad770f7">Configure application settings.</span></p></div>
+                <button type="button" id="close-settings" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <fieldset>
-                <legend>Message delivery</legend>
+                <legend><span data-i18n="information-response-language">Information response language</span></legend>
+                <label><span data-i18n="language.a4fe6526">Language</span>
+                    <select name="informationResponseLanguage" required>
+                        <option value="en">English</option>
+                        <!-- Uncomment to re-enable the development language in application settings.
+                        <option value="xx">xxEnglish</option>
+                        -->
+                        <option value="es">Espa&#241;ol</option><option value="fr">Fran&#231;ais</option>
+                    </select>
+                </label>
+            </fieldset>
+            <fieldset>
+                <legend><span data-i18n="message-delivery.7be3934b">Message delivery</span></legend>
                 <div class="form-grid">
-                    <label>Maximum retries<input name="messageMaxRetries" type="number" min="0" max="2147483647" step="1" value="3" required></label>
-                    <label>Retry interval (seconds)<input name="messageRetryIntervalSeconds" type="number" min="1" max="2147483647" step="1" value="60" required></label>
+                    <label><span data-i18n="maximum-retries.f78e5800">Maximum retries</span><input name="messageMaxRetries" type="number" min="0" max="2147483647" step="1" value="3" required></label>
+                    <label><span data-i18n="retry-interval-seconds.971f5706">Retry interval (seconds)</span><input name="messageRetryIntervalSeconds" type="number" min="1" max="2147483647" step="1" value="60" required></label>
                 </div>
             </fieldset>
             <fieldset>
-                <legend>Information Retention</legend>
+                <legend><span data-i18n="information-retention.65409d55">Information Retention</span></legend>
                 <div class="form-grid">
-                    <label>Retain packets and positions for (days)<input name="packetRetentionDays" type="number" min="1" max="2147483647" step="1" value="1" required></label>
-                    <label>Retain inactive stations for (days)<input name="stationRetentionDays" type="number" min="1" max="2147483647" step="1" value="10" required></label>
-                    <label>Retain messages for (days)<input name="messageRetentionDays" type="number" min="1" max="2147483647" step="1" value="10" required></label>
+                    <label><span data-i18n="retain-packets-and-positions-for-days.c32beb6e">Retain packets and positions for (days)</span><input name="packetRetentionDays" type="number" min="1" max="2147483647" step="1" value="1" required></label>
+                    <label><span data-i18n="retain-inactive-stations-for-days.a3e6470a">Retain inactive stations for (days)</span><input name="stationRetentionDays" type="number" min="1" max="2147483647" step="1" value="10" required></label>
+                    <label><span data-i18n="retain-messages-for-days.073c86cb">Retain messages for (days)</span><input name="messageRetentionDays" type="number" min="1" max="2147483647" step="1" value="10" required></label>
                 </div>
             </fieldset>
             <fieldset>
-                <legend>Map settings</legend>
-                <label>Map tile URL<input name="mapTileUrl"
-                    placeholder="https://tile.openstreetmap.org/{z}/{x}/{y}.png"></label>
+                <legend><span data-i18n="map-settings.d0467f3b">Map settings</span></legend>
+                <label><span data-i18n="map-tile-url.e8070583">Map tile URL</span><input name="mapTileUrl"
+                    placeholder="https://tile.openstreetmap.org/{z}/{x}/{y}.png" data-i18n-placeholder="https-tile-openstreetmap-org-z-x-y-png.f65928ca"></label>
             </fieldset>
             <fieldset>
-                <legend>Content Settings</legend>
-                <label>TinyTopics server URL<input name="tinyTopicsServerUrl" type="url" maxlength="2048" value="http://www.tiny-topics.com:8088" required></label>
+                <legend><span data-i18n="content-settings.a4f51421">Content Settings</span></legend>
+                <label><span data-i18n="tinytopics-server-url.cc0c02f4">TinyTopics server URL</span><input name="tinyTopicsServerUrl" type="url" maxlength="2048" value="http://www.tiny-topics.com:8088" required></label>
             </fieldset>
             <p id="settings-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-settings" class="secondary">Cancel</button>
-                <button type="submit">Save Settings</button>
+                <button type="button" id="cancel-settings" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit"><span data-i18n="save-settings.ec92e1dc">Save Settings</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="communication-settings-dialog" aria-labelledby="communication-settings-title">
         <div class="dialog-content">
             <div class="dialog-heading">
-                <div><h2 id="communication-settings-title">Communication Settings</h2><p>Manage connections, stations, and packets.</p></div>
+                <div><h2 id="communication-settings-title"><span data-i18n="communication-settings.ceb96cf1">Communication Settings</span></h2><p><span data-i18n="manage-connections-stations-and-packets.def78f7e">Manage connections, stations, and packets.</span></p></div>
             </div>
             <fieldset>
-                <legend>Communication methods</legend>
-                <button type="button" id="add-communication" class="secondary">Add connection</button>
-                <button type="button" id="refresh-communications" class="secondary">Refresh status</button>
+                <legend><span data-i18n="communication-methods.e3282a99">Communication methods</span></legend>
+                <button type="button" id="add-communication" class="secondary"><span data-i18n="add-connection.685f88ae">Add connection</span></button>
+                <button type="button" id="refresh-communications" class="secondary"><span data-i18n="refresh-status.442c4b89">Refresh status</span></button>
                 <div id="communication-list" aria-live="polite"></div>
                 <p id="communication-list-message" class="form-message" role="status"></p>
             </fieldset>
             <fieldset>
-                <legend>Stations</legend>
+                <legend><span data-i18n="stations.9d3d204f">Stations</span></legend>
                 <div class="settings-summary">
-                    <span><strong id="stations-count">0</strong> total stations</span>
-                    <button type="button" id="delete-all-stations" class="danger">Delete all</button>
+                    <span><strong id="stations-count">0</strong> <span data-i18n="total-stations.9526622e">total stations</span></span>
+                    <button type="button" id="delete-all-stations" class="danger"><span data-i18n="delete-all.97811183">Delete all</span></button>
                 </div>
                 <div class="settings-summary">
-                    <span><strong id="ignored-stations-count">0</strong> ignored stations</span>
-                    <button type="button" id="manage-ignored-stations" class="secondary">Manage</button>
+                    <span><strong id="ignored-stations-count">0</strong> <span data-i18n="ignored-stations.3bd81f31">ignored stations</span></span>
+                    <button type="button" id="manage-ignored-stations" class="secondary"><span data-i18n="manage.5a234448">Manage</span></button>
                 </div>
             </fieldset>
             <fieldset>
-                <legend>Packet Logging</legend>
-                <label class="checkbox-label"><input type="checkbox" id="packet-logging-enabled" disabled> Enable packet logging</label>
+                <legend><span data-i18n="packet-logging.541305a2">Packet Logging</span></legend>
+                <label class="checkbox-label"><input type="checkbox" id="packet-logging-enabled" disabled> <span data-i18n="enable-packet-logging.e296c427">Enable packet logging</span></label>
                 <p id="packet-logging-message" class="form-message" role="status" aria-live="polite"></p>
-                <button type="button" id="open-packets" class="secondary">Packet List</button>
+                <button type="button" id="open-packets" class="secondary"><span data-i18n="packet-list.e5022cbe">Packet List</span></button>
             </fieldset>
             <div class="form-actions">
-                <button type="button" id="close-communication-settings">Close</button>
+                <button type="button" id="close-communication-settings"><span data-i18n="close.7d9eb7ac">Close</span></button>
             </div>
         </div>
     </dialog>
     <dialog id="delete-all-stations-dialog">
         <form id="delete-all-stations-form">
             <div class="dialog-heading">
-                <div><h2>Delete All Stations?</h2><p>This action permanently removes all station data.</p></div>
-                <button type="button" id="close-delete-all-stations" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="delete-all-stations.ef6f28da">Delete All Stations?</span></h2><p><span data-i18n="this-action-permanently-removes-all-station-data.472854af">This action permanently removes all station data.</span></p></div>
+                <button type="button" id="close-delete-all-stations" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>All stations, their position reports, Welcome Center associations, and packets will be deleted.</p>
-                <strong>This cannot be undone.</strong>
+                <p><span data-i18n="all-stations-their-position-reports-welcome-cent.4076335a">All stations, their position reports, Welcome Center associations, and packets will be deleted.</span></p>
+                <strong><span data-i18n="this-cannot-be-undone.b545dd16">This cannot be undone.</span></strong>
             </div>
             <p id="delete-all-stations-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-delete-all-stations" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-delete-all-stations" class="danger-solid">Delete All Stations</button>
+                <button type="button" id="cancel-delete-all-stations" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-delete-all-stations" class="danger-solid"><span data-i18n="delete-all-stations.ee9617a6">Delete All Stations</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="ignored-stations-dialog">
         <div class="dialog-content">
             <div class="dialog-heading">
-                <div><h2>Ignored Stations</h2><p>Packets from these callsigns are ignored.</p></div>
-                <button type="button" id="close-ignored-stations" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="ignored-stations.8694d33f">Ignored Stations</span></h2><p><span data-i18n="packets-from-these-callsigns-are-ignored.8c73141b">Packets from these callsigns are ignored.</span></p></div>
+                <button type="button" id="close-ignored-stations" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="inline-control">
-                <input id="ignored-callsign" maxlength="10" placeholder="Callsign" aria-label="Ignored callsign">
-                <button type="button" id="add-ignored-station">Add</button>
+                <input id="ignored-callsign" maxlength="10" placeholder="Callsign" aria-label="Ignored callsign" data-i18n-aria-label="ignored-callsign.5c402e6c" data-i18n-placeholder="callsign.830a83cd">
+                <button type="button" id="add-ignored-station"><span data-i18n="add.9fd728c6">Add</span></button>
             </div>
             <p id="ignored-stations-message" class="form-message" role="status" aria-live="polite"></p>
             <div id="ignored-stations-list" class="compact-list"></div>
@@ -1108,97 +1144,97 @@
     <dialog id="delete-ignored-station-dialog">
         <form id="delete-ignored-station-form">
             <div class="dialog-heading">
-                <div><h2>Remove Ignored Station</h2><p>This station will no longer be ignored.</p></div>
-                <button type="button" id="close-delete-ignored" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="remove-ignored-station.67f61ff6">Remove Ignored Station</span></h2><p><span data-i18n="this-station-will-no-longer-be-ignored.f4f9f4cc">This station will no longer be ignored.</span></p></div>
+                <button type="button" id="close-delete-ignored" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Remove this callsign from the ignored station list?</p>
+                <p><span data-i18n="remove-this-callsign-from-the-ignored-station-li.11400d6d">Remove this callsign from the ignored station list?</span></p>
                 <strong id="delete-ignored-callsign"></strong>
             </div>
             <p id="delete-ignored-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-delete-ignored" class="secondary">Cancel</button>
-                <button type="submit" id="confirm-delete-ignored" class="danger-solid">Remove</button>
+                <button type="button" id="cancel-delete-ignored" class="secondary"><span data-i18n="cancel.19766ed6">Cancel</span></button>
+                <button type="submit" id="confirm-delete-ignored" class="danger-solid"><span data-i18n="remove.c3812fc4">Remove</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="confirm-settings-dialog">
         <form id="confirm-settings-form">
             <div class="dialog-heading">
-                <div><h2>Save Application Settings?</h2><p>Confirm the retention, map, and content settings.</p></div>
-                <button type="button" id="close-confirm-settings" class="icon-button" aria-label="Close">×</button>
+                <div><h2><span data-i18n="save-application-settings.e89f090e">Save Application Settings?</span></h2><p><span data-i18n="confirm-the-retention-map-and-content-settings.22fab482">Confirm the retention, map, and content settings.</span></p></div>
+                <button type="button" id="close-confirm-settings" class="icon-button" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">×</button>
             </div>
             <div class="confirmation-panel">
-                <p>Save the application settings?</p>
-                <p>Changes may take up to 30 seconds to reflect in the application.</p>
-                <strong>Apply these changes?</strong>
+                <p><span data-i18n="save-the-application-settings.2df7f5e2">Save the application settings?</span></p>
+                <p><span data-i18n="changes-may-take-up-to-30-seconds-to-reflect-in-.6ee25f02">Changes may take up to 30 seconds to reflect in the application.</span></p>
+                <strong><span data-i18n="apply-these-changes.f80f3d21">Apply these changes?</span></strong>
             </div>
             <p id="confirm-settings-message" class="form-message" role="status" aria-live="polite"></p>
             <div class="form-actions">
-                <button type="button" id="cancel-confirm-settings" class="secondary">Go Back</button>
-                <button type="submit" id="confirm-save-settings">Save Changes</button>
+                <button type="button" id="cancel-confirm-settings" class="secondary"><span data-i18n="go-back.b8d99df1">Go Back</span></button>
+                <button type="submit" id="confirm-save-settings"><span data-i18n="save-changes.35322b5b">Save Changes</span></button>
             </div>
         </form>
     </dialog>
     <dialog id="poi-list-dialog" class="poi-dialog wide-dialog" aria-labelledby="poi-list-title">
         <div class="dialog-content">
             <div class="dialog-heading">
-                <div><h2 id="poi-list-title">Points of Interest</h2><p id="poi-center-label"></p></div>
-                <button type="button" class="icon-button" data-poi-close="#poi-list-dialog" aria-label="Close">&times;</button>
+                <div><h2 id="poi-list-title"><span data-i18n="points-of-interest.3ec47e51">Points of Interest</span></h2><p id="poi-center-label"></p></div>
+                <button type="button" class="icon-button" data-poi-close="#poi-list-dialog" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">&times;</button>
             </div>
-            <div class="card-actions poi-toolbar"><button type="button" id="poi-add">Create Point of Interest</button><button type="button" id="poi-refresh" class="secondary">Refresh</button></div>
-            <div id="poi-overview-map" aria-label="Map of all Points of Interest in this Welcome Center"></div>
+            <div class="card-actions poi-toolbar"><button type="button" id="poi-add"><span data-i18n="create-point-of-interest.6909b184">Create Point of Interest</span></button><button type="button" id="poi-refresh" class="secondary"><span data-i18n="refresh.0e916101">Refresh</span></button></div>
+            <div id="poi-overview-map" aria-label="Map of all Points of Interest in this Welcome Center" data-i18n-aria-label="map-of-all-points-of-interest-in-this-welcome-ce.350a0e0e"></div>
             <p id="poi-list-message" class="map-message" role="status" aria-live="polite"></p>
             <div id="poi-list" class="compact-list"></div>
         </div>
     </dialog>
     <dialog id="poi-edit-dialog" class="poi-dialog" aria-labelledby="poi-edit-title">
         <form id="poi-form">
-            <div class="dialog-heading"><h2 id="poi-edit-title">Point of Interest</h2>
-                <button type="button" class="icon-button" data-poi-close="#poi-edit-dialog" aria-label="Close">&times;</button></div>
+            <div class="dialog-heading"><h2 id="poi-edit-title"><span data-i18n="point-of-interest.9a59b417">Point of Interest</span></h2>
+                <button type="button" class="icon-button" data-poi-close="#poi-edit-dialog" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">&times;</button></div>
             <div class="form-grid">
-                <label>Name<input name="name" required minlength="1" maxlength="9" pattern="(?:[A-Za-z0-9]{1,9}|[0-9]{3}\.[0-9]{1,3}(?:-[A-Za-z0-9]{0,2})?)" title="1-9 letters/digits or a frequency such as 146.52-ab; maximum 9 characters"></label>
-                <label>Description<input name="description" maxlength="40" pattern="[ -~]*" title="Up to 40 printable ASCII characters"></label>
-                <label>Latitude<input name="latitude" required placeholder="4336.50N or 43.60833"></label>
-                <label>Longitude<input name="longitude" required placeholder="07258.30W or -72.97167"></label>
+                <label><span data-i18n="name.dcd1d522">Name</span><input name="name" required minlength="1" maxlength="9" pattern="(?:[A-Za-z0-9]{1,9}|[0-9]{3}\.[0-9]{1,3}(?:-[A-Za-z0-9]{0,2})?)" title="1-9 letters/digits or a frequency such as 146.52-ab; maximum 9 characters" data-i18n-title="1-9-letters-digits-or-a-frequency-such-as-146-52.68f015fc"></label>
+                <label><span data-i18n="description.526e0087">Description</span><input name="description" maxlength="40" pattern="[ -~]*" title="Up to 40 printable ASCII characters" data-i18n-title="up-to-40-printable-ascii-characters.a64da4c6"></label>
+                <label><span data-i18n="latitude.238a676d">Latitude</span><input name="latitude" required placeholder="4336.50N or 43.60833" data-i18n-placeholder="4336-50n-or-43-60833.cf9526d8"></label>
+                <label><span data-i18n="longitude.6d80458f">Longitude</span><input name="longitude" required placeholder="07258.30W or -72.97167" data-i18n-placeholder="07258-30w-or-72-97167.f3cab7b9"></label>
                 <input type="hidden" name="symbolCode" value="c"><input type="hidden" name="symbolTableId" value="/">
-                <fieldset class="full-width"><legend>APRS symbol</legend><div data-symbol-picker></div></fieldset>
+                <fieldset class="full-width"><legend><span data-i18n="aprs-symbol.9daffb61">APRS symbol</span></legend><div data-symbol-picker></div></fieldset>
             </div>
-            <button type="button" id="poi-pick-location" class="secondary">Choose location on map</button>
-            <label class="poi-availability"><input type="checkbox" name="temporarilyUnavailable"> Make temporarily unavailable</label>
+            <button type="button" id="poi-pick-location" class="secondary"><span data-i18n="choose-location-on-map.d8815531">Choose location on map</span></button>
+            <label class="poi-availability"><input type="checkbox" name="temporarilyUnavailable"> <span data-i18n="make-temporarily-unavailable.230abf71">Make temporarily unavailable</span></label>
             <p id="poi-edit-message" class="form-message" role="status" aria-live="polite"></p>
-            <div class="form-actions"><button type="button" class="secondary" data-poi-close="#poi-edit-dialog">Cancel</button><button type="submit" id="poi-save">Save</button></div>
+            <div class="form-actions"><button type="button" class="secondary" data-poi-close="#poi-edit-dialog"><span data-i18n="cancel.19766ed6">Cancel</span></button><button type="submit" id="poi-save"><span data-i18n="save.1509f561">Save</span></button></div>
         </form>
     </dialog>
     <dialog id="poi-delete-dialog" class="poi-dialog" aria-labelledby="poi-delete-title">
         <form id="poi-delete-form">
-            <div class="dialog-heading"><h2 id="poi-delete-title">Delete Point of Interest?</h2>
-                <button type="button" class="icon-button" data-poi-close="#poi-delete-dialog" aria-label="Close">&times;</button></div>
-            <div class="confirmation-panel"><p>Permanently delete this Point of Interest?</p><strong id="poi-delete-name"></strong><p>An inactive APRS object report will be queued to withdraw it.</p></div>
+            <div class="dialog-heading"><h2 id="poi-delete-title"><span data-i18n="delete-point-of-interest.81e6ae2b">Delete Point of Interest?</span></h2>
+                <button type="button" class="icon-button" data-poi-close="#poi-delete-dialog" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">&times;</button></div>
+            <div class="confirmation-panel"><p><span data-i18n="permanently-delete-this-point-of-interest.7b5b81a5">Permanently delete this Point of Interest?</span></p><strong id="poi-delete-name"></strong><p><span data-i18n="an-inactive-aprs-object-report-will-be-queued-to.29a37a0c">An inactive APRS object report will be queued to withdraw it.</span></p></div>
             <p id="poi-delete-message" class="form-message" role="status" aria-live="polite"></p>
-            <div class="form-actions"><button type="button" id="poi-delete-cancel" class="secondary" data-poi-close="#poi-delete-dialog">Cancel</button><button type="submit" id="poi-delete-confirm" class="danger-solid">Delete</button></div>
+            <div class="form-actions"><button type="button" id="poi-delete-cancel" class="secondary" data-poi-close="#poi-delete-dialog"><span data-i18n="cancel.19766ed6">Cancel</span></button><button type="submit" id="poi-delete-confirm" class="danger-solid"><span data-i18n="delete.e2d0a549">Delete</span></button></div>
         </form>
     </dialog>
     <dialog id="poi-map-dialog" class="poi-dialog" aria-labelledby="poi-map-title">
         <div class="dialog-content">
-            <div class="dialog-heading"><h2 id="poi-map-title">Point of Interest Location</h2>
-                <button type="button" class="icon-button" data-poi-close="#poi-map-dialog" aria-label="Close">&times;</button></div>
+            <div class="dialog-heading"><h2 id="poi-map-title"><span data-i18n="point-of-interest-location.b43b9090">Point of Interest Location</span></h2>
+                <button type="button" class="icon-button" data-poi-close="#poi-map-dialog" aria-label="Close" data-i18n-aria-label="close.7d9eb7ac">&times;</button></div>
             <div id="poi-location-map"></div>
             <p id="poi-map-message" class="form-message" role="status" aria-live="polite"></p>
-            <div class="form-actions"><button type="button" class="secondary" data-poi-close="#poi-map-dialog">Cancel</button><button type="button" id="poi-use-location" disabled>Use location</button></div>
+            <div class="form-actions"><button type="button" class="secondary" data-poi-close="#poi-map-dialog"><span data-i18n="cancel.19766ed6">Cancel</span></button><button type="button" id="poi-use-location" disabled><span data-i18n="use-location.a6ab4552">Use location</span></button></div>
         </div>
     </dialog>
-    <script src="/webjars/leaflet/1.9.4/leaflet.js"></script>
-    <script src="/region-map-editor.js?v=20260824-17"></script>
-    <script src="/station-list.js?v=20260918-2"></script>
-    <script src="/poi-map.js?v=20260921-2"></script>
-    <script src="/aprs-symbol-picker.js?v=20260925-2"></script>
-    <script src="/policy-content.js?v=20261008-1"></script>
-    <script src="/policy-automation.js?v=20261112-1"></script>
-    <script src="/app.js?v=20261112-1"></script>
-    <script src="/region-import.js?v=20260926-1"></script>
-    <script src="/points-of-interest.js?v=20260925-1"></script>
-    <script src="/center-communications.js?v=20260924-1"></script>
-<script src="/serial-port-picker.js?v=20261005"></script><script src="/communications.js?v=20261005-4"></script>
+    <script src="/webjars/leaflet/1.9.4/leaflet.js?v=20261119-i18n2"></script>
+    <script src="/region-map-editor.js?v=20261119-i18n2"></script>
+    <script src="/station-list.js?v=20261119-i18n2"></script>
+    <script src="/poi-map.js?v=20261119-i18n2"></script>
+    <script src="/aprs-symbol-picker.js?v=20261119-i18n2"></script>
+    <script src="/policy-content.js?v=20261119-i18n2"></script>
+    <script src="/policy-automation.js?v=20261119-i18n2"></script>
+    <script src="/app.js?v=20261119-i18n2"></script>
+    <script src="/region-import.js?v=20261119-i18n2"></script>
+    <script src="/points-of-interest.js?v=20261119-i18n2"></script>
+    <script src="/center-communications.js?v=20261119-i18n2"></script>
+<script src="/serial-port-picker.js?v=20261119-i18n2"></script><script src="/communications.js?v=20261119-i18n2"></script>
 </body>
 </html>

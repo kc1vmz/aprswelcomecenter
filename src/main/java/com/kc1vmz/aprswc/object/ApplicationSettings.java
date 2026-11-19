@@ -21,6 +21,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
@@ -84,6 +85,19 @@ public class ApplicationSettings {
 
     public void setMessageRetryIntervalSeconds(Integer value) {
         messageRetryIntervalSeconds = value;
+    }
+
+    @NotNull
+    @Pattern(regexp = "en|xx|es|fr")
+    @Column(nullable = false, length = 8)
+    private String informationResponseLanguage = "en";
+
+    public String getInformationResponseLanguage() {
+        return informationResponseLanguage;
+    }
+
+    public void setInformationResponseLanguage(String value) {
+        informationResponseLanguage = value;
     }
 
     @Id
@@ -173,6 +187,31 @@ public class ApplicationSettings {
             Integer messageMaxRetries,
             Integer messageRetryIntervalSeconds,
             boolean packetLoggingEnabled) {
+        this(
+                id,
+                mapTileUrl,
+                tinyTopicsServerUrl,
+                packetRetentionDays,
+                stationRetentionDays,
+                messageRetentionDays,
+                messageMaxRetries,
+                messageRetryIntervalSeconds,
+                packetLoggingEnabled,
+                "en");
+    }
+
+    public ApplicationSettings(
+            UUID id,
+            String mapTileUrl,
+            String tinyTopicsServerUrl,
+            Integer packetRetentionDays,
+            Integer stationRetentionDays,
+            Integer messageRetentionDays,
+            Integer messageMaxRetries,
+            Integer messageRetryIntervalSeconds,
+            boolean packetLoggingEnabled,
+            String informationResponseLanguage) {
+        this.informationResponseLanguage = informationResponseLanguage;
         this.packetLoggingEnabled = packetLoggingEnabled;
         this.packetRetentionDays = packetRetentionDays;
         this.stationRetentionDays = stationRetentionDays;

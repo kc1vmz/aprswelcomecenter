@@ -48,7 +48,7 @@ window.policyContent = (() => {
             input.type = 'text';
             input.maxLength = 4000;
             input.value = draft[name] ?? '';
-            input.placeholder = 'Optional; blank uses the topic default';
+            input.placeholder = (globalThis.aprswcI18n?.mark("optional-blank-uses-the-topic-default.f6f3d86f") ?? 'Optional; blank uses the topic default');
             input.addEventListener('input', () => {
                 const next = {...(drafts.get(topicId) || {})};
                 next[name] = input.value;
@@ -77,19 +77,19 @@ window.policyContent = (() => {
             if (current !== generation || !rows.length) return;
             const details = document.createElement('details');
             const summary = document.createElement('summary');
-            summary.textContent = `TinyTopics content history — latest: ${rows[0].CONTENT_STATUS}`;
+            summary.textContent = (globalThis.aprswcI18n?.mark("tinytopics-content-history-latest-0.dfc22030", [globalThis.aprswcI18n?.status("content", rows[0].CONTENT_STATUS) ?? rows[0].CONTENT_STATUS]) ?? `TinyTopics content history — latest: ${rows[0].CONTENT_STATUS}`);
             details.append(summary);
             for (const row of rows) {
                 const entry = document.createElement('p');
-                entry.textContent = `${new Date(row.REQUESTED_AT).toLocaleString()} — ${row.TOPIC_ID}: ${row.CONTENT_STATUS}`
+                entry.textContent = `${new Date(row.REQUESTED_AT).toLocaleString()} — ${row.TOPIC_ID}: ${globalThis.aprswcI18n?.status("content", row.CONTENT_STATUS) ?? row.CONTENT_STATUS}`
                     + (row.HTTP_STATUS ? ` (HTTP ${row.HTTP_STATUS})` : '')
                     + (row.ERROR_MESSAGE ? `. ${row.ERROR_MESSAGE}` : '')
-                    + `. Text: ${row.RESOLVED_TEXT}`;
+                    + (globalThis.aprswcI18n?.mark("text-0.ebc7be22", [row.RESOLVED_TEXT]) ?? `. Text: ${row.RESOLVED_TEXT}`);
                 details.append(entry);
             }
             history.append(details);
         } catch {
-            if (current === generation) history.textContent = 'TinyTopics content history could not be loaded.';
+            if (current === generation) history.textContent = (globalThis.aprswcI18n?.mark("tinytopics-content-history-could-not-be-loaded.15e5ecc0") ?? 'TinyTopics content history could not be loaded.');
         }
     }
 
@@ -101,8 +101,8 @@ window.policyContent = (() => {
         available = false;
         drafts = new Map(topicId ? [[topicId, {...policy.topicParameters}]] : []);
         selector.replaceChildren();
-        option('', 'Loading topics…');
-        notice.textContent = topicId ? `Saved topic: ${topicId}` : '';
+        option('', (globalThis.aprswcI18n?.mark("loading-topics.c6f1891c") ?? 'Loading topics…'));
+        notice.textContent = topicId ? (globalThis.aprswcI18n?.mark("saved-topic-0.79c68b0d", [topicId]) ?? `Saved topic: ${topicId}`) : '';
         renderParameters();
         void loadHistory(policy, current);
         try {
@@ -113,15 +113,15 @@ window.policyContent = (() => {
             topics = rows;
             available = topics.length > 0;
             selector.replaceChildren();
-            option('', available ? 'Choose a topic' : 'No topics available');
+            option('', available ? (globalThis.aprswcI18n?.mark("choose-a-topic.a11d13ad") ?? 'Choose a topic') : (globalThis.aprswcI18n?.mark("no-topics-available.39778324") ?? 'No topics available'));
             topics.forEach(topic => option(topic.id, topic.description ? `${topic.id} — ${topic.description}` : topic.id));
             if (topicId && !topics.some(topic => topic.id === topicId)) {
-                if (available) option(topicId, `${topicId} (saved topic unavailable)`);
-                notice.textContent = `Saved topic ${topicId} is unavailable. Its saved parameters are preserved.`;
+                if (available) option(topicId, (globalThis.aprswcI18n?.mark("0-saved-topic-unavailable.86db2602", [topicId]) ?? `${topicId} (saved topic unavailable)`));
+                notice.textContent = (globalThis.aprswcI18n?.mark("saved-topic-0-is-unavailable-its-saved-parameter.95e91381", [topicId]) ?? `Saved topic ${topicId} is unavailable. Its saved parameters are preserved.`);
             } else {
                 const declared = topics.find(topic => topic.id === topicId)?.parameterNames || [];
                 const obsolete = Object.keys(drafts.get(topicId) || {}).filter(name => !declared.includes(name));
-                notice.textContent = obsolete.length ? `Parameters no longer declared by this topic: ${obsolete.join(', ')}. Clear their values to omit them from requests.` : '';
+                notice.textContent = obsolete.length ? (globalThis.aprswcI18n?.mark("parameters-no-longer-declared-by-this-topic-0-cl.5039167e", [obsolete.join(', ')]) ?? `Parameters no longer declared by this topic: ${obsolete.join(', ')}. Clear their values to omit them from requests.`) : '';
             }
             selector.value = available ? topicId : '';
             renderParameters();
@@ -129,9 +129,9 @@ window.policyContent = (() => {
             if (current !== generation) return;
             available = false;
             selector.replaceChildren();
-            option('', 'No topics available');
-            notice.textContent = 'TinyTopics could not be reached or returned an invalid topic list.'
-                + (topicId ? ` Saved topic ${topicId} and its parameters are preserved.` : '');
+            option('', (globalThis.aprswcI18n?.mark("no-topics-available.39778324") ?? 'No topics available'));
+            notice.textContent = (globalThis.aprswcI18n?.mark("tinytopics-could-not-be-reached-or-returned-an-i.c26fba03") ?? 'TinyTopics could not be reached or returned an invalid topic list.')
+                + (topicId ? (globalThis.aprswcI18n?.mark("saved-topic-0-and-its-parameters-are-preserved.0b906076", [topicId]) ?? ` Saved topic ${topicId} and its parameters are preserved.`) : '');
             update();
         }
     }

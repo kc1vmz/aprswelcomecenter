@@ -17,6 +17,7 @@
  */
 package com.kc1vmz.aprswc.accessor;
 
+import com.kc1vmz.aprswc.content.InformationResponseText;
 import com.kc1vmz.aprswc.enumeration.MessageType;
 import com.kc1vmz.aprswc.enumeration.WelcomeCenterStatus;
 import com.kc1vmz.aprswc.object.*;
@@ -26,7 +27,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -34,11 +34,18 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class WelcomeCenterLifecycle {
     private static final Logger log = LoggerFactory.getLogger(WelcomeCenterLifecycle.class);
 
-    @Autowired
-    private ObjectBeaconQueue objectBeaconQueue;
+    private final ObjectBeaconQueue objectBeaconQueue;
+    private final StationMessageQueue stationMessageQueue;
+    private final InformationResponseText informationText;
 
-    @Autowired
-    private StationMessageQueue stationMessageQueue;
+    public WelcomeCenterLifecycle(
+            ObjectBeaconQueue objectBeaconQueue,
+            StationMessageQueue stationMessageQueue,
+            InformationResponseText informationText) {
+        this.objectBeaconQueue = objectBeaconQueue;
+        this.stationMessageQueue = stationMessageQueue;
+        this.informationText = informationText;
+    }
 
     @TransactionalEventListener
     public void afterCommit(WelcomeCenterChanged event) {
@@ -89,14 +96,12 @@ public class WelcomeCenterLifecycle {
     }
 
     private void announceOpen(WelcomeCenterSnapshot welcomeCenterSnapshot) {
-        String bulletinContent = String.format(
-                "APRS Welcome Center '%s' now open - send HELP for more commands.", welcomeCenterSnapshot.callsign());
+        String bulletinContent = informationText.format("center.open", welcomeCenterSnapshot.callsign());
         bulletin(welcomeCenterSnapshot, bulletinContent);
     }
 
     private void announceClosed(WelcomeCenterSnapshot welcomeCenterSnapshot) {
-        String bulletinContent =
-                String.format("APRS Welcome Center '%s' now closed.", welcomeCenterSnapshot.callsign());
+        String bulletinContent = informationText.format("center.closed", welcomeCenterSnapshot.callsign());
         bulletin(welcomeCenterSnapshot, bulletinContent);
     }
 

@@ -17,13 +17,14 @@
  */
 package com.kc1vmz.aprswc.controller;
 
+import com.kc1vmz.aprswc.controller.ApiErrorHandler.ErrorBody;
 import com.kc1vmz.aprswc.importregion.RegionImportService;
 import com.kc1vmz.aprswc.importregion.RegionImportService.FeaturePage;
 import com.kc1vmz.aprswc.importregion.RegionImportService.ImportSummary;
 import com.kc1vmz.aprswc.importregion.ShapefileReader.Boundary;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -41,7 +42,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -101,24 +101,22 @@ public class RegionImportController {
         return ResponseEntity.noContent().build();
     }
 
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String, String>> routingError(ResponseStatusException error) {
-        return ResponseEntity.status(error.getStatusCode())
-                .body(Map.of("message", error.getReason() == null ? "Import request failed." : error.getReason()));
-    }
-
     @ExceptionHandler(TimeoutException.class)
-    public ResponseEntity<Map<String, String>> timeout() {
-        return ResponseEntity.status(408).body(Map.of("message", "Upload timed out. Try a smaller collection."));
+    public ResponseEntity<ErrorBody> timeout() {
+        return ResponseEntity.status(408)
+                .body(new ErrorBody(
+                        "IMPORT_TIMEOUT", List.of(), "Upload timed out. Try a smaller collection.", List.of()));
     }
 
     @ExceptionHandler({IllegalArgumentException.class, IOException.class})
-    public ResponseEntity<Map<String, String>> badUpload(Exception error) {
+    public ResponseEntity<ErrorBody> badUpload(Exception error) {
         return ResponseEntity.badRequest()
-                .body(Map.of(
-                        "message",
+                .body(new ErrorBody(
+                        "INVALID_UPLOAD",
+                        List.of(),
                         error instanceof IOException
                                 ? "The ZIP could not be read. Upload a valid, unencrypted ZIP."
-                                : error.getMessage()));
+                                : error.getMessage(),
+                        List.of()));
     }
 }

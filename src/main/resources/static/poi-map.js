@@ -21,9 +21,9 @@ const poiMap = {
             const point = this.point(poi);
             if (!point) continue;
             L.marker(point, { icon, title: `${poi.name} (${poi.status})` })
-                .bindPopup(`<strong>${escapeHtml(poi.name)} (${escapeHtml(poi.status)})</strong>`
+                .bindPopup(`<strong>${escapeHtml(poi.name)} (${escapeHtml(globalThis.aprswcI18n?.label(poi.status) ?? poi.status)})</strong>`
                     + `<br>${escapeHtml(poi.description || "")}`
-                    + (poi.downReasons?.length ? `<br>${escapeHtml(poi.downReasons.join("; "))}` : ""))
+                    + (poi.downReasons?.length ? `<br>${escapeHtml(poi.downReasons.map(reason => globalThis.aprswcI18n?.label(reason) ?? reason).join("; "))}` : ""))
                 .addTo(layers);
             bounds.extend(point);
         }

@@ -38,7 +38,7 @@ function setup(status = 200) {
             calls.push({ url, ...options });
             const read = options.method === 'GET';
             return { ok: read || status < 400, status: read ? 200 : status,
-                json: async () => read ? [poi] : { message: 'Point of Interest changed. Refresh and try again.' } };
+                json: async () => read ? [poi] : { code: 'POI_CHANGED', parameters: [], message: 'Point of Interest changed. Refresh and try again.' } };
         }
     });
     vm.runInContext(source, context);

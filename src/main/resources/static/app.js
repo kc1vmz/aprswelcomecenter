@@ -9,21 +9,21 @@ try {
 
 function renderStationList() {
     const rows = window.aprswcStationList.select(stationListRows, stationListOptions);
-    const sortLabels = { callsign: "Callsign A-Z", callsignDesc: "Callsign Z-A",
-        lastHeard: "Newest heard first", lastHeardAsc: "Oldest heard first" };
-    document.querySelector("#stations-heading-count").textContent = ` (${rows.length} of ${stationListRows.length})`;
+    const sortLabels = { callsign: (globalThis.aprswcI18n?.mark("callsign-a-z.97438715") ?? "Callsign A-Z"), callsignDesc: (globalThis.aprswcI18n?.mark("callsign-z-a.c639ce51") ?? "Callsign Z-A"),
+        lastHeard: (globalThis.aprswcI18n?.mark("newest-heard-first.f19bcb9a") ?? "Newest heard first"), lastHeardAsc: (globalThis.aprswcI18n?.mark("oldest-heard-first.c3f402f0") ?? "Oldest heard first") };
+    document.querySelector("#stations-heading-count").textContent = (globalThis.aprswcI18n?.mark("stations.count", [rows.length, stationListRows.length]) ?? ` (${rows.length} of ${stationListRows.length})`);
     document.querySelector("#station-options-summary").textContent =
-        `${sortLabels[stationListOptions.sort]} - ${stationListOptions.hours ? `Last ${stationListOptions.hours} hour${stationListOptions.hours === 1 ? "" : "s"}` : "All stations"}`;
+        `${sortLabels[stationListOptions.sort]} - ${stationListOptions.hours ? (globalThis.aprswcI18n?.plural("stations.hours", stationListOptions.hours) ?? `Last ${stationListOptions.hours} hour${stationListOptions.hours === 1 ? "" : "s"}`) : (globalThis.aprswcI18n?.mark("all-stations.e31982b3") ?? "All stations")}`;
     render("#stations", rows, station => `
         <article class="card">
             <div class="station-card-header">
                 <strong>${escapeHtml(station.callsign)}</strong>
-                <button type="button" class="secondary view-station" data-id="${station.id}">Details</button>
+                <button type="button" class="secondary view-station" data-id="${station.id}">${(globalThis.aprswcI18n?.mark("details.45989de4") ?? `Details`)}</button>
             </div>
             <small>${escapeHtml(station.lastHeard
-                ? `Last heard: ${new Date(station.lastHeard).toLocaleString()}`
-                : `Not heard in ${stationPacketRetentionDays} day${stationPacketRetentionDays === 1 ? "" : "s"}`)}</small>
-        </article>`, stationListRows.length ? "No stations heard within this time period." : "No stations yet.");
+                ? (globalThis.aprswcI18n?.mark("last-heard-0.1622b4ee", [new Date(station.lastHeard).toLocaleString()]) ?? `Last heard: ${new Date(station.lastHeard).toLocaleString()}`)
+                : (globalThis.aprswcI18n?.plural("stations.days", stationPacketRetentionDays) ?? `Not heard in ${stationPacketRetentionDays} day${stationPacketRetentionDays === 1 ? "" : "s"}`))}</small>
+        </article>`, stationListRows.length ? (globalThis.aprswcI18n?.mark("no-stations-heard-within-this-time-period.61725d2b") ?? "No stations heard within this time period.") : (globalThis.aprswcI18n?.mark("no-stations-yet.11482466") ?? "No stations yet."));
 }
 
 const welcomeCenters = new Map();
@@ -78,7 +78,7 @@ function applyMapTileUrl(value) {
     window.regionMapEditor?.setTileUrl(mapTileUrl);
 }
 
-const render = (selector, rows, format, emptyMessage = "No records yet.") => {
+const render = (selector, rows, format, emptyMessage = (globalThis.aprswcI18n?.mark("no-records-yet.b779ee08") ?? "No records yet.")) => {
     document.querySelector(selector).innerHTML = rows.length
         ? rows.map(format).join("")
         : `<p>${escapeHtml(emptyMessage)}</p>`;
@@ -88,7 +88,11 @@ async function requestJson(url, options) {
     const response = await fetch(url, options);
     if (!response.ok) {
         const details = await response.json().catch(() => ({}));
-        throw new Error(details.message || `Request failed with status ${response.status}.`);
+        const error = globalThis.aprswcI18n?.apiError(details, response.status)
+            ?? new Error(details.message || `Request failed with status ${response.status}.`);
+        error.code = details.code;
+        error.status = response.status;
+        throw error;
     }
     return response.status === 204 ? null : response.json();
 }
@@ -96,7 +100,12 @@ async function requestJson(url, options) {
 async function requestOptionalJson(url, options) {
     const response = await fetch(url, options);
     if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}.`);
+        const details = await response.json().catch(() => ({}));
+        const error = globalThis.aprswcI18n?.apiError(details, response.status)
+            ?? new Error(details.message || `Request failed with status ${response.status}.`);
+        error.code = details.code;
+        error.status = response.status;
+        throw error;
     }
     const content = await response.text();
     return content ? JSON.parse(content) : null;
@@ -105,7 +114,12 @@ async function requestOptionalJson(url, options) {
 async function requestText(url, options) {
     const response = await fetch(url, options);
     if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}.`);
+        const details = await response.json().catch(() => ({}));
+        const error = globalThis.aprswcI18n?.apiError(details, response.status)
+            ?? new Error(details.message || `Request failed with status ${response.status}.`);
+        error.code = details.code;
+        error.status = response.status;
+        throw error;
     }
     return response.text();
 }
@@ -115,7 +129,7 @@ async function openAboutDialog() {
     const message = document.querySelector("#about-message");
     const details = document.querySelector("#about-details");
     message.className = "form-message";
-    message.textContent = "Loading application information…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading-application-information.25f258d1") ?? "Loading application information…");
     details.innerHTML = "";
     dialog.showModal();
 
@@ -126,14 +140,14 @@ async function openAboutDialog() {
             ? `<a href="${escapeHtml(website)}" target="_blank" rel="noopener noreferrer">${escapeHtml(website)}</a>`
             : escapeHtml(website || "—");
         details.innerHTML = `
-            <dt>Version</dt><dd>${escapeHtml(applicationVersion.version || "—")}</dd>
-            <dt>Author</dt><dd>${escapeHtml(applicationVersion.author || "—")}</dd>
-            <dt>Copyright year</dt><dd>${escapeHtml(applicationVersion.copyrightYear || "—")}</dd>
-            <dt>Website</dt><dd>${websiteLink}</dd>`;
+            <dt>${(globalThis.aprswcI18n?.mark("version.dd167905") ?? `Version`)}</dt><dd>${escapeHtml(applicationVersion.version || "—")}</dd>
+            <dt>${(globalThis.aprswcI18n?.mark("author.d95082a2") ?? `Author`)}</dt><dd>${escapeHtml(applicationVersion.author || "—")}</dd>
+            <dt>${(globalThis.aprswcI18n?.mark("copyright-year.8f7a60ba") ?? `Copyright year`)}</dt><dd>${escapeHtml(applicationVersion.copyrightYear || "—")}</dd>
+            <dt>${(globalThis.aprswcI18n?.mark("website.b5a229ac") ?? `Website`)}</dt><dd>${websiteLink}</dd>`;
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Application information could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("application-information-could-not-be-loaded.56140f92") ?? "Application information could not be loaded.");
     }
 }
 
@@ -159,7 +173,7 @@ async function openLicenseDialog() {
     const message = document.querySelector("#license-message");
     const licenseText = document.querySelector("#license-text");
     message.className = "form-message";
-    message.textContent = "Loading license…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading-license.c1788f81") ?? "Loading license…");
     licenseText.textContent = "";
     dialog.showModal();
 
@@ -168,7 +182,7 @@ async function openLicenseDialog() {
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The license agreement could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-license-agreement-could-not-be-loaded.226696e6") ?? "The license agreement could not be loaded.");
     }
 }
 
@@ -204,7 +218,7 @@ async function load() {
         document.querySelector("#welcome-centers-heading-count").textContent = "";
         document.querySelector("#stations-heading-count").textContent = "";
         document.querySelectorAll(".cards").forEach(element => {
-            element.innerHTML = "<p>Service data is unavailable.</p>";
+            element.innerHTML = `<p>${globalThis.aprswcI18n?.label("Service data is unavailable.") ?? "Service data is unavailable."}</p>`;
         });
     }
 }
@@ -217,33 +231,33 @@ function renderWelcomeCenters(centers) {
 
         render("#centers", centers, center => `
             <article class="card">
-                <span class="tag">${escapeHtml(center.callsign)} (${center.status === "CLOSED" ? "Closed" : "Open"})</span>
+                <span class="tag">${escapeHtml(center.callsign)} (${center.status === "CLOSED" ? (globalThis.aprswcI18n?.mark("closed.c21ead06") ?? "Closed") : (globalThis.aprswcI18n?.mark("open.ed077f3d") ?? "Open")})</span>
                 <strong>${escapeHtml(center.name || center.callsign)}</strong>
                 <div class="card-actions center-card-actions">
                     <button type="button" class="secondary toggle-center-status" data-id="${center.id}">
-                        ${center.status === "OPEN" ? "Close" : "Open"}
+                        ${center.status === "OPEN" ? (globalThis.aprswcI18n?.mark("close.7d9eb7ac") ?? "Close") : (globalThis.aprswcI18n?.mark("action.open") ?? "Open")}
                     </button>
                     <button type="button" class="secondary edit-center" data-id="${center.id}">
-                        Details
+                        ${(globalThis.aprswcI18n?.mark("details.45989de4") ?? `Details`)}
                     </button>
                     <button type="button" class="secondary manage-regions" data-id="${center.id}">
-                        Regions
+                        ${(globalThis.aprswcI18n?.mark("regions.610c65d8") ?? `Regions`)}
                     </button>
-                    <button type="button" class="secondary manage-pois" data-id="${center.id}">Points of Interest</button>
+                    <button type="button" class="secondary manage-pois" data-id="${center.id}">${(globalThis.aprswcI18n?.mark("points-of-interest.3ec47e51") ?? `Points of Interest`)}</button>
                     <button type="button" class="secondary manage-plan" data-id="${center.id}">
-                        Communication Plan
+                        ${(globalThis.aprswcI18n?.mark("communication-plan.a095c8dd") ?? `Communication Plan`)}
                     </button>
                     <button type="button" class="secondary view-weather" data-id="${center.id}">
-                        Weather
+                        ${(globalThis.aprswcI18n?.mark("weather.a0bba638") ?? `Weather`)}
                     </button>
                     <button type="button" class="secondary view-center-stations" data-id="${center.id}">
-                        Stations
+                        ${(globalThis.aprswcI18n?.mark("stations.9d3d204f") ?? `Stations`)}
                     </button>
                     <button type="button" class="secondary view-center-messages" data-id="${center.id}">
-                        Messages
+                        ${(globalThis.aprswcI18n?.mark("messages.04d7b483") ?? `Messages`)}
                     </button>
                 </div>
-            </article>`, "No welcome centers yet.");
+            </article>`, (globalThis.aprswcI18n?.mark("no-welcome-centers-yet.24ba813a") ?? "No welcome centers yet."));
 
 }
 
@@ -257,9 +271,11 @@ function openCenterStatusDialog(id) {
     const center = welcomeCenters.get(id);
     if (!center) return;
     pendingCenterStatus = { id, expectedStatus: center.status, status: center.status === "OPEN" ? "CLOSED" : "OPEN" };
-    const action = center.status === "OPEN" ? "Close" : "Open";
-    document.querySelector("#center-status-title").textContent = `${action} Welcome Center?`;
-    document.querySelector("#center-status-question").textContent = `${action} ${center.callsign}?`;
+    const action = center.status === "OPEN" ? (globalThis.aprswcI18n?.mark("close.7d9eb7ac") ?? "Close") : (globalThis.aprswcI18n?.mark("action.open") ?? "Open");
+    document.querySelector("#center-status-title").textContent = center.status === "OPEN"
+        ? (globalThis.aprswcI18n?.mark("center-status.close-title") ?? "Close Welcome Center?")
+        : (globalThis.aprswcI18n?.mark("center-status.open-title") ?? "Open Welcome Center?");
+    document.querySelector("#center-status-question").textContent = (globalThis.aprswcI18n?.mark(center.status === "OPEN" ? "center-status.close-question" : "center-status.open-question", [center.callsign]) ?? `${action} ${center.callsign}?`);
     document.querySelector("#center-status-message").textContent = "";
     const submit = document.querySelector("#confirm-center-status");
     submit.textContent = action;
@@ -279,7 +295,7 @@ async function confirmCenterStatus(event) {
     const message = document.querySelector("#center-status-message");
     centerStatusSaving = true;
     submit.disabled = true;
-    message.textContent = "Saving...";
+    message.textContent = (globalThis.aprswcI18n?.mark("saving.dc85af8f") ?? "Saving...");
     try {
         const response = await fetch(`/api/v1/welcome-centers/${pending.id}/status`, {
             method: "PATCH", headers: { "Content-Type": "application/json" },
@@ -288,22 +304,22 @@ async function confirmCenterStatus(event) {
         if (response.status === 409 || response.status === 404) {
             pendingCenterStatus = null;
             message.textContent = response.status === 409
-                ? "This Welcome Center's state changed since the list was loaded. Your change was not applied. Review the refreshed list and try again."
-                : "This Welcome Center no longer exists. The list will be refreshed.";
+                ? (globalThis.aprswcI18n?.mark("this-welcome-center-s-state-changed-since-the-li.c852d73a") ?? "This Welcome Center's state changed since the list was loaded. Your change was not applied. Review the refreshed list and try again.")
+                : (globalThis.aprswcI18n?.mark("this-welcome-center-no-longer-exists-the-list-wi.1c02a0f6") ?? "This Welcome Center no longer exists. The list will be refreshed.");
         } else if (!response.ok) {
             throw new Error("save");
         } else {
             pendingCenterStatus = null;
-            message.textContent = "State changed successfully.";
+            message.textContent = (globalThis.aprswcI18n?.mark("state-changed-successfully.8be25be1") ?? "State changed successfully.");
         }
         try {
             await refreshWelcomeCenters();
             if (response.ok) document.querySelector("#center-status-dialog").close();
         } catch (_) {
-            message.textContent += " The list could not be refreshed. Reload the page before trying again.";
+            message.textContent += (globalThis.aprswcI18n?.mark("the-list-could-not-be-refreshed-reload-the-page-.635b3b57") ?? " The list could not be refreshed. Reload the page before trying again.");
         }
     } catch (_) {
-        message.textContent = "The change could not be confirmed. Refresh the page to check the current state before trying again.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-change-could-not-be-confirmed-refresh-the-pa.6b8a6bfa") ?? "The change could not be confirmed. Refresh the page to check the current state before trying again.");
         pendingCenterStatus = null;
     } finally {
         centerStatusSaving = false;
@@ -312,22 +328,22 @@ async function confirmCenterStatus(event) {
 
 function renderStationWelcomeCenters(centers) {
     if (!centers?.length) {
-        return '<p class="empty-associations">No associated Welcome Centers.</p>';
+        return `<p class="empty-associations">${(globalThis.aprswcI18n?.mark("label.no-associated-welcome-centers.") ?? "No associated Welcome Centers.")}</p>`;
     }
     return `<ul class="station-centers">${centers.map(center => `
         <li>
             <span class="station-center-callsign">${escapeHtml(center.callsign || "—")}</span>
-            <strong class="station-center-name">${escapeHtml(center.name || "Unnamed Welcome Center")}</strong>
+            <strong class="station-center-name">${escapeHtml(center.name || (globalThis.aprswcI18n?.mark("unnamed-welcome-center.4ae97a0c") ?? "Unnamed Welcome Center"))}</strong>
         </li>`).join("")}</ul>`;
 }
 
 function formatWelcomeCenterLabel(center) {
     if (!center) {
-        return "Welcome Center";
+        return (globalThis.aprswcI18n?.mark("welcome-center.047c9552") ?? "Welcome Center");
     }
     const callsign = center.callsign || "";
     const name = center.name || "";
-    return callsign && name && callsign !== name ? `${callsign} · ${name}` : callsign || name || "Welcome Center";
+    return callsign && name && callsign !== name ? `${callsign} · ${name}` : callsign || name || (globalThis.aprswcI18n?.mark("welcome-center.047c9552") ?? "Welcome Center");
 }
 
 async function openWelcomeCenterMessagesDialog(centerId) {
@@ -343,7 +359,7 @@ async function openWelcomeCenterMessagesDialog(centerId) {
     list.innerHTML = "";
     deleteButton.disabled = true;
     message.className = "form-message";
-    message.textContent = "Loading messages…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading-messages.3a496d42") ?? "Loading messages…");
     if (!dialog.open) dialog.showModal();
     try {
         const messages = await requestJson(
@@ -352,17 +368,17 @@ async function openWelcomeCenterMessagesDialog(centerId) {
         const deliveries = new Map(deliveryRows.map(row => [row.ID, row]));
         list.innerHTML = messages.length ? messages.map(stationMessage => `
             <article class="station-message-item welcome-center-message-item">
-                <time>${stationMessage.sentTime ? formatReceivedTime(stationMessage.sentTime) : "Not yet sent"}</time>
+                <time>${stationMessage.sentTime ? formatReceivedTime(stationMessage.sentTime) : (globalThis.aprswcI18n?.mark("not-yet-sent.abbeab9f") ?? "Not yet sent")}</time>
                 <div><strong>${escapeHtml(stationMessage.callsignFrom || "—")}</strong></div>
-                <div><strong>${escapeHtml(stationMessage.messageType === "STATUS_REPORT" ? "Status report" : stationMessage.callsignTo || "All stations")}</strong></div>
-                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong>${stationMessage.messageIdentifier ? `<small class="message-character-count">Message ID: ${escapeHtml(stationMessage.messageIdentifier)}${formatMessageDelivery(deliveries.get(stationMessage.id))}</small>` : ""}</div>
-            </article>`).join("") : '<p class="empty-associations">No messages for this Welcome Center.</p>';
+                <div><strong>${escapeHtml(stationMessage.messageType === "STATUS_REPORT" ? (globalThis.aprswcI18n?.mark("status-report.b7840265") ?? "Status report") : stationMessage.callsignTo || (globalThis.aprswcI18n?.mark("all-stations.e31982b3") ?? "All stations"))}</strong></div>
+                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong>${stationMessage.messageIdentifier ? `<small class="message-character-count">${(globalThis.aprswcI18n?.mark("message-id-0-1.3f4212ff", [stationMessage.messageIdentifier, formatMessageDelivery(deliveries.get(stationMessage.id))]) ?? `Message ID: ${escapeHtml(stationMessage.messageIdentifier)}${formatMessageDelivery(deliveries.get(stationMessage.id))}`)}</small>` : ""}</div>
+            </article>`).join("") : `<p class="empty-associations">${(globalThis.aprswcI18n?.mark("label.no-messages-for-this-welcome-center.") ?? "No messages for this Welcome Center.")}</p>`;
         document.querySelector("#welcome-center-message-count").textContent = `(${messages.length})`;
         deleteButton.disabled = messages.length === 0;
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Messages could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("messages-could-not-be-loaded.0bfd141e") ?? "Messages could not be loaded.");
     }
 }
 
@@ -433,7 +449,7 @@ async function sendWelcomeCenterMessage(event) {
     const message = document.querySelector("#confirm-send-welcome-center-message-message");
     button.disabled = true;
     message.className = "form-message";
-    message.textContent = "Creating message…";
+    message.textContent = (globalThis.aprswcI18n?.mark("creating-message.bc79663d") ?? "Creating message…");
     try {
         await requestJson("/api/v1/station-messages", {
             method: "POST",
@@ -445,7 +461,7 @@ async function sendWelcomeCenterMessage(event) {
         await openWelcomeCenterMessagesDialog(centerId);
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The message could not be created.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-message-could-not-be-created.478ac277") ?? "The message could not be created.");
     } finally {
         button.disabled = false;
     }
@@ -457,7 +473,7 @@ async function openStationDialog(stationId) {
     const properties = document.querySelector("#station-properties");
     const stationWelcomeCenters = document.querySelector("#station-dialog-welcome-centers");
     message.className = "form-message";
-    message.textContent = "Loading station…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading-station.d7fa0ad4") ?? "Loading station…");
     properties.innerHTML = "";
     stationWelcomeCenters.innerHTML = "";
     activeStationId = stationId;
@@ -473,7 +489,7 @@ async function openStationDialog(stationId) {
     stationLocationMarker?.remove();
     stationLocationMarker = null;
     stationLocationMap?.setView([20, 0], 2);
-    document.querySelector("#station-location-message").textContent = "Loading the latest station position…";
+    document.querySelector("#station-location-message").textContent = (globalThis.aprswcI18n?.mark("loading-the-latest-station-position.bea728ca") ?? "Loading the latest station position…");
 
     try {
         const [station, centers, positions] = await Promise.all([
@@ -482,7 +498,7 @@ async function openStationDialog(stationId) {
             requestJson(`/api/v1/stations/${stationId}/positions`).catch(() => [])
         ]);
         properties.innerHTML = `
-            <div><span>Callsign</span><strong>${escapeHtml(station.callsign)}</strong></div>`;
+            <div><span>${(globalThis.aprswcI18n?.mark("callsign.830a83cd") ?? `Callsign`)}</span><strong>${escapeHtml(station.callsign)}</strong></div>`;
         activeStationCallsign = station.callsign;
         document.querySelector("#ignore-station").disabled = false;
         document.querySelector("#delete-station").disabled = false;
@@ -495,7 +511,7 @@ async function openStationDialog(stationId) {
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Station details could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("station-details-could-not-be-loaded.8fe92ae2") ?? "Station details could not be loaded.");
     }
 }
 
@@ -503,7 +519,7 @@ function initializeStationLocationMap() {
     const message = document.querySelector("#station-location-message");
     if (typeof L === "undefined") {
         message.className = "map-message error";
-        message.textContent = "The map library could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-map-library-could-not-be-loaded.fba86529") ?? "The map library could not be loaded.");
         return;
     }
     if (!stationLocationMap) {
@@ -527,11 +543,11 @@ async function renderStationLocation(station, positions) {
     if (!latestPosition?.longitude || !latestPosition?.latitude) {
         stationLocationMap.setView([20, 0], 2);
         message.className = "map-message";
-        message.textContent = "No station position is available.";
+        message.textContent = (globalThis.aprswcI18n?.mark("no-station-position-is-available.4b1a9a61") ?? "No station position is available.");
         return;
     }
     message.className = "map-message";
-    message.textContent = "Converting the latest station position…";
+    message.textContent = (globalThis.aprswcI18n?.mark("converting-the-latest-station-position.ac1187b2") ?? "Converting the latest station position…");
     try {
         const converted = await requestJson("/api/v1/coordinates", {
             method: "POST",
@@ -543,19 +559,19 @@ async function renderStationLocation(station, positions) {
         });
         const point = converted[0];
         if (!point?.valid) {
-            throw new Error("Invalid station coordinates");
+            throw new Error((globalThis.aprswcI18n?.mark("invalid-station-coordinates.fb982695") ?? "Invalid station coordinates"));
         }
         stationLocationMarker = L.marker([point.latitude, point.longitude])
-            .bindPopup(`<strong>${escapeHtml(station.callsign || "Unknown station")}</strong>`)
+            .bindPopup(`<strong>${escapeHtml(station.callsign || (globalThis.aprswcI18n?.mark("unknown-station.6d052a92") ?? "Unknown station"))}</strong>`)
             .addTo(stationLocationMap);
         stationLocationMap.setView([point.latitude, point.longitude], 13);
         message.textContent = latestPosition.createdTime
-            ? `Latest position reported ${formatReceivedTime(latestPosition.createdTime)}.`
-            : "Latest station position.";
+            ? (globalThis.aprswcI18n?.mark("latest-position-reported-0.305103c7", [formatReceivedTime(latestPosition.createdTime)]) ?? `Latest position reported ${formatReceivedTime(latestPosition.createdTime)}.`)
+            : (globalThis.aprswcI18n?.mark("latest-station-position.00af4ac7") ?? "Latest station position.");
     } catch (error) {
         stationLocationMap.setView([20, 0], 2);
         message.className = "map-message error";
-        message.textContent = "The latest station position could not be displayed.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-latest-station-position-could-not-be-display.2c112ee9") ?? "The latest station position could not be displayed.");
     }
 }
 
@@ -596,7 +612,7 @@ async function openStationMessagesDialog() {
     list.innerHTML = "";
     deleteButton.disabled = true;
     message.className = "form-message";
-    message.textContent = "Loading messages…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading-messages.3a496d42") ?? "Loading messages…");
     if (!dialog.open) {
         dialog.showModal();
     }
@@ -607,16 +623,16 @@ async function openStationMessagesDialog() {
         const deliveries = new Map(deliveryRows.map(row => [row.ID, row]));
         list.innerHTML = messages.length ? messages.map(stationMessage => `
             <article class="station-message-item">
-                <time>${stationMessage.sentTime ? formatReceivedTime(stationMessage.sentTime) : "Not yet sent"}</time>
+                <time>${stationMessage.sentTime ? formatReceivedTime(stationMessage.sentTime) : (globalThis.aprswcI18n?.mark("not-yet-sent.abbeab9f") ?? "Not yet sent")}</time>
                 <div><strong>${escapeHtml(stationMessage.callsignFrom || "—")}</strong></div>
-                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong>${stationMessage.messageIdentifier ? `<small class="message-character-count">Message ID: ${escapeHtml(stationMessage.messageIdentifier)}${formatMessageDelivery(deliveries.get(stationMessage.id))}</small>` : ""}</div>
-            </article>`).join("") : '<p class="empty-associations">No messages for this station.</p>';
+                <div><strong>${escapeHtml(stationMessage.content || "—")}</strong>${stationMessage.messageIdentifier ? `<small class="message-character-count">${(globalThis.aprswcI18n?.mark("message-id-0-1.3f4212ff", [stationMessage.messageIdentifier, formatMessageDelivery(deliveries.get(stationMessage.id))]) ?? `Message ID: ${escapeHtml(stationMessage.messageIdentifier)}${formatMessageDelivery(deliveries.get(stationMessage.id))}`)}</small>` : ""}</div>
+            </article>`).join("") : `<p class="empty-associations">${(globalThis.aprswcI18n?.mark("label.no-messages-for-this-station.") ?? "No messages for this station.")}</p>`;
         document.querySelector("#station-message-count").textContent = `(${messages.length})`;
         deleteButton.disabled = messages.length === 0;
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Messages could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("messages-could-not-be-loaded.0bfd141e") ?? "Messages could not be loaded.");
     }
 }
 
@@ -661,7 +677,7 @@ async function deleteMessages(event) {
     const message = document.querySelector("#delete-messages-message");
     button.disabled = true;
     message.className = "form-message";
-    message.textContent = "Deleting messages…";
+    message.textContent = (globalThis.aprswcI18n?.mark("deleting-messages.9437d61a") ?? "Deleting messages…");
     try {
         await requestJson(scope.url, { method: "DELETE" });
         closeDeleteMessagesDialog();
@@ -672,7 +688,7 @@ async function deleteMessages(event) {
         }
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The messages could not be deleted.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-messages-could-not-be-deleted.4ef5ce75") ?? "The messages could not be deleted.");
     } finally {
         button.disabled = false;
     }
@@ -691,7 +707,7 @@ async function openSendStationMessageDialog() {
     form.elements.callsignFrom.focus();
     const request = ++stationPathRequest;
     const select = form.elements.packetProcessorId;
-    select.replaceChildren(new Option("Use last heard", ""));
+    select.replaceChildren(new Option((globalThis.aprswcI18n?.mark("use-last-heard.ec652192") ?? "Use last heard"), ""));
     const submit = form.querySelector('button[type="submit"]');
     submit.disabled = true;
     try {
@@ -745,7 +761,7 @@ async function sendStationMessage(event) {
     const message = document.querySelector("#confirm-send-station-message-message");
     button.disabled = true;
     message.className = "form-message";
-    message.textContent = "Creating message…";
+    message.textContent = (globalThis.aprswcI18n?.mark("creating-message.bc79663d") ?? "Creating message…");
     try {
         await requestJson("/api/v1/station-messages/standalone", {
             method: "POST",
@@ -757,7 +773,7 @@ async function sendStationMessage(event) {
         await openStationMessagesDialog();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = error.message || "The message could not be created.";
+        message.textContent = error.message || (globalThis.aprswcI18n?.mark("the-message-could-not-be-created.478ac277") ?? "The message could not be created.");
     } finally {
         button.disabled = false;
     }
@@ -775,7 +791,7 @@ async function openStationPositionsDialog() {
     positionsList.innerHTML = "";
     deleteButton.disabled = true;
     message.className = "form-message";
-    message.textContent = "Loading position records…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading-position-records.370ac6b4") ?? "Loading position records…");
     if (!dialog.open) {
         dialog.showModal();
     }
@@ -784,15 +800,15 @@ async function openStationPositionsDialog() {
         positionsList.innerHTML = positions.length ? positions.map(position => `
             <article class="station-position-item">
                 <time datetime="${escapeHtml(position.createdTime)}">${formatReceivedTime(position.createdTime)}</time>
-                <div><span>Latitude</span><strong>${escapeHtml(position.latitude || "—")}</strong></div>
-                <div><span>Longitude</span><strong>${escapeHtml(position.longitude || "—")}</strong></div>
-            </article>`).join("") : '<p class="empty-associations">No position records.</p>';
+                <div><span>${(globalThis.aprswcI18n?.mark("latitude.238a676d") ?? `Latitude`)}</span><strong>${escapeHtml(position.latitude || "—")}</strong></div>
+                <div><span>${(globalThis.aprswcI18n?.mark("longitude.6d80458f") ?? `Longitude`)}</span><strong>${escapeHtml(position.longitude || "—")}</strong></div>
+            </article>`).join("") : `<p class="empty-associations">${(globalThis.aprswcI18n?.mark("label.no-position-records.") ?? "No position records.")}</p>`;
         document.querySelector("#station-position-count").textContent = `(${positions.length})`;
         deleteButton.disabled = positions.length === 0;
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Position records could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("position-records-could-not-be-loaded.e818ab8e") ?? "Position records could not be loaded.");
     }
 }
 
@@ -808,7 +824,7 @@ async function openStationWeatherDialog() {
     reportsList.innerHTML = "";
     deleteButton.disabled = true;
     message.className = "form-message";
-    message.textContent = "Loading weather reports…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading-weather-reports.f703e179") ?? "Loading weather reports…");
     if (!dialog.open) {
         dialog.showModal();
     }
@@ -821,7 +837,7 @@ async function openStationWeatherDialog() {
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Weather reports could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("weather-reports-could-not-be-loaded.557a42ab") ?? "Weather reports could not be loaded.");
     }
 }
 
@@ -849,7 +865,7 @@ async function deleteStationWeatherReports(event) {
     const message = document.querySelector("#delete-station-weather-reports-message");
     button.disabled = true;
     message.className = "form-message";
-    message.textContent = "Deleting weather reports…";
+    message.textContent = (globalThis.aprswcI18n?.mark("deleting-weather-reports.e723d274") ?? "Deleting weather reports…");
     try {
         await requestJson(
             `/api/v1/welcome-center-weather-reports?callsign=${encodeURIComponent(activeStationCallsign)}`,
@@ -858,7 +874,7 @@ async function deleteStationWeatherReports(event) {
         await openStationWeatherDialog();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The weather reports could not be deleted.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-weather-reports-could-not-be-deleted.017e185b") ?? "The weather reports could not be deleted.");
     } finally {
         button.disabled = false;
     }
@@ -886,14 +902,14 @@ async function deleteStationPositions(event) {
     const message = document.querySelector("#delete-station-positions-message");
     button.disabled = true;
     message.className = "form-message";
-    message.textContent = "Deleting position records…";
+    message.textContent = (globalThis.aprswcI18n?.mark("deleting-position-records.201df8ea") ?? "Deleting position records…");
     try {
         await requestJson(`/api/v1/stations/${activeStationId}/positions`, { method: "DELETE" });
         closeDeleteStationPositionsDialog();
         await openStationPositionsDialog();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The position records could not be deleted.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-position-records-could-not-be-deleted.27c16ba9") ?? "The position records could not be deleted.");
     } finally {
         button.disabled = false;
     }
@@ -917,7 +933,7 @@ async function confirmIgnoreStation(event) {
     const message = document.querySelector("#confirm-ignore-station-message");
     button.disabled = true;
     message.className = "form-message";
-    message.textContent = "Ignoring station…";
+    message.textContent = (globalThis.aprswcI18n?.mark("ignoring-station.c4fe8315") ?? "Ignoring station…");
     try {
         await requestJson(`/api/v1/stations/${activeStationId}/ignore`, { method: "POST" });
         closeIgnoreStationConfirmation();
@@ -926,7 +942,7 @@ async function confirmIgnoreStation(event) {
         document.querySelector("#station-ignored-dialog").showModal();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The station could not be ignored.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-station-could-not-be-ignored.b6351fef") ?? "The station could not be ignored.");
     } finally {
         button.disabled = false;
     }
@@ -954,7 +970,7 @@ async function confirmDeleteStation(event) {
     const message = document.querySelector("#confirm-delete-station-message");
     button.disabled = true;
     message.className = "form-message";
-    message.textContent = "Deleting station…";
+    message.textContent = (globalThis.aprswcI18n?.mark("deleting-station.9bd40860") ?? "Deleting station…");
     try {
         await requestJson(`/api/v1/stations/${activeStationId}`, { method: "DELETE" });
         closeDeleteStationConfirmation();
@@ -962,7 +978,7 @@ async function confirmDeleteStation(event) {
         await load();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The station could not be deleted.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-station-could-not-be-deleted.a73d5926") ?? "The station could not be deleted.");
     } finally {
         button.disabled = false;
     }
@@ -981,7 +997,7 @@ async function openWelcomeCenterStationsDialog(centerId) {
     document.querySelector("#welcome-center-stations-label").textContent = formatWelcomeCenterLabel(center);
     document.querySelector("#welcome-center-station-count").textContent = "0";
     message.className = "form-message";
-    message.textContent = "Loading station positions…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading-station-positions.29c48786") ?? "Loading station positions…");
     setWelcomeCenterStationsMode("MAP");
     dialog.showModal();
     initializeWelcomeCenterStationsMap();
@@ -998,11 +1014,11 @@ async function openWelcomeCenterStationsDialog(centerId) {
         renderWelcomeCenterStationList(positions);
         await renderWelcomeCenterStationsMap(positions, regions, points, request);
         if (request !== stationsMapRequest) return;
-        message.textContent = positions.length ? "" : "No stations are currently within this Welcome Center.";
+        message.textContent = positions.length ? "" : (globalThis.aprswcI18n?.mark("no-stations-are-currently-within-this-welcome-ce.d0095d8e") ?? "No stations are currently within this Welcome Center.");
     } catch (error) {
         if (request !== stationsMapRequest) return;
         message.className = "form-message error";
-        message.textContent = "Station positions and Points of Interest could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("station-positions-and-points-of-interest-could-n.9d9527a7") ?? "Station positions and Points of Interest could not be loaded.");
     }
 }
 
@@ -1042,10 +1058,10 @@ function initializeWelcomeCenterStationsMap() {
 function renderWelcomeCenterStationList(positions) {
     render("#welcome-center-stations-list", positions, position => `
         <article class="welcome-center-station-position">
-            <div><span>Callsign</span><strong>${escapeHtml(position.callsign || "—")}</strong></div>
-            <div><span>Longitude</span><strong>${escapeHtml(position.longitude || "—")}</strong></div>
-            <div><span>Latitude</span><strong>${escapeHtml(position.latitude || "—")}</strong></div>
-        </article>`, "No stations are currently within this Welcome Center.");
+            <div><span>${(globalThis.aprswcI18n?.mark("callsign.830a83cd") ?? `Callsign`)}</span><strong>${escapeHtml(position.callsign || "—")}</strong></div>
+            <div><span>${(globalThis.aprswcI18n?.mark("longitude.6d80458f") ?? `Longitude`)}</span><strong>${escapeHtml(position.longitude || "—")}</strong></div>
+            <div><span>${(globalThis.aprswcI18n?.mark("latitude.238a676d") ?? `Latitude`)}</span><strong>${escapeHtml(position.latitude || "—")}</strong></div>
+        </article>`, (globalThis.aprswcI18n?.mark("no-stations-are-currently-within-this-welcome-ce.d0095d8e") ?? "No stations are currently within this Welcome Center."));
 }
 
 async function renderWelcomeCenterStationsMap(positions, regions, points = [], request = stationsMapRequest) {
@@ -1097,7 +1113,7 @@ async function renderWelcomeCenterStationsMap(positions, regions, points = [], r
             return;
         }
         const marker = L.marker([coordinate.latitude, coordinate.longitude])
-                .bindPopup(escapeHtml(position.callsign || "Unknown station"))
+                .bindPopup(escapeHtml(position.callsign || (globalThis.aprswcI18n?.mark("unknown-station.6d052a92") ?? "Unknown station")))
                 .addTo(welcomeCenterStationsMapLayers);
         bounds.extend(marker.getLatLng());
     });
@@ -1126,7 +1142,7 @@ async function renderWelcomeCenterStationsMap(positions, regions, points = [], r
             }
         }
         if (layer) {
-            layer.bindPopup(`<strong>${escapeHtml(region.name || "Unnamed Region")}</strong>`);
+            layer.bindPopup(`<strong>${escapeHtml(region.name || (globalThis.aprswcI18n?.mark("unnamed-region.8acb41f0") ?? "Unnamed Region"))}</strong>`);
             layer.addTo(welcomeCenterStationsMapLayers);
             bounds.extend(layer.getBounds());
         }
@@ -1151,7 +1167,7 @@ function openStationPacketsDialog() {
 
 async function openPacketsDialog(callsign = null) {
     packetStationCallsign = callsign;
-    document.querySelector("#packets-title").textContent = callsign ? `Packets - ${callsign}` : "Station Packets";
+    document.querySelector("#packets-title").textContent = callsign ? (globalThis.aprswcI18n?.mark("packets-0.f4143f3b", [callsign]) ?? `Packets - ${callsign}`) : (globalThis.aprswcI18n?.mark("station-packets.49d38779") ?? "Station Packets");
     document.querySelector("#delete-all-packets").hidden = Boolean(callsign);
     document.querySelector("#packet-direction-filter").value = "ALL";
     const dialog = document.querySelector("#packets-dialog");
@@ -1163,47 +1179,49 @@ async function refreshPackets() {
     const message = document.querySelector("#packets-message");
     const loggingStatus = document.querySelector("#packets-logging-status");
     let loggingEnabled = false;
-    loggingStatus.textContent = "Checking packet logging status…";
+    let loggingStatusLoaded = false;
+    loggingStatus.textContent = (globalThis.aprswcI18n?.mark("checking-packet-logging-status.7ae9777f") ?? "Checking packet logging status…");
     const list = document.querySelector("#packets-list");
     const refreshButton = document.querySelector("#refresh-packets");
     message.className = "form-message";
-    message.textContent = "Loading station packets…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading-station-packets.1567b6ad") ?? "Loading station packets…");
     list.innerHTML = "";
     refreshButton.disabled = true;
 
     try {
         const setting = await requestJson("/api/v1/application-settings/packet-logging");
         loggingEnabled = setting.enabled === true;
+        loggingStatusLoaded = true;
         loggingStatus.textContent = loggingEnabled
-            ? "Packet logging is enabled."
-            : "Packet logging is disabled. Previously logged packets are shown below. Enable logging in Communication Settings to record new packets.";
+            ? (globalThis.aprswcI18n?.mark("packet-logging-is-enabled.73bfa548") ?? "Packet logging is enabled.")
+            : (globalThis.aprswcI18n?.mark("packet-logging-is-disabled-previously-logged-pac.ca9debdd") ?? "Packet logging is disabled. Previously logged packets are shown below. Enable logging in Communication Settings to record new packets.");
         const packets = await requestJson("/api/v1/station-packets"
-            + (packetStationCallsign ? `?callsign=${encodeURIComponent(packetStationCallsign)}` : ""));
+            + (packetStationCallsign ? (`?callsign=${encodeURIComponent(packetStationCallsign)}`) : ""));
         packets.sort((left, right) => String(right.receivedTime || "").localeCompare(String(left.receivedTime || "")));
         document.querySelector("#delete-all-packets").disabled = packets.length === 0;
-        message.textContent = packets.length ? `${packets.length} packet(s)` : "No persisted station packets.";
+        message.textContent = packets.length ? (globalThis.aprswcI18n?.plural("packets.count", packets.length) ?? `${packets.length} packet(s)`) : (globalThis.aprswcI18n?.mark("no-persisted-station-packets.fdefd882") ?? "No persisted station packets.");
         const direction = document.querySelector("#packet-direction-filter").value;
         const visible = packets.filter(packet => direction === "ALL" || (packet.direction || "RX") === direction);
-        message.textContent = `${visible.length} of ${packets.length} packet(s)`;
+        message.textContent = (globalThis.aprswcI18n?.plural("packets.visible", packets.length, [visible.length, packets.length]) ?? `${visible.length} of ${packets.length} packet(s)`);
         list.innerHTML = visible.map(packet => `
             <article class="packet-item">
                 <div class="packet-metadata"><time datetime="${escapeHtml(packet.receivedTime)}">${formatReceivedTime(packet.receivedTime)}</time></div>
-                <strong><span class="tag">${escapeHtml(packet.direction || "RX")}</span> ${escapeHtml(packet.callsign || "Unknown callsign")}</strong>
+                <strong><span class="tag">${escapeHtml(packet.direction || "RX")}</span> ${escapeHtml(packet.callsign || (globalThis.aprswcI18n?.mark("unknown-callsign.025bbaf0") ?? "Unknown callsign"))}</strong>
                 <code>${escapeHtml((packet.command || "").replaceAll("\r", "\\r").replaceAll("\n", "\\n"))}</code>
             </article>`).join("");
     } catch (error) {
-        if (loggingStatus.textContent === "Checking packet logging status…") {
-            loggingStatus.textContent = "Packet logging status could not be loaded. Reopen this dialog to try again.";
+        if (!loggingStatusLoaded) {
+            loggingStatus.textContent = (globalThis.aprswcI18n?.mark("packet-logging-status-could-not-be-loaded-reopen.ecd6a149") ?? "Packet logging status could not be loaded. Reopen this dialog to try again.");
         }
         message.className = "form-message error";
-        message.textContent = "Station packets could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("station-packets-could-not-be-loaded.51a36f80") ?? "Station packets could not be loaded.");
     } finally {
         refreshButton.disabled = !loggingEnabled;
     }
 }
 
 function formatReceivedTime(receivedTime) {
-    if (!receivedTime) return "Unknown time";
+    if (!receivedTime) return (globalThis.aprswcI18n?.mark("unknown-time.bdda387b") ?? "Unknown time");
     const parsed = new Date(receivedTime);
     return Number.isNaN(parsed.getTime()) ? escapeHtml(receivedTime) : escapeHtml(parsed.toLocaleString());
 }
@@ -1216,7 +1234,7 @@ function closePacketsDialog() {
 function downloadStationPackets() {
     const link = document.createElement("a");
     link.href = "/api/v1/station-packets/csv"
-        + (packetStationCallsign ? `?callsign=${encodeURIComponent(packetStationCallsign)}` : "");
+        + (packetStationCallsign ? (`?callsign=${encodeURIComponent(packetStationCallsign)}`) : "");
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -1231,10 +1249,10 @@ async function openWeatherDialog(centerId) {
     activeWeatherCenterId = centerId;
     document.querySelector("#weather-center-label").textContent = formatWelcomeCenterLabel(center);
     message.className = "form-message";
-    message.textContent = "Loading weather information…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading-weather-information.2e34b6f8") ?? "Loading weather information…");
     summary.innerHTML = "";
     reportsList.innerHTML = "";
-    document.querySelector("#weather-summary-heading").textContent = "Weather averages as of";
+    document.querySelector("#weather-summary-heading").textContent = (globalThis.aprswcI18n?.mark("weather-averages-as-of.8b880766") ?? "Weather averages as of");
     document.querySelector("#weather-report-count").textContent = "(0)";
     dialog.showModal();
 
@@ -1249,7 +1267,7 @@ async function openWeatherDialog(centerId) {
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Weather information could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("weather-information-could-not-be-loaded.08720789") ?? "Weather information could not be loaded.");
     }
 }
 
@@ -1268,16 +1286,16 @@ function downloadWeatherReports() {
 function renderWeatherSummary(summary, container) {
     const heading = document.querySelector("#weather-summary-heading");
     if (!summary) {
-        heading.textContent = "Averages unavailable";
-        container.innerHTML = '<p class="empty-associations">Weather averages are not available.</p>';
+        heading.textContent = (globalThis.aprswcI18n?.mark("averages-unavailable.d3173da7") ?? "Averages unavailable");
+        container.innerHTML = `<p class="empty-associations">${(globalThis.aprswcI18n?.mark("label.weather-averages-are-not-available.") ?? "Weather averages are not available.")}</p>`;
         return;
     }
-    heading.textContent = `Weather averages as of ${formatReceivedTime(summary.reportTime)}`;
+    heading.textContent = (globalThis.aprswcI18n?.mark("weather-averages-as-of-0.2491ee65", [formatReceivedTime(summary.reportTime)]) ?? `Weather averages as of ${formatReceivedTime(summary.reportTime)}`);
     container.innerHTML = `
-        <div class="weather-reading"><span>Temperature</span><strong>${formatWeatherAverage(summary.temperature)}</strong></div>
-        <div class="weather-reading"><span>Humidity</span><strong>${formatWeatherAverage(summary.humidity)}</strong></div>
-        <div class="weather-reading"><span>Barometric pressure</span><strong>${formatWeatherAverage(summary.barometricPressure)}</strong></div>
-        <div class="weather-reading"><span>Luminosity</span><strong>${formatWeatherAverage(summary.luminosity)}</strong></div>`;
+        <div class="weather-reading"><span>${(globalThis.aprswcI18n?.mark("temperature.b958ce8b") ?? `Temperature`)}</span><strong>${formatWeatherAverage(summary.temperature)}</strong></div>
+        <div class="weather-reading"><span>${(globalThis.aprswcI18n?.mark("humidity.46819ccb") ?? `Humidity`)}</span><strong>${formatWeatherAverage(summary.humidity)}</strong></div>
+        <div class="weather-reading"><span>${(globalThis.aprswcI18n?.mark("barometric-pressure.dd7d13aa") ?? `Barometric pressure`)}</span><strong>${formatWeatherAverage(summary.barometricPressure)}</strong></div>
+        <div class="weather-reading"><span>${(globalThis.aprswcI18n?.mark("luminosity.04ed30fe") ?? `Luminosity`)}</span><strong>${formatWeatherAverage(summary.luminosity)}</strong></div>`;
 }
 
 function renderWeatherReports(reports, container) {
@@ -1285,12 +1303,12 @@ function renderWeatherReports(reports, container) {
     container.innerHTML = reports.length ? reports.map(report => `
         <article class="weather-report-item">
             <time datetime="${escapeHtml(report.reportTime)}">${formatReceivedTime(report.reportTime)}</time>
-            <strong class="weather-report-callsign">${escapeHtml(report.callsign || "Unknown callsign")}</strong>
-            <div><span>Temperature</span><strong>${formatWeatherValue(report.temperature)}</strong></div>
-            <div><span>Humidity</span><strong>${formatWeatherValue(report.humidity)}</strong></div>
-            <div><span>Pressure</span><strong>${formatWeatherValue(report.barometricPressure)}</strong></div>
-            <div><span>Luminosity</span><strong>${formatWeatherValue(report.luminosity)}</strong></div>
-        </article>`).join("") : '<p class="empty-associations">No weather reports available.</p>';
+            <strong class="weather-report-callsign">${escapeHtml(report.callsign || (globalThis.aprswcI18n?.mark("unknown-callsign.025bbaf0") ?? "Unknown callsign"))}</strong>
+            <div><span>${(globalThis.aprswcI18n?.mark("temperature.b958ce8b") ?? `Temperature`)}</span><strong>${formatWeatherValue(report.temperature)}</strong></div>
+            <div><span>${(globalThis.aprswcI18n?.mark("humidity.46819ccb") ?? `Humidity`)}</span><strong>${formatWeatherValue(report.humidity)}</strong></div>
+            <div><span>${(globalThis.aprswcI18n?.mark("pressure.1f8407f9") ?? `Pressure`)}</span><strong>${formatWeatherValue(report.barometricPressure)}</strong></div>
+            <div><span>${(globalThis.aprswcI18n?.mark("luminosity.04ed30fe") ?? `Luminosity`)}</span><strong>${formatWeatherValue(report.luminosity)}</strong></div>
+        </article>`).join("") : `<p class="empty-associations">${(globalThis.aprswcI18n?.mark("label.no-weather-reports-available.") ?? "No weather reports available.")}</p>`;
 }
 
 function formatWeatherValue(value) {
@@ -1326,17 +1344,17 @@ async function deleteAllPackets(event) {
     const message = document.querySelector("#delete-all-packets-message");
     button.disabled = true;
     message.className = "form-message";
-    message.textContent = "Deleting station packets…";
+    message.textContent = (globalThis.aprswcI18n?.mark("deleting-station-packets.26199c3f") ?? "Deleting station packets…");
 
     try {
         await requestJson("/api/v1/station-packets", { method: "DELETE" });
         closeDeleteAllPacketsDialog();
         document.querySelector("#packets-list").innerHTML = "";
-        document.querySelector("#packets-message").textContent = "No persisted station packets.";
+        document.querySelector("#packets-message").textContent = (globalThis.aprswcI18n?.mark("no-persisted-station-packets.fdefd882") ?? "No persisted station packets.");
         document.querySelector("#delete-all-packets").disabled = true;
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Station packets could not be deleted.";
+        message.textContent = (globalThis.aprswcI18n?.mark("station-packets-could-not-be-deleted.0c8c1e58") ?? "Station packets could not be deleted.");
     } finally {
         button.disabled = false;
     }
@@ -1357,7 +1375,7 @@ async function saveCenter(event) {
 
     submitButton.disabled = true;
     message.className = "form-message";
-    message.textContent = editingCenterId ? "Saving changes…" : "Creating welcome center…";
+    message.textContent = editingCenterId ? (globalThis.aprswcI18n?.mark("saving-changes.39520758") ?? "Saving changes…") : (globalThis.aprswcI18n?.mark("creating-welcome-center.9bff0f67") ?? "Creating welcome center…");
 
     try {
         const url = editingCenterId
@@ -1373,20 +1391,20 @@ async function saveCenter(event) {
             if (response.status === 409) {
                 await refreshWelcomeCenters();
                 await centerCommunications.refresh();
-                throw new Error((detail.message || "The Welcome Center or communication methods changed.")
-                    + " Review the refreshed selection before saving again.");
+                throw new Error((globalThis.aprswcI18n?.apiError(detail, response.status).message || detail.message || (globalThis.aprswcI18n?.mark("the-welcome-center-or-communication-methods-chan.494ee44c") ?? "The Welcome Center or communication methods changed."))
+                    + (globalThis.aprswcI18n?.mark("review-the-refreshed-selection-before-saving-aga.ec21610b") ?? " Review the refreshed selection before saving again."));
             }
-            throw new Error(detail.message || "The welcome center could not be saved.");
+            throw (globalThis.aprswcI18n?.apiError(detail, response.status) ?? new Error(detail.message || (globalThis.aprswcI18n?.mark("the-welcome-center-could-not-be-saved.cb381884") ?? "The welcome center could not be saved.")));
         }
 
         form.reset();
         message.className = "form-message success";
-        message.textContent = editingCenterId ? "Changes saved." : "Welcome center created.";
+        message.textContent = editingCenterId ? (globalThis.aprswcI18n?.mark("changes-saved.12b3f1a3") ?? "Changes saved.") : (globalThis.aprswcI18n?.mark("welcome-center-created.591ef350") ?? "Welcome center created.");
         await load();
         setTimeout(closeDialog, 600);
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = error.message || "The welcome center could not be saved.";
+        message.textContent = error.message || (globalThis.aprswcI18n?.mark("the-welcome-center-could-not-be-saved.cb381884") ?? "The welcome center could not be saved.");
     } finally {
         submitButton.disabled = !centerCommunications.isReady();
     }
@@ -1395,8 +1413,8 @@ async function saveCenter(event) {
 function openCreateDialog() {
     editingCenterId = null;
     document.querySelector("#center-form").reset();
-    document.querySelector("#dialog-title").textContent = "Create Welcome Center";
-    document.querySelector("#save-center").textContent = "Create Welcome Center";
+    document.querySelector("#dialog-title").textContent = (globalThis.aprswcI18n?.mark("create-welcome-center.325ea174") ?? "Create Welcome Center");
+    document.querySelector("#save-center").textContent = (globalThis.aprswcI18n?.mark("create-welcome-center.325ea174") ?? "Create Welcome Center");
     document.querySelector("#delete-center-from-details").hidden = true;
     openDialog();
 }
@@ -1415,8 +1433,8 @@ function openEditDialog(id) {
             control.value = center[control.name] ?? "";
         }
     });
-    document.querySelector("#dialog-title").textContent = "View / Edit Welcome Center";
-    document.querySelector("#save-center").textContent = "Save Changes";
+    document.querySelector("#dialog-title").textContent = (globalThis.aprswcI18n?.mark("view-edit-welcome-center.5f8eaf66") ?? "View / Edit Welcome Center");
+    document.querySelector("#save-center").textContent = (globalThis.aprswcI18n?.mark("save-changes.35322b5b") ?? "Save Changes");
     document.querySelector("#delete-center-from-details").hidden = false;
     openDialog();
 }
@@ -1439,7 +1457,7 @@ async function openCenterLocationDialog() {
     const message = document.querySelector("#center-location-message");
     selectedCenterLocation = null;
     document.querySelector("#use-center-location").disabled = true;
-    message.textContent = "Select a point on the map.";
+    message.textContent = (globalThis.aprswcI18n?.mark("select-a-point-on-the-map.e7236886") ?? "Select a point on the map.");
     dialog.showModal();
 
     if (!centerLocationMap) {
@@ -1453,7 +1471,7 @@ async function openCenterLocationDialog() {
                 centerLocationMarker = L.marker(event.latlng).addTo(centerLocationMap);
             }
             document.querySelector("#use-center-location").disabled = false;
-            message.textContent = "Point selected. Use this location or choose another point.";
+            message.textContent = (globalThis.aprswcI18n?.mark("point-selected-use-this-location-or-choose-anoth.ac13968e") ?? "Point selected. Use this location or choose another point.");
         });
     }
     centerLocationMapTileLayer.setUrl(mapTileUrl);
@@ -1479,7 +1497,7 @@ async function openCenterLocationDialog() {
             else centerLocationMarker = L.marker(point).addTo(centerLocationMap);
         }
     } catch (error) {
-        message.textContent = "The current location could not be displayed. Select a new point.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-current-location-could-not-be-displayed-sele.658ee064") ?? "The current location could not be displayed. Select a new point.");
     }
 }
 
@@ -1498,13 +1516,13 @@ async function useCenterLocation() {
             body: JSON.stringify([selectedCenterLocation])
         });
         const coordinate = converted[0];
-        if (!coordinate?.longitude || !coordinate?.latitude) throw new Error("Invalid coordinate");
+        if (!coordinate?.longitude || !coordinate?.latitude) throw new Error((globalThis.aprswcI18n?.mark("invalid-coordinate.269c4c36") ?? "Invalid coordinate"));
         const form = document.querySelector("#center-form");
         form.elements.longitude.value = coordinate.longitude;
         form.elements.latitude.value = coordinate.latitude;
         closeCenterLocationDialog();
     } catch (error) {
-        message.textContent = "The selected point could not be converted to APRS notation.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-selected-point-could-not-be-converted-to-apr.7d0b31f0") ?? "The selected point could not be converted to APRS notation.");
     }
 }
 
@@ -1525,7 +1543,7 @@ function openDeleteDialog(id) {
     }
 
     pendingDeleteId = id;
-    document.querySelector("#delete-center-name").textContent = center.name || "Unnamed Welcome Center";
+    document.querySelector("#delete-center-name").textContent = center.name || (globalThis.aprswcI18n?.mark("unnamed-welcome-center.4ae97a0c") ?? "Unnamed Welcome Center");
     document.querySelector("#delete-center-callsign").textContent = center.callsign;
     document.querySelector("#delete-message").textContent = "";
     document.querySelector("#delete-dialog").showModal();
@@ -1547,7 +1565,7 @@ async function confirmDelete(event) {
     const message = document.querySelector("#delete-message");
     deleteButton.disabled = true;
     message.className = "form-message";
-    message.textContent = "Deleting welcome center…";
+    message.textContent = (globalThis.aprswcI18n?.mark("deleting-welcome-center.0e16d76a") ?? "Deleting welcome center…");
 
     try {
         await requestJson(`/api/v1/welcome-centers/${pendingDeleteId}`, { method: "DELETE" });
@@ -1555,7 +1573,7 @@ async function confirmDelete(event) {
         await load();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The welcome center could not be deleted.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-welcome-center-could-not-be-deleted.36ccf25f") ?? "The welcome center could not be deleted.");
     } finally {
         deleteButton.disabled = false;
     }
@@ -1583,7 +1601,7 @@ function closeRegionsDialog() {
 async function loadRegions() {
     const list = document.querySelector("#regions-list");
     const message = document.querySelector("#regions-message");
-    list.innerHTML = "<p>Loading regions…</p>";
+    list.innerHTML = `<p>${globalThis.aprswcI18n?.label("Loading regions…") ?? "Loading regions…"}</p>`;
     message.textContent = "";
 
     try {
@@ -1593,19 +1611,19 @@ async function loadRegions() {
         render("#regions-list", regions, region => `
             <article class="card region-summary">
                 <div>
-                    <strong>${escapeHtml(region.name || "Unnamed Region")}</strong>
+                    <strong>${escapeHtml(region.name || (globalThis.aprswcI18n?.mark("unnamed-region.8acb41f0") ?? "Unnamed Region"))}</strong>
                     <p>${escapeHtml(describeGeometry(region))}</p>
                 </div>
                 <div class="card-actions">
-                    <button type="button" class="secondary edit-region" data-id="${region.id}">View / Edit</button>
-                    <button type="button" class="danger delete-region" data-id="${region.id}">Delete</button>
+                    <button type="button" class="secondary edit-region" data-id="${region.id}">${(globalThis.aprswcI18n?.mark("view-edit.e6639d33") ?? `View / Edit`)}</button>
+                    <button type="button" class="danger delete-region" data-id="${region.id}">${(globalThis.aprswcI18n?.mark("delete.e2d0a549") ?? `Delete`)}</button>
                 </div>
-            </article>`, "No regions yet. Create your first one now!");
+            </article>`, (globalThis.aprswcI18n?.mark("no-regions-yet-create-your-first-one-now.54ca34bb") ?? "No regions yet. Create your first one now!"));
         await renderRegionMap(regions);
     } catch (error) {
         list.innerHTML = "";
         message.className = "form-message error";
-        message.textContent = "The Regions could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-regions-could-not-be-loaded.214eabbd") ?? "The Regions could not be loaded.");
     }
 }
 
@@ -1613,7 +1631,7 @@ function initializeRegionMap() {
     const mapMessage = document.querySelector("#regions-map-message");
     if (typeof L === "undefined") {
         mapMessage.className = "map-message error";
-        mapMessage.textContent = "The map library could not be loaded.";
+        mapMessage.textContent = (globalThis.aprswcI18n?.mark("the-map-library-could-not-be-loaded.fba86529") ?? "The map library could not be loaded.");
         return;
     }
     if (!regionMap) {
@@ -1637,7 +1655,7 @@ async function renderRegionMap(regions) {
     mapMessage.className = "map-message";
     regionMapLayers.clearLayers();
     if (!regions.length) {
-        mapMessage.textContent = "No regions to display on the map.";
+        mapMessage.textContent = (globalThis.aprswcI18n?.mark("no-regions-to-display-on-the-map.c16d2779") ?? "No regions to display on the map.");
         regionMap.setView([20, 0], 2);
         return;
     }
@@ -1663,7 +1681,7 @@ async function renderRegionMap(regions) {
         return { region, topLeftIndex, bottomRightIndex };
     });
 
-    mapMessage.textContent = "Converting region coordinates…";
+    mapMessage.textContent = (globalThis.aprswcI18n?.mark("converting-region-coordinates.42eaca03") ?? "Converting region coordinates…");
     try {
         const converted = await requestJson("/api/v1/coordinates", {
             method: "POST",
@@ -1697,7 +1715,7 @@ async function renderRegionMap(regions) {
                 }
             }
             if (layer) {
-                const popupName = escapeHtml(region.name || "Unnamed Region");
+                const popupName = escapeHtml(region.name || (globalThis.aprswcI18n?.mark("unnamed-region.8acb41f0") ?? "Unnamed Region"));
                 layer.bindPopup(`<strong>${popupName}</strong>`);
                 layer.addTo(regionMapLayers);
                 bounds.extend(layer.getBounds());
@@ -1711,11 +1729,11 @@ async function renderRegionMap(regions) {
             regionMap.setView([20, 0], 2);
         }
         mapMessage.textContent = renderedCount
-            ? `${renderedCount} of ${regions.length} region(s) displayed.`
-            : "Region coordinate conversion is not yet available.";
+            ? (globalThis.aprswcI18n?.plural("regions.visible", regions.length, [renderedCount, regions.length]) ?? `${renderedCount} of ${regions.length} region(s) displayed.`)
+            : (globalThis.aprswcI18n?.mark("region-coordinate-conversion-is-not-yet-availabl.1127df49") ?? "Region coordinate conversion is not yet available.");
     } catch (error) {
         mapMessage.className = "map-message error";
-        mapMessage.textContent = "The region map could not be loaded.";
+        mapMessage.textContent = (globalThis.aprswcI18n?.mark("the-region-map-could-not-be-loaded.3a5f4d31") ?? "The region map could not be loaded.");
     }
 }
 
@@ -1726,21 +1744,21 @@ function diameterRadiusMeters(diameter, unit) {
 }
 
 function describeGeometry(region) {
-    if (region.type === "POLYGON") return `Polygon - ${region.vertices.length} vertices`;
+    if (region.type === "POLYGON") return (globalThis.aprswcI18n?.mark("polygon-0-vertices.3ce02ef7", [region.vertices.length]) ?? `Polygon - ${region.vertices.length} vertices`);
     if (region.type === "CIRCLE") {
-        return `Circle centered at ${region.centerLatitude ?? "?"}, ${region.centerLongitude ?? "?"}`;
+        return (globalThis.aprswcI18n?.mark("circle-centered-at-0-1.ca2b8a93", [region.centerLatitude ?? "?", region.centerLongitude ?? "?"]) ?? `Circle centered at ${region.centerLatitude ?? "?"}, ${region.centerLongitude ?? "?"}`);
     }
-    return `Rectangle - (${region.topLeftLongitude ?? "?"}, ${region.topLeftLatitude ?? "?"}) - (${
+    return (globalThis.aprswcI18n?.mark("rectangle-0-1-2-3.070625a4", [region.topLeftLongitude ?? "?", region.topLeftLatitude ?? "?", region.bottomRightLongitude ?? "?", region.bottomRightLatitude ?? "?"]) ?? `Rectangle - (${region.topLeftLongitude ?? "?"}, ${region.topLeftLatitude ?? "?"}) - (${
         region.bottomRightLongitude ?? "?"
-    }, ${region.bottomRightLatitude ?? "?"})`;
+    }, ${region.bottomRightLatitude ?? "?"})`);
 }
 
 function openCreateRegionDialog() {
     editingRegionId = null;
     document.querySelector("#region-form").reset();
     document.querySelector("#region-form").polygonVertices = [];
-    document.querySelector("#region-dialog-title").textContent = "Create Region";
-    document.querySelector("#save-region").textContent = "Create Region";
+    document.querySelector("#region-dialog-title").textContent = (globalThis.aprswcI18n?.mark("create-region.595eff26") ?? "Create Region");
+    document.querySelector("#save-region").textContent = (globalThis.aprswcI18n?.mark("create-region.595eff26") ?? "Create Region");
     setRegionInputMode("MAP");
     updateGeometryFields();
     openRegionEditor();
@@ -1761,8 +1779,8 @@ function openEditRegionDialog(id) {
             control.value = region[control.name] ?? "";
         }
     });
-    document.querySelector("#region-dialog-title").textContent = "View / Edit Region";
-    document.querySelector("#save-region").textContent = "Save Changes";
+    document.querySelector("#region-dialog-title").textContent = (globalThis.aprswcI18n?.mark("view-edit-region.f3d06b19") ?? "View / Edit Region");
+    document.querySelector("#save-region").textContent = (globalThis.aprswcI18n?.mark("save-changes.35322b5b") ?? "Save Changes");
     setRegionInputMode("MAP");
     updateGeometryFields();
     openRegionEditor();
@@ -1820,7 +1838,7 @@ async function saveRegion(event) {
         region.vertices = form.polygonVertices;
     }
     saveButton.disabled = true;
-    message.textContent = editingRegionId ? "Saving changes…" : "Creating Region…";
+    message.textContent = editingRegionId ? (globalThis.aprswcI18n?.mark("saving-changes.39520758") ?? "Saving changes…") : (globalThis.aprswcI18n?.mark("creating-region.30c678e0") ?? "Creating Region…");
 
     try {
         const baseUrl = `/api/v1/welcome-centers/${activeRegionCenterId}/regions`;
@@ -1833,7 +1851,7 @@ async function saveRegion(event) {
         await loadRegions();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = error.message || "The Region could not be saved.";
+        message.textContent = error.message || (globalThis.aprswcI18n?.mark("the-region-could-not-be-saved.4819e9f7") ?? "The Region could not be saved.");
     } finally {
         saveButton.disabled = false;
     }
@@ -1845,7 +1863,7 @@ function openDeleteRegionDialog(id) {
         return;
     }
     pendingDeleteRegionId = id;
-    document.querySelector("#delete-region-name").textContent = region.name || "Unnamed Region";
+    document.querySelector("#delete-region-name").textContent = region.name || (globalThis.aprswcI18n?.mark("unnamed-region.8acb41f0") ?? "Unnamed Region");
     document.querySelector("#delete-region-message").textContent = "";
     document.querySelector("#delete-region-dialog").showModal();
     document.querySelector("#cancel-delete-region").focus();
@@ -1864,7 +1882,7 @@ async function confirmDeleteRegion(event) {
     const button = document.querySelector("#confirm-delete-region");
     const message = document.querySelector("#delete-region-message");
     button.disabled = true;
-    message.textContent = "Deleting Region…";
+    message.textContent = (globalThis.aprswcI18n?.mark("deleting-region.82bb319a") ?? "Deleting Region…");
     try {
         const url = `/api/v1/welcome-centers/${activeRegionCenterId}/regions/${pendingDeleteRegionId}`;
         await requestJson(url, { method: "DELETE" });
@@ -1872,7 +1890,7 @@ async function confirmDeleteRegion(event) {
         await loadRegions();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The Region could not be deleted.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-region-could-not-be-deleted.30d1b186") ?? "The Region could not be deleted.");
     } finally {
         button.disabled = false;
     }
@@ -1904,20 +1922,20 @@ function closePlanDialog() {
 
 function formatCommunicationEventType(value) {
     const labels = {
-        ENTER_REGION: "Enter region",
-        EXIT_REGION: "Exit region",
-        ON_REQUEST: "On demand",
-        SCHEDULED_ONCE: "Scheduled (One-time)",
-        SCHEDULED_RECURRING: "Scheduled (Recurring)",
-        SHRIEK_HEARD: "When shriek heard"
+        ENTER_REGION: (globalThis.aprswcI18n?.mark("enter-region.be24b4ba") ?? "Enter region"),
+        EXIT_REGION: (globalThis.aprswcI18n?.mark("exit-region.60e19c77") ?? "Exit region"),
+        ON_REQUEST: (globalThis.aprswcI18n?.mark("on-demand.7be15cd1") ?? "On demand"),
+        SCHEDULED_ONCE: (globalThis.aprswcI18n?.mark("scheduled-one-time.67ea930f") ?? "Scheduled (One-time)"),
+        SCHEDULED_RECURRING: (globalThis.aprswcI18n?.mark("scheduled-recurring.50b86a96") ?? "Scheduled (Recurring)"),
+        SHRIEK_HEARD: (globalThis.aprswcI18n?.mark("when-shriek-heard.d458e377") ?? "When shriek heard")
     };
-    return labels[value] || "Unspecified event";
+    return labels[value] || (globalThis.aprswcI18n?.mark("unspecified-event.41014def") ?? "Unspecified event");
 }
 
 async function loadPlan() {
     const list = document.querySelector("#policies-list");
     const message = document.querySelector("#plan-message");
-    list.innerHTML = "<p>Loading communication plan…</p>";
+    list.innerHTML = `<p>${globalThis.aprswcI18n?.label("Loading communication plan…") ?? "Loading communication plan…"}</p>`;
     message.textContent = "";
     try {
         const [policies, categories] = await Promise.all([
@@ -1931,19 +1949,19 @@ async function loadPlan() {
         render("#policies-list", policies, policy => `
             <article class="card region-summary">
                 <div>
-                    <strong>${escapeHtml(policy.category?.name || "Uncategorized")}</strong>
+                    <strong>${escapeHtml((globalThis.aprswcI18n?.categoryName(policy.category) ?? policy.category?.name) || (globalThis.aprswcI18n?.mark("uncategorized.8d40d123") ?? "Uncategorized"))}</strong>
                     <span class="tag">${escapeHtml(policyAutomation.summary(policy) || formatCommunicationEventType(policy.communicationEventType))}</span>
-                    <p>${escapeHtml(policy.contentSource === "TINYTOPICS" ? `TinyTopics: ${policy.topicId}` : policy.messageText || "No message text")}</p>
+                    <p>${escapeHtml(policy.contentSource === "TINYTOPICS" ? (globalThis.aprswcI18n?.mark("tinytopics-0.81e8bace", [policy.topicId]) ?? `TinyTopics: ${policy.topicId}`) : policy.messageText || (globalThis.aprswcI18n?.mark("no-message-text.42933a4d") ?? "No message text"))}</p>
                 </div>
                 <div class="card-actions">
-                    <button type="button" class="secondary edit-policy" data-id="${policy.id}">View / Edit</button>
-                    <button type="button" class="danger delete-policy" data-id="${policy.id}">Delete</button>
+                    <button type="button" class="secondary edit-policy" data-id="${policy.id}">${(globalThis.aprswcI18n?.mark("view-edit.e6639d33") ?? `View / Edit`)}</button>
+                    <button type="button" class="danger delete-policy" data-id="${policy.id}">${(globalThis.aprswcI18n?.mark("delete.e2d0a549") ?? `Delete`)}</button>
                 </div>
-            </article>`, "No communications policies yet. Create your first one now!");
+            </article>`, (globalThis.aprswcI18n?.mark("no-communications-policies-yet-create-your-first.bfc42b17") ?? "No communications policies yet. Create your first one now!"));
     } catch (error) {
         list.innerHTML = "";
         message.className = "form-message error";
-        message.textContent = "The Communication Plan could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-communication-plan-could-not-be-loaded.d01f75bc") ?? "The Communication Plan could not be loaded.");
     }
 }
 
@@ -1960,10 +1978,10 @@ function populateCategoryOptions(selectedId) {
             : category.name === assignedName);
     select.innerHTML = selectableCategories.length
         ? selectableCategories
-            .map(category => `<option value="${category.id}">${escapeHtml(category.name)}${onDemand && category.command ? ` - (${escapeHtml(category.command)})` : ""}</option>`)
+            .map(category => `<option value="${category.id}">${escapeHtml(globalThis.aprswcI18n?.categoryName(category) ?? category.name)}${onDemand && category.command ? ` - (${escapeHtml(category.command)})` : ""}</option>`)
             .join("")
-        : onDemand ? "" : '<option value="">No categories available</option>';
-    if (onDemand) select.innerHTML = '<option value="" disabled hidden>Select an associated command</option>' + select.innerHTML;
+        : onDemand ? "" : `<option value="">${(globalThis.aprswcI18n?.mark("label.no-categories-available") ?? "No categories available")}</option>`;
+    if (onDemand) select.innerHTML = `<option value="" disabled hidden>${(globalThis.aprswcI18n?.mark("label.select-an-associated-command") ?? "Select an associated command")}</option>` + select.innerHTML;
     select.value = selectableCategories.some(category => category.id === selectedId)
         ? selectedId : onDemand ? "" : select.options[0]?.value || "";
     updatePolicyMessageTextState();
@@ -1974,7 +1992,7 @@ function updatePolicyMessageTextState() {
     const messageText = document.querySelector('#policy-form textarea[name="messageText"]');
     const autoGenerated = category?.autoGeneratedText === true;
     messageText.disabled = autoGenerated;
-    messageText.placeholder = autoGenerated ? "This text will be auto-generated when sent." : "";
+    messageText.placeholder = autoGenerated ? (globalThis.aprswcI18n?.mark("this-text-will-be-auto-generated-when-sent.9c1dcc97") ?? "This text will be auto-generated when sent.") : "";
     if (autoGenerated) {
         messageText.value = "";
     }
@@ -1986,8 +2004,8 @@ function openCreatePolicyDialog() {
     editingPolicyId = null;
     document.querySelector("#policy-form").reset();
     populateCategoryOptions(null);
-    document.querySelector("#policy-dialog-title").textContent = "Create Communication Policy";
-    document.querySelector("#save-policy").textContent = "Create Communication Policy";
+    document.querySelector("#policy-dialog-title").textContent = (globalThis.aprswcI18n?.mark("create-communication-policy.b792a3f6") ?? "Create Communication Policy");
+    document.querySelector("#save-policy").textContent = (globalThis.aprswcI18n?.mark("create-communication-policy.b792a3f6") ?? "Create Communication Policy");
     openPolicyEditor();
 }
 
@@ -2000,8 +2018,8 @@ function openEditPolicyDialog(id) {
     form.elements.communicationEventType.value = policy.communicationEventType || "ENTER_REGION";
     form.elements.messageText.value = policy.messageText || "";
     populateCategoryOptions(policy.category?.id);
-    document.querySelector("#policy-dialog-title").textContent = "View / Edit Communication Policy";
-    document.querySelector("#save-policy").textContent = "Save Changes";
+    document.querySelector("#policy-dialog-title").textContent = (globalThis.aprswcI18n?.mark("view-edit-communication-policy.0938ae2d") ?? "View / Edit Communication Policy");
+    document.querySelector("#save-policy").textContent = (globalThis.aprswcI18n?.mark("save-changes.35322b5b") ?? "Save Changes");
     openPolicyEditor();
 }
 
@@ -2026,7 +2044,7 @@ async function savePolicy(event) {
     const content = window.policyContent.value();
     if (content.contentSource === "TINYTOPICS" && !content.topicId) {
         message.className = "form-message error";
-        message.textContent = "Choose an available TinyTopics topic before saving.";
+        message.textContent = (globalThis.aprswcI18n?.mark("choose-an-available-tinytopics-topic-before-savi.e42e3fe3") ?? "Choose an available TinyTopics topic before saving.");
         return;
     }
     const policy = {
@@ -2043,7 +2061,7 @@ async function savePolicy(event) {
     };
     if (!policy.category) {
         message.className = "form-message error";
-        message.textContent = "Select an associated command before saving.";
+        message.textContent = (globalThis.aprswcI18n?.mark("select-an-associated-command-before-saving.cd817a91") ?? "Select an associated command before saving.");
         return;
     }
     let stale = false;
@@ -2059,8 +2077,8 @@ async function savePolicy(event) {
         await loadPlan();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = error.message || "The Communication Policy could not be saved.";
-        if (/Policy changed/.test(error.message)) { stale = true; await loadPlan(); }
+        message.textContent = error.message || (globalThis.aprswcI18n?.mark("the-communication-policy-could-not-be-saved.97a0ec96") ?? "The Communication Policy could not be saved.");
+        if (error.code === "POLICY_CHANGED") { stale = true; await loadPlan(); }
     } finally {
         button.disabled = stale;
     }
@@ -2070,7 +2088,7 @@ function openDeletePolicyDialog(id) {
     const policy = communicationPolicies.get(id);
     if (!policy) return;
     pendingDeletePolicyId = id;
-    document.querySelector("#delete-policy-name").textContent = policy.category?.name || "Uncategorized policy";
+    document.querySelector("#delete-policy-name").textContent = (globalThis.aprswcI18n?.categoryName(policy.category) ?? policy.category?.name) || (globalThis.aprswcI18n?.mark("uncategorized-policy.87217d91") ?? "Uncategorized policy");
     document.querySelector("#delete-policy-message").textContent = "";
     document.querySelector("#delete-policy-dialog").showModal();
     document.querySelector("#cancel-delete-policy").focus();
@@ -2093,7 +2111,7 @@ async function confirmDeletePolicy(event) {
         await loadPlan();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The Communication Policy could not be deleted.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-communication-policy-could-not-be-deleted.0445e2f3") ?? "The Communication Policy could not be deleted.");
     } finally {
         button.disabled = false;
     }
@@ -2126,33 +2144,33 @@ async function loadCategories() {
     const list = document.querySelector("#categories-list");
     const message = document.querySelector("#categories-message");
     const selectedId = document.querySelector("#policy-category").value;
-    list.innerHTML = "<p>Loading categories…</p>";
+    list.innerHTML = `<p>${globalThis.aprswcI18n?.label("Loading categories…") ?? "Loading categories…"}</p>`;
     message.textContent = "";
     try {
         const categories = await refreshCategories(selectedId);
         render("#categories-list", categories, category => `
             <article class="card region-summary">
                 <div>
-                    <strong>${escapeHtml(category.name)}</strong>
-                    <p>${escapeHtml(category.description || "No description")}</p>
+                    <strong>${escapeHtml(globalThis.aprswcI18n?.categoryName(category) ?? category.name)}</strong>
+                    <p>${escapeHtml(category.description || (globalThis.aprswcI18n?.mark("no-description.bcd8cc53") ?? "No description"))}</p>
                 </div>
                 ${category.systemDefined ? "" : `<div class="card-actions">
-                    <button type="button" class="secondary edit-category" data-id="${category.id}">View / Edit</button>
-                    <button type="button" class="danger delete-category" data-id="${category.id}">Delete</button>
+                    <button type="button" class="secondary edit-category" data-id="${category.id}">${(globalThis.aprswcI18n?.mark("view-edit.e6639d33") ?? `View / Edit`)}</button>
+                    <button type="button" class="danger delete-category" data-id="${category.id}">${(globalThis.aprswcI18n?.mark("delete.e2d0a549") ?? `Delete`)}</button>
                 </div>`}
             </article>`);
     } catch (error) {
         list.innerHTML = "";
         message.className = "form-message error";
-        message.textContent = "Communication Categories could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("communication-categories-could-not-be-loaded.7ba98303") ?? "Communication Categories could not be loaded.");
     }
 }
 
 function openCreateCategoryDialog() {
     editingCategoryId = null;
     document.querySelector("#category-form").reset();
-    document.querySelector("#category-dialog-title").textContent = "Create Category";
-    document.querySelector("#save-category").textContent = "Create Category";
+    document.querySelector("#category-dialog-title").textContent = (globalThis.aprswcI18n?.mark("create-category.4b4a9857") ?? "Create Category");
+    document.querySelector("#save-category").textContent = (globalThis.aprswcI18n?.mark("create-category.4b4a9857") ?? "Create Category");
     openCategoryEditor();
 }
 
@@ -2163,8 +2181,8 @@ function openEditCategoryDialog(id) {
     const form = document.querySelector("#category-form");
     form.elements.name.value = category.name || "";
     form.elements.description.value = category.description || "";
-    document.querySelector("#category-dialog-title").textContent = "View / Edit Category";
-    document.querySelector("#save-category").textContent = "Save Changes";
+    document.querySelector("#category-dialog-title").textContent = (globalThis.aprswcI18n?.mark("view-edit-category.bb27c3a7") ?? "View / Edit Category");
+    document.querySelector("#save-category").textContent = (globalThis.aprswcI18n?.mark("save-changes.35322b5b") ?? "Save Changes");
     openCategoryEditor();
 }
 
@@ -2203,7 +2221,7 @@ async function saveCategory(event) {
         populateCategoryOptions(saved.id);
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The Category could not be saved. Its name may already be in use.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-category-could-not-be-saved-its-name-may-alr.9683f49e") ?? "The Category could not be saved. Its name may already be in use.");
     } finally {
         button.disabled = false;
     }
@@ -2213,7 +2231,7 @@ function openDeleteCategoryDialog(id) {
     const category = communicationCategories.get(id);
     if (!category) return;
     pendingDeleteCategoryId = id;
-    document.querySelector("#delete-category-name").textContent = category.name;
+    document.querySelector("#delete-category-name").textContent = globalThis.aprswcI18n?.categoryName(category) ?? category.name;
     document.querySelector("#delete-category-message").textContent = "";
     document.querySelector("#delete-category-dialog").showModal();
     document.querySelector("#cancel-delete-category").focus();
@@ -2236,7 +2254,7 @@ async function confirmDeleteCategory(event) {
         await loadCategories();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The Category could not be deleted. It may be used by a policy.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-category-could-not-be-deleted-it-may-be-used.e3fbe0f8") ?? "The Category could not be deleted. It may be used by a policy.");
     } finally {
         button.disabled = false;
     }
@@ -2252,7 +2270,7 @@ async function openSettingsDialog() {
     const form = document.querySelector("#settings-form");
     const message = document.querySelector("#settings-message");
     form.reset();
-    message.textContent = "Loading settings…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading-settings.e71a1345") ?? "Loading settings…");
     document.querySelector("#settings-dialog").showModal();
     try {
         const records = await requestJson("/api/v1/application-settings");
@@ -2272,7 +2290,7 @@ async function openSettingsDialog() {
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Application Settings could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("application-settings-could-not-be-loaded.7c638479") ?? "Application Settings could not be loaded.");
     }
 }
 
@@ -2294,7 +2312,7 @@ async function loadPacketLoggingSetting() {
     const message = document.querySelector("#packet-logging-message");
     checkbox.disabled = true;
     message.className = "form-message";
-    message.textContent = "Loading…";
+    message.textContent = (globalThis.aprswcI18n?.mark("loading.ba3bbbe1") ?? "Loading…");
     try {
         const setting = await requestJson("/api/v1/application-settings/packet-logging");
         checkbox.checked = setting.enabled;
@@ -2302,7 +2320,7 @@ async function loadPacketLoggingSetting() {
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Packet logging setting could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("packet-logging-setting-could-not-be-loaded.8e94a4b6") ?? "Packet logging setting could not be loaded.");
     }
 }
 
@@ -2312,17 +2330,17 @@ async function savePacketLoggingSetting() {
     const enabled = checkbox.checked;
     checkbox.disabled = true;
     message.className = "form-message";
-    message.textContent = "Saving…";
+    message.textContent = (globalThis.aprswcI18n?.mark("saving.23e39291") ?? "Saving…");
     try {
         const setting = await requestJson("/api/v1/application-settings/packet-logging", {
             method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled })
         });
         checkbox.checked = setting.enabled;
-        message.textContent = setting.enabled ? "Packet logging enabled." : "Packet logging disabled.";
+        message.textContent = setting.enabled ? (globalThis.aprswcI18n?.mark("packet-logging-enabled.23fba93b") ?? "Packet logging enabled.") : (globalThis.aprswcI18n?.mark("packet-logging-disabled.aded4c48") ?? "Packet logging disabled.");
     } catch (error) {
         checkbox.checked = !enabled;
         message.className = "form-message error";
-        message.textContent = "Packet logging setting could not be saved.";
+        message.textContent = (globalThis.aprswcI18n?.mark("packet-logging-setting-could-not-be-saved.ac906a96") ?? "Packet logging setting could not be saved.");
     } finally {
         checkbox.disabled = false;
     }
@@ -2343,7 +2361,7 @@ function requestSettingsConfirmation(event) {
         if (!Number.isInteger(days) || days <= 0 || days > 2147483647) {
             const message = document.querySelector("#settings-message");
             message.className = "form-message error";
-            message.textContent = "Retention must be a whole number of days greater than zero.";
+            message.textContent = (globalThis.aprswcI18n?.mark("retention-must-be-a-whole-number-of-days-greater.cb63ae15") ?? "Retention must be a whole number of days greater than zero.");
             form.elements[name].focus();
             return;
         }
@@ -2354,7 +2372,7 @@ function requestSettingsConfirmation(event) {
         if (!valueOf(name) || !Number.isInteger(value) || value < minimum || value > 2147483647) {
             const message = document.querySelector("#settings-message");
             message.className = "form-message error";
-            message.textContent = "Retries must be a nonnegative whole number; retry interval must be a positive whole number of seconds.";
+            message.textContent = (globalThis.aprswcI18n?.mark("retries-must-be-a-nonnegative-whole-number-retry.03674c25") ?? "Retries must be a nonnegative whole number; retry interval must be a positive whole number of seconds.");
             form.elements[name].focus();
             return;
         }
@@ -2364,7 +2382,7 @@ function requestSettingsConfirmation(event) {
             || !["{z}", "{x}", "{y}"].every(token => configuredMapTileUrl.includes(token)))) {
         const message = document.querySelector("#settings-message");
         message.className = "form-message error";
-        message.textContent = "Map tile URL must use HTTP or HTTPS and include {z}, {x}, and {y}.";
+        message.textContent = (globalThis.aprswcI18n?.mark("map-tile-url-must-use-http-or-https-and-include-.29681427") ?? "Map tile URL must use HTTP or HTTPS and include {z}, {x}, and {y}.");
         form.elements.mapTileUrl.focus();
         return;
     }
@@ -2373,7 +2391,8 @@ function requestSettingsConfirmation(event) {
         messageMaxRetries: Number(valueOf("messageMaxRetries")),
         messageRetryIntervalSeconds: Number(valueOf("messageRetryIntervalSeconds")),
         mapTileUrl: configuredMapTileUrl || null,
-        tinyTopicsServerUrl: valueOf("tinyTopicsServerUrl")
+        tinyTopicsServerUrl: valueOf("tinyTopicsServerUrl"),
+        informationResponseLanguage: valueOf("informationResponseLanguage") || "en"
     };
     document.querySelector("#confirm-settings-message").textContent = "";
     document.querySelector("#confirm-settings-dialog").showModal();
@@ -2392,13 +2411,13 @@ async function loadIgnoredStations() {
             ? stations.map(station => `
                 <div class="compact-item">
                     <strong>${escapeHtml(station.callsign)}</strong>
-                    <button type="button" class="danger delete-ignored" data-id="${station.id}">Remove</button>
+                    <button type="button" class="danger delete-ignored" data-id="${station.id}">${(globalThis.aprswcI18n?.mark("remove.c3812fc4") ?? `Remove`)}</button>
                 </div>`).join("")
-            : "<p>No ignored stations.</p>";
+            : `<p>${(globalThis.aprswcI18n?.mark("label.no-ignored-stations.") ?? "No ignored stations.")}</p>`;
         message.textContent = "";
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Ignored Stations could not be loaded.";
+        message.textContent = (globalThis.aprswcI18n?.mark("ignored-stations-could-not-be-loaded.faf29a8f") ?? "Ignored Stations could not be loaded.");
     }
 }
 
@@ -2430,14 +2449,14 @@ async function deleteAllStations(event) {
     const message = document.querySelector("#delete-all-stations-message");
     button.disabled = true;
     message.className = "form-message";
-    message.textContent = "Deleting all stations…";
+    message.textContent = (globalThis.aprswcI18n?.mark("deleting-all-stations.1ffe6bcc") ?? "Deleting all stations…");
     try {
         await requestJson("/api/v1/stations", { method: "DELETE" });
         closeDeleteAllStationsDialog();
         await Promise.all([load(), loadStationCount()]);
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The stations could not be deleted.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-stations-could-not-be-deleted.4e594889") ?? "The stations could not be deleted.");
     } finally {
         button.disabled = false;
     }
@@ -2468,7 +2487,7 @@ async function addIgnoredStation() {
         await loadIgnoredStations();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "The callsign could not be added. It may already be ignored.";
+        message.textContent = (globalThis.aprswcI18n?.mark("the-callsign-could-not-be-added-it-may-already-b.0964f9e3") ?? "The callsign could not be added. It may already be ignored.");
     }
 }
 
@@ -2494,7 +2513,7 @@ async function confirmDeleteIgnoredStation(event) {
         closeDeleteIgnoredStation();
         await loadIgnoredStations();
     } catch (error) {
-        document.querySelector("#delete-ignored-message").textContent = "The station could not be removed.";
+        document.querySelector("#delete-ignored-message").textContent = (globalThis.aprswcI18n?.mark("the-station-could-not-be-removed.649cec33") ?? "The station could not be removed.");
     }
 }
 
@@ -2513,7 +2532,7 @@ async function saveSettings(event) {
     const button = document.querySelector("#confirm-save-settings");
     const message = document.querySelector("#confirm-settings-message");
     button.disabled = true;
-    message.textContent = "Saving Application Settings…";
+    message.textContent = (globalThis.aprswcI18n?.mark("saving-application-settings.5975e8b7") ?? "Saving Application Settings…");
     try {
         const baseUrl = "/api/v1/application-settings";
         const saved = await requestJson(applicationSettingsId ? `${baseUrl}/${applicationSettingsId}` : baseUrl, {
@@ -2529,7 +2548,7 @@ async function saveSettings(event) {
         closeSettingsDialog();
     } catch (error) {
         message.className = "form-message error";
-        message.textContent = "Application Settings could not be saved.";
+        message.textContent = (globalThis.aprswcI18n?.mark("application-settings-could-not-be-saved.ef666765") ?? "Application Settings could not be saved.");
     } finally {
         button.disabled = false;
     }
@@ -2751,8 +2770,8 @@ function updateMessageCharacterCount(form) {
     const field = form.elements.content || form.elements.messageText;
     const count = field.value.length;
     form.querySelector(".message-character-count").textContent = form.id === "policy-form" && field.maxLength > 0
-        ? `${count} of ${field.maxLength} characters entered`
-        : `${count} ${count === 1 ? "character" : "characters"} entered`;
+        ? (globalThis.aprswcI18n?.mark("0-of-1-characters-entered.224da01c", [count, field.maxLength]) ?? `${count} of ${field.maxLength} characters entered`)
+        : (globalThis.aprswcI18n?.plural("characters.entered", count) ?? `${count} ${count === 1 ? "character" : "characters"} entered`);
 }
 
 for (const id of ["send-welcome-center-message-form", "send-station-message-form", "policy-form"]) {
@@ -2762,8 +2781,8 @@ for (const id of ["send-welcome-center-message-form", "send-station-message-form
 
 function formatMessageDelivery(delivery) {
     if (!delivery) return "";
-    const labels = {PENDING: "Pending", AWAITING_ACK: "Awaiting ACK", ACKNOWLEDGED: "Acknowledged", REJECTED: "Rejected", EXHAUSTED: "Exhausted", CANCELLED: "Cancelled"};
-    const last = delivery.LAST_SENT ? `; last sent ${formatReceivedTime(delivery.LAST_SENT)}` : "";
-    const completed = delivery.COMPLETED_AT ? `; updated ${formatReceivedTime(delivery.COMPLETED_AT)}` : "";
-    return escapeHtml(` - ${labels[delivery.STATE] || delivery.STATE}; ${delivery.ATTEMPTS} attempts${last}${completed}`);
+    const labels = {PENDING: (globalThis.aprswcI18n?.mark("pending.331551b0") ?? "Pending"), AWAITING_ACK: (globalThis.aprswcI18n?.mark("awaiting-ack.1670bd11") ?? "Awaiting ACK"), ACKNOWLEDGED: (globalThis.aprswcI18n?.mark("acknowledged.d87cdf8a") ?? "Acknowledged"), REJECTED: (globalThis.aprswcI18n?.mark("rejected.aea4a04a") ?? "Rejected"), EXHAUSTED: (globalThis.aprswcI18n?.mark("exhausted.a51ee304") ?? "Exhausted"), CANCELLED: (globalThis.aprswcI18n?.mark("cancelled.d353a99e") ?? "Cancelled")};
+    const last = delivery.LAST_SENT ? (globalThis.aprswcI18n?.mark("last-sent-0.c9236c01", [formatReceivedTime(delivery.LAST_SENT)]) ?? `; last sent ${formatReceivedTime(delivery.LAST_SENT)}`) : "";
+    const completed = delivery.COMPLETED_AT ? (globalThis.aprswcI18n?.mark("updated-0.10b1af72", [formatReceivedTime(delivery.COMPLETED_AT)]) ?? `; updated ${formatReceivedTime(delivery.COMPLETED_AT)}`) : "";
+    return escapeHtml((globalThis.aprswcI18n?.plural("delivery.attempts", delivery.ATTEMPTS, [labels[delivery.STATE] || delivery.STATE, delivery.ATTEMPTS, last, completed]) ?? ` - ${labels[delivery.STATE] || delivery.STATE}; ${delivery.ATTEMPTS} attempts${last}${completed}`));
 }
