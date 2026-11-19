@@ -163,6 +163,8 @@ class MessageDeliveryServiceTest {
                 null, "KC1VMZ-4", "WC1", null, null, "Hello", route, MessageType.MESSAGE, null, null, null, true);
         identifiers.prepare(m);
         service.send(route, "WC1", "KC1VMZ-4", MessageIdentifierService.wireContent(m), () -> true, () -> {});
+        due(m);
+        service.tick(Instant.now());
         write(0);
         var restarted =
                 new MessageDeliveryService(jdbc, transactions, managers, centers, policies, connections, ignored);

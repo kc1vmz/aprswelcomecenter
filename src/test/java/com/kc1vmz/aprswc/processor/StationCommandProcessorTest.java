@@ -155,7 +155,7 @@ class StationCommandProcessorTest {
         var center = welcomeCenter();
         when(applicationVersion.find())
                 .thenReturn(
-                        Mono.just(new ApplicationVersion("APRSWelcomeCenter", "1.0.23", "", "", "")),
+                        Mono.just(new ApplicationVersion("APRSWelcomeCenter", "1.0.24", "", "", "")),
                         Mono.just(new ApplicationVersion("APRSWelcomeCenter", "2.3.4", "", "", "")));
         var command = new StationCommand(UUID.randomUUID(), "N1ABC-7", center, null, "xv{A1", null);
         command.setPacketProcessorId("route-1");
@@ -164,7 +164,7 @@ class StationCommandProcessorTest {
         var messages = ArgumentCaptor.forClass(StationMessage.class);
         verify(stationMessageQueue, times(2)).offer(messages.capture());
         assertEquals(
-                List.of("APRS Welcome Center version 1.0.23", "APRS Welcome Center version 2.3.4"),
+                List.of("APRS Welcome Center version 1.0.24", "APRS Welcome Center version 2.3.4"),
                 messages.getAllValues().stream().map(StationMessage::getContent).toList());
         for (var message : messages.getAllValues()) {
             assertEquals("N1ABC-7", message.getCallsignTo());
