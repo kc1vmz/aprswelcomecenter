@@ -19,8 +19,12 @@ package com.kc1vmz.aprswc.processor;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.kc1vmz.aprswc.content.PolicyContentService;
 import com.kc1vmz.aprswc.enumeration.CommunicationEventType;
 import com.kc1vmz.aprswc.enumeration.MessageType;
+import com.kc1vmz.aprswc.enumeration.PolicyContentSource;
+import com.kc1vmz.aprswc.exceptions.ApiFailure;
+import com.kc1vmz.aprswc.object.CommunicationCategory;
 import com.kc1vmz.aprswc.object.CommunicationPolicy;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +32,27 @@ class PolicyTransmissionTest {
     private CommunicationPolicy policy(MessageType type, String address) {
         return new CommunicationPolicy(
                 null, null, null, "Text", null, null, type, CommunicationEventType.SCHEDULED_ONCE, address);
+    }
+
+    @Test
+    void textContentRequiresAtLeastOneNonblankCharacterForEveryEvent() {
+        for (CommunicationEventType event : CommunicationEventType.values()) {
+            var p = policy(MessageType.MESSAGE, null);
+            p.setCommunicationEventType(event);
+            p.setCategory(new CommunicationCategory(null, "General", "General", false, true, null));
+            for (String empty : new String[] {null, "", " \t\n"}) {
+                p.setMessageText(empty);
+                assertThatThrownBy(() -> PolicyContentService.validate(p)).isInstanceOf(ApiFailure.class);
+            }
+            p.setMessageText("x");
+            assertThatCode(() -> PolicyContentService.validate(p)).doesNotThrowAnyException();
+            p.setMessageText(null);
+            p.setContentSource(PolicyContentSource.TINYTOPICS);
+            p.setTopicId("weather");
+            assertThatCode(() -> PolicyContentService.validate(p)).doesNotThrowAnyException();
+            p.setCategory(new CommunicationCategory(null, "Weather", "Weather", true, true, null));
+            assertThatCode(() -> PolicyContentService.validate(p)).doesNotThrowAnyException();
+        }
     }
 
     @Test

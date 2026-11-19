@@ -41,6 +41,18 @@ test('switches sources and preserves text and parameter drafts', async () => {
     assert.deepEqual(JSON.parse(JSON.stringify(ui.api.value())), {contentSource: 'TINYTOPICS', topicId: 'weather', topicParameters: {x: '-72.97', y: ''}});
 });
 
+test('text is required for every event when creating or editing a policy', async () => {
+    const ui = setup();
+    for (const policy of [null, {id: 'existing', contentSource: 'TEXT'}]) {
+        await ui.api.load(policy);
+        for (const event of ['ENTER_REGION', 'EXIT_REGION', 'ON_REQUEST', 'SCHEDULED_ONCE', 'SCHEDULED_RECURRING', 'SHRIEK_HEARD']) {
+            ui.fields.communicationEventType.value = event;
+            ui.api.update();
+            assert.equal(ui.fields.messageText.required, true, event);
+        }
+    }
+});
+
 test('unavailable server disables topic selector and preserves saved configuration', async () => {
     const ui = setup(async () => {throw new Error('offline');});
     await ui.api.load({id: 'policy', contentSource: 'TINYTOPICS', topicId: 'weather', topicParameters: {x: '-72'}});

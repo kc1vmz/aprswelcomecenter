@@ -27,8 +27,7 @@ window.policyContent = (() => {
         document.querySelector('#policy-text-field').hidden = tiny;
         document.querySelector('#policy-topic-fields').hidden = !tiny;
         form.elements.messageText.disabled = automatic || tiny;
-        form.elements.messageText.required = !automatic && !tiny
-            && ['SCHEDULED_ONCE', 'SCHEDULED_RECURRING', 'SHRIEK_HEARD'].includes(form.elements.communicationEventType.value);
+        form.elements.messageText.required = !automatic && !tiny;
         selector.disabled = !tiny || !available;
         parameters.querySelectorAll('input').forEach(input => { input.disabled = !tiny; });
     }

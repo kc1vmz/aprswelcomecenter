@@ -58,6 +58,9 @@ public class PolicyContentService {
             policy.setTopicParameters(Map.of());
             return;
         }
+        if (policy.getContentSource() == PolicyContentSource.TEXT
+                && (policy.getMessageText() == null || policy.getMessageText().isBlank()))
+            PolicyTransmission.validateText(policy, policy.getMessageText());
         if (policy.getContentSource() == PolicyContentSource.TINYTOPICS
                 && (policy.getTopicId() == null || !policy.getTopicId().matches("[a-z0-9-]{1,40}")))
             throw new ApiFailure(
