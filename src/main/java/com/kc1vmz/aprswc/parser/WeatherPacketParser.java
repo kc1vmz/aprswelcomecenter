@@ -114,8 +114,8 @@ public class WeatherPacketParser {
                 messageIndex = 26;
             }
 
-            if (content.charAt(messageIndex) != '_') {
-                // this must be an underscore
+            if ((content.charAt(messageIndex) != '_') || (content.charAt(messageIndex+4) != '/')) {
+                // this must be an underscore and have wind speed / direction separator
                 return null;
             }
             messageIndex++;
