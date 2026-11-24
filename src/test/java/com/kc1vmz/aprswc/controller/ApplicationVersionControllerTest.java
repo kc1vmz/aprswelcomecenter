@@ -17,6 +17,9 @@
  */
 package com.kc1vmz.aprswc.controller;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
@@ -57,17 +60,14 @@ class ApplicationVersionControllerTest {
     }
 
     @Test
-    void servesLicenseResource() {
+    void servesLicenseResource() throws IOException {
+        byte[] expectedLicense = Files.readAllBytes(Path.of("LICENSE"));
         client.get()
                 .uri("/LICENSE.txt")
                 .exchange()
                 .expectStatus()
                 .isOk()
-                .expectBody(String.class)
-                .value(license -> {
-                    org.assertj.core.api.Assertions.assertThat(license)
-                            .contains("GNU General Public License")
-                            .contains("John Rokicki KC1VMZ");
-                });
+                .expectBody(byte[].class)
+                .isEqualTo(expectedLicense);
     }
 }
