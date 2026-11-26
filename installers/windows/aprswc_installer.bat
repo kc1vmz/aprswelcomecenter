@@ -89,7 +89,7 @@ curl -L -o aprs-welcome-center-%WC_VERSION%.jar %WC_SRC_URL_ROOT%\aprs-welcome-c
 SET WC_SRC_URL_ROOT=
 
 echo Creating startup script
-echo @ECHO OFF>> aprswc_start.bat
+echo @ECHO OFF> aprswc_start.bat
 echo pushd .>> aprswc_start.bat
 echo cd %WC_INSTALL_DIR%>> aprswc_start.bat
 echo REM Set Environment Variables>> aprswc_start.bat
