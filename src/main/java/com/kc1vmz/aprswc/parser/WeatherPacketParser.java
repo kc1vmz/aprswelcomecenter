@@ -19,6 +19,7 @@ package com.kc1vmz.aprswc.parser;
 
 import com.kc1vmz.aprswc.object.StationPacket;
 import com.kc1vmz.aprswc.object.WelcomeCenterWeatherReport;
+import com.kc1vmz.aprswc.utils.AprsCoordinateFormat;
 import com.kc1vmz.aprswc.utils.CompressedDataFormatUtils;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -145,10 +146,8 @@ public class WeatherPacketParser {
             String content = packet.getCommand();
             String compressedDataStr = content.substring(9, 17);
             byte[] compressedData = compressedDataStr.getBytes();
-            String lat = CompressedDataFormatUtils.convertDecimalToDDMMSSx(
-                    CompressedDataFormatUtils.getLatitudeShort(compressedData), "NS");
-            String lon = CompressedDataFormatUtils.convertDecimalToDDDMMSSx(
-                    CompressedDataFormatUtils.getLongitudeShort(compressedData), "EW");
+            String lat = AprsCoordinateFormat.latitude(CompressedDataFormatUtils.getLatitudeShort(compressedData));
+            String lon = AprsCoordinateFormat.longitude(CompressedDataFormatUtils.getLongitudeShort(compressedData));
 
             String weatherData = content.substring(21);
             ret = parseWeatherData(packet.getCallsign(), weatherData);
@@ -178,10 +177,8 @@ public class WeatherPacketParser {
         try {
             String compressedDataStr = content.substring(2, 10);
             byte[] compressedData = compressedDataStr.getBytes();
-            String lat = CompressedDataFormatUtils.convertDecimalToDDMMSSx(
-                    CompressedDataFormatUtils.getLatitudeShort(compressedData), "NS");
-            String lon = CompressedDataFormatUtils.convertDecimalToDDDMMSSx(
-                    CompressedDataFormatUtils.getLongitudeShort(compressedData), "EW");
+            String lat = AprsCoordinateFormat.latitude(CompressedDataFormatUtils.getLatitudeShort(compressedData));
+            String lon = AprsCoordinateFormat.longitude(CompressedDataFormatUtils.getLongitudeShort(compressedData));
 
             String weatherData = content.substring(14);
             ret = parseWeatherData(packet.getCallsign(), weatherData);

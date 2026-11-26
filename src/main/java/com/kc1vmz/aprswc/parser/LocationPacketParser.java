@@ -20,6 +20,7 @@ package com.kc1vmz.aprswc.parser;
 import com.kc1vmz.aprswc.object.Station;
 import com.kc1vmz.aprswc.object.StationPacket;
 import com.kc1vmz.aprswc.object.StationPosition;
+import com.kc1vmz.aprswc.utils.AprsCoordinateFormat;
 import com.kc1vmz.aprswc.utils.CompressedDataFormatUtils;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -58,12 +59,8 @@ public class LocationPacketParser {
         if ((data[messageIndex] < '0') || (data[messageIndex] > '9')) { // if it is not a digit, then it is compressed
             // compressed location data
             byte[] compressedData = Arrays.copyOfRange(data, messageIndex, messageIndex + 13);
-            lon = CompressedDataFormatUtils.convertDDMMSSxToAPRSDDMMSSx(
-                    CompressedDataFormatUtils.convertDecimalToDDDMMSSx(
-                            CompressedDataFormatUtils.getLongitude(compressedData), "EW"));
-            lat = CompressedDataFormatUtils.convertDDMMSSxToAPRSDDMMSSx(
-                    CompressedDataFormatUtils.convertDecimalToDDMMSSx(
-                            CompressedDataFormatUtils.getLatitude(compressedData), "NS"));
+            lon = AprsCoordinateFormat.longitude(CompressedDataFormatUtils.getLongitude(compressedData));
+            lat = AprsCoordinateFormat.latitude(CompressedDataFormatUtils.getLatitude(compressedData));
 
             messageIndex += 13; // compressed is 13 bytes
         } else {

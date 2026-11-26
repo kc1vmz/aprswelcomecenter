@@ -20,11 +20,10 @@ package com.kc1vmz.aprswc.accessor;
 import com.kc1vmz.aprswc.object.CoordinatePair;
 import com.kc1vmz.aprswc.object.DecimalCoordinate;
 import com.kc1vmz.aprswc.object.DecimalCoordinatePair;
+import com.kc1vmz.aprswc.utils.AprsCoordinateFormat;
 import com.kc1vmz.aprswc.utils.ConvertLonLat;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
-import java.util.Locale;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -52,30 +51,7 @@ public class CoordinateAccessor {
 
     public CoordinatePair convertToAprsCoordinate(DecimalCoordinatePair coordinate) {
         return new CoordinatePair(
-                formatAprsCoordinate(coordinate.getLongitude(), 3, 'E', 'W', 180),
-                formatAprsCoordinate(coordinate.getLatitude(), 2, 'N', 'S', 90));
-    }
-
-    private String formatAprsCoordinate(
-            BigDecimal coordinate, int degreeWidth, char positiveDirection, char negativeDirection, int maximum) {
-        if (coordinate == null || coordinate.abs().compareTo(BigDecimal.valueOf(maximum)) > 0) {
-            return null;
-        }
-
-        BigDecimal absolute = coordinate.abs();
-        int degrees = absolute.intValue();
-        BigDecimal minutes = absolute.subtract(BigDecimal.valueOf(degrees))
-                .multiply(BigDecimal.valueOf(60))
-                .setScale(2, RoundingMode.HALF_UP);
-        if (minutes.compareTo(BigDecimal.valueOf(60)) == 0) {
-            degrees += 1;
-            minutes = BigDecimal.ZERO.setScale(2);
-        }
-        if (degrees > maximum) {
-            return null;
-        }
-
-        char direction = coordinate.signum() < 0 ? negativeDirection : positiveDirection;
-        return String.format(Locale.ROOT, "%0" + degreeWidth + "d%05.2f%c", degrees, minutes.doubleValue(), direction);
+                AprsCoordinateFormat.format(coordinate.getLongitude(), 3, 'E', 'W', 180),
+                AprsCoordinateFormat.format(coordinate.getLatitude(), 2, 'N', 'S', 90));
     }
 }
