@@ -26,8 +26,43 @@ import com.kc1vmz.aprswc.object.StationPacket;
 import com.kc1vmz.aprswc.utils.ConvertLonLat;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
+@ExtendWith(OutputCaptureExtension.class)
 class WeatherPositionRegressionTest {
+    @Test
+    void compressedGatewayPositionDoesNotLogWeatherErrors(CapturedOutput output) {
+        for (String prefix : List.of("=", "!", "@261200z", "/261200z")) {
+            var packet = new StationPacket(
+                    null, "test", null, null, "WA7GMX-8>APU25N,TCPIP*,qAC,T2CAEAST:" + prefix + "V6Oo6/OL]&  B", null);
+            assertEquals(PacketType.LOCATION, new PacketParser().parse(packet));
+            assertNull(new WeatherPacketParser().parseWeatherPacket(packet));
+            var position = new LocationPacketParser()
+                    .parseLocationPacket(packet, new Station(null, "WA7GMX-8", StationState.UNKNOWN, List.of()));
+            assertEquals("4726.27N", position.getLatitude());
+            assertEquals("12235.27W", position.getLongitude());
+        }
+        assertFalse(output.getAll().contains("Error parsing weather"));
+        assertFalse(output.getAll().contains("Exception caught parsing weather"));
+    }
+
+    @Test
+    void truncatedPositionFieldsAreIgnoredWithoutWeatherErrors(CapturedOutput output) {
+        for (String prefix : List.of("=", "!", "@261200z", "/261200z")) {
+            for (String body : List.of("V6Oo6/OL]_  B", "4222.88N/07157.29W_000/000")) {
+                String full = prefix + body;
+                for (int length = 1; length < full.length(); length++) {
+                    var packet = new StationPacket(null, "test", "N1ABC", null, full.substring(0, length), null);
+                    assertNull(new WeatherPacketParser().parseWeatherPacket(packet));
+                }
+            }
+        }
+        assertFalse(output.getAll().contains("Error parsing weather"));
+        assertFalse(output.getAll().contains("Exception caught parsing weather"));
+    }
+
     @Test
     void shortUncompressedPositionUsesActualCoordinatesInsteadOfWeatherCoordinates() {
         for (String suffix : List.of("", "  ", " longer comment")) {
