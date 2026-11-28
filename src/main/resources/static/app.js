@@ -695,6 +695,47 @@ async function deleteMessages(event) {
 }
 
 let stationPathRequest = 0;
+let stationSenderCenters = [];
+let stationSenderInstances = [];
+
+function updateStationSenderPaths() {
+    const form = document.querySelector("#send-station-message-form");
+    const center = stationSenderCenters.find(c => c.id === form.elements.callsignFrom.value);
+    const select = form.elements.packetProcessorId;
+    select.replaceChildren(new Option((globalThis.aprswcI18n?.mark("use-last-heard.ec652192") ?? "Use last heard"), ""));
+    const eligible = stationSenderInstances.filter(entry => entry.health.status === "CONNECTED"
+        && entry.configuration.state === "ACTIVE"
+        && center && (center.communicationMode !== "SELECTED" || center.communicationInstanceIds.includes(entry.configuration.id)));
+    for (const entry of eligible) {
+        const config = entry.configuration;
+        select.add(new Option(`${config.label} - ${config.type}`, config.id));
+    }
+    form.querySelector('button[type="submit"]').disabled = !center || !eligible.length;
+    const status = document.querySelector("#send-station-message-message");
+    status.textContent = !stationSenderCenters.length
+        ? (globalThis.aprswcI18n?.mark("station-sender.none") ?? "Open a Welcome Center before sending a message.")
+        : center && !eligible.length
+            ? (globalThis.aprswcI18n?.mark("station-sender.no-route") ?? "No eligible connected communication method is available.") : "";
+}
+
+async function loadStationSenders() {
+    const request = ++stationPathRequest;
+    const form = document.querySelector("#send-station-message-form");
+    form.querySelector('button[type="submit"]').disabled = true;
+    form.elements.callsignFrom.replaceChildren();
+    stationSenderCenters = [];
+    const [centers, instances] = await Promise.all([
+        requestJson("/api/v1/welcome-centers"), requestJson("/api/v1/communication-instances")]);
+    if (request !== stationPathRequest) return;
+    stationSenderCenters = centers.filter(c => c.status === "OPEN").sort((a,b) => a.callsign.localeCompare(b.callsign));
+    stationSenderInstances = instances;
+    const select = form.elements.callsignFrom;
+    select.replaceChildren(new Option((globalThis.aprswcI18n?.mark("station-sender.choose") ?? "Choose a Welcome Center"), ""));
+    for (const center of stationSenderCenters) select.add(new Option(center.callsign, center.id));
+    select.value = stationSenderCenters.length === 1 ? stationSenderCenters[0].id : "";
+    select.onchange = updateStationSenderPaths;
+    updateStationSenderPaths();
+}
 
 async function openSendStationMessageDialog() {
     if (!activeStationCallsign) return;
@@ -705,19 +746,8 @@ async function openSendStationMessageDialog() {
     document.querySelector("#send-station-message-message").textContent = "";
     document.querySelector("#send-station-message-dialog").showModal();
     form.elements.callsignFrom.focus();
-    const request = ++stationPathRequest;
-    const select = form.elements.packetProcessorId;
-    select.replaceChildren(new Option((globalThis.aprswcI18n?.mark("use-last-heard.ec652192") ?? "Use last heard"), ""));
-    const submit = form.querySelector('button[type="submit"]');
-    submit.disabled = true;
     try {
-        const instances = await requestJson("/api/v1/communication-instances");
-        if (request !== stationPathRequest) return;
-        for (const entry of instances.filter(entry => entry.health.status === "CONNECTED")) {
-            const config = entry.configuration;
-            select.add(new Option(`${config.label} - ${config.type}`, config.id));
-        }
-        submit.disabled = false;
+        await loadStationSenders();
     } catch (error) {
         const status = document.querySelector("#send-station-message-message");
         status.className = "form-message error";
@@ -734,10 +764,12 @@ function closeSendStationMessageDialog() {
 function requestStationMessageConfirmation(event) {
     event.preventDefault();
     const form = event.currentTarget;
+    const center = stationSenderCenters.find(c => c.id === form.elements.callsignFrom.value);
+    if (!center || form.querySelector('button[type="submit"]').disabled) return;
     pendingStationMessage = {
         callsignTo: activeStationCallsign,
-        callsignFrom: form.elements.callsignFrom.value.trim().toUpperCase(),
-        welcomeCenter: null,
+        callsignFrom: center.callsign,
+        welcomeCenter: {id: center.id},
         sentTime: null,
         content: form.elements.content.value.trim(),
         packetProcessorId: form.elements.packetProcessorId.value || null
@@ -772,8 +804,17 @@ async function sendStationMessage(event) {
         closeSendStationMessageDialog();
         await openStationMessagesDialog();
     } catch (error) {
-        message.className = "form-message error";
-        message.textContent = error.message || (globalThis.aprswcI18n?.mark("the-message-could-not-be-created.478ac277") ?? "The message could not be created.");
+        if (error.status === 409) {
+            closeStationMessageConfirmation();
+            pendingStationMessage = null;
+            try { await loadStationSenders(); } catch (refreshError) { error = refreshError; }
+            const status = document.querySelector("#send-station-message-message");
+            status.className = "form-message error";
+            status.textContent = error.message;
+        } else {
+            message.className = "form-message error";
+            message.textContent = error.message || (globalThis.aprswcI18n?.mark("the-message-could-not-be-created.478ac277") ?? "The message could not be created.");
+        }
     } finally {
         button.disabled = false;
     }

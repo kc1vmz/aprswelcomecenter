@@ -235,7 +235,8 @@ public class StationMessageProcessor {
     }
 
     public void prepareStandalone(StationMessage message) {
-        if (message.getWelcomeCenter() != null
+        if (message.getWelcomeCenter() == null
+                || message.getWelcomeCenter().getId() == null
                 || message.getMessageType() != MessageType.MESSAGE
                 || message.getCallsignFrom() == null
                 || message.getCallsignFrom().isBlank()
@@ -247,11 +248,31 @@ public class StationMessageProcessor {
                     HttpStatus.BAD_REQUEST,
                     "A_SENDER_RECIPIENT_AND_MESSAGE_ARE_REQUIRED_BA9B43",
                     "A sender, recipient and message are required.");
-        message.setStandalone(true);
+        var center = welcomeCenterAccessor
+                .findOpenById(message.getWelcomeCenter().getId())
+                .block();
+        if (center == null || !center.getCallsign().equalsIgnoreCase(message.getCallsignFrom()))
+            throw new ApiFailure(
+                    HttpStatus.CONFLICT,
+                    "STATION_SENDER_CHANGED",
+                    "The selected Welcome Center changed or is no longer Open. Select a sender again.");
+        message.setWelcomeCenter(center);
+        message.setCallsignFrom(center.getCallsign());
+        message.setStandalone(false);
+        message.setRequiresOpenCenter(true);
+        List<String> connected = communications.connectedRoutes(center.getId());
         if (message.getPacketProcessorId() == null
                 || message.getPacketProcessorId().isBlank())
-            message.setPacketProcessorId(determinePacketProcessor(message, null));
-        if (!communications.connectedRoutes(null).contains(message.getPacketProcessorId()))
+            message.setPacketProcessorId(stationPacketAccessor
+                    .findAllByCallsign(message.getCallsignTo())
+                    .filter(packet -> "RX".equals(packet.getDirection()))
+                    .filter(packet -> connected.contains(packet.getPacketProcessorId()))
+                    .sort(Comparator.comparing(
+                            StationPacket::getReceivedTime, Comparator.nullsLast(Comparator.reverseOrder())))
+                    .map(StationPacket::getPacketProcessorId)
+                    .next()
+                    .block());
+        if (message.getPacketProcessorId() == null || !connected.contains(message.getPacketProcessorId()))
             throw new ApiFailure(
                     HttpStatus.CONFLICT,
                     "NO_CONNECTED_COMMUNICATION_PATH_IS_AVAILABLE__7B6625",
@@ -302,11 +323,11 @@ public class StationMessageProcessor {
     }
 
     private boolean centerIsOpenIfRequired(StationMessage message) {
-        return !message.isRequiresOpenCenter()
-                || (message.getWelcomeCenter() != null
-                        && welcomeCenterAccessor
-                                        .findOpenById(message.getWelcomeCenter().getId())
-                                        .block()
-                                != null);
+        if (!message.isRequiresOpenCenter()) return true;
+        if (message.getWelcomeCenter() == null) return false;
+        var center = welcomeCenterAccessor
+                .findOpenById(message.getWelcomeCenter().getId())
+                .block();
+        return center != null && center.getCallsign().equalsIgnoreCase(message.getCallsignFrom());
     }
 }

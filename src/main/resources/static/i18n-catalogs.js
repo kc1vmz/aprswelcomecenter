@@ -1,6 +1,10 @@
 // English is the source catalog. xxEnglish exposes missing UI bindings.
 (() => {
     const en = {
+    "station-sender.none": "Open a Welcome Center before sending a message.",
+    "station-sender.no-route": "No eligible connected communication method is available.",
+    "station-sender.choose": "Choose a Welcome Center",
+    "api.STATION_SENDER_CHANGED": "The selected Welcome Center changed or is no longer Open. Select a sender again.",
     "action.open": "Open",
     "field-label.username": "Username",
     "packets.count.one": "{0} packet",

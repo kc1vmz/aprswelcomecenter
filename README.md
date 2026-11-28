@@ -590,3 +590,11 @@ Packets containing exact lowercase `!x!` in the packet body are processed normal
 Packets containing exact uppercase `!WCI!` in the packet body are ignored by all welcome centers.
 
 
+
+## REST API documentation
+
+The running application provides Swagger UI at `/swagger-ui.html`, an OpenAPI JSON specification at `/v3/api-docs`, and YAML at `/v3/api-docs.yaml` (for example, `http://localhost:8080/swagger-ui.html`). Documentation is generated from the `/api/v1` controllers and request/response models; its version follows the application's configured version.
+
+Swagger UI supports interactive requests. Its **Try it out** controls call the running application, so write operations change data and may send APRS traffic. The documentation uses the same server and access controls as the application.
+
+To disable the documentation endpoints, set both `springdoc.api-docs.enabled=false` and `springdoc.swagger-ui.enabled=false` in application configuration.

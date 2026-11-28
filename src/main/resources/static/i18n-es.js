@@ -1,5 +1,9 @@
 // Spanish UI catalog. Protocol identifiers and user data are not translated.
 Object.assign(globalThis.aprswcCatalogs, {es: {
+    "station-sender.none": "Abra un centro de bienvenida antes de enviar un mensaje.",
+    "station-sender.no-route": "No hay un medio de comunicaci\u00f3n conectado y permitido disponible.",
+    "station-sender.choose": "Seleccione un centro de bienvenida",
+    "api.STATION_SENDER_CHANGED": "El centro de bienvenida seleccionado cambi\u00f3 o ya no est\u00e1 abierto. Seleccione el remitente de nuevo.",
     "action.open": "Abrir",
     "field-label.username": "Nombre de usuario",
     "packets.count.one": "{0} paquete",

@@ -77,10 +77,19 @@ class StationMessageProcessorTest {
     @InjectMocks
     private StationMessageProcessor processor;
 
+    private WelcomeCenter sender() {
+        var center = mock(WelcomeCenter.class);
+        when(center.getId()).thenReturn(UUID.randomUUID());
+        when(center.getCallsign()).thenReturn("K4BO");
+        when(welcomeCenterAccessor.findOpenById(center.getId())).thenReturn(Mono.just(center));
+        return center;
+    }
+
     @Test
-    void standaloneUsesLatestConnectedRouteWithoutCenterRestrictions() {
-        var message = new StationMessage(null, "N1ONE", "K4BO", null, null, "Hello", null, MessageType.MESSAGE);
-        when(communications.connectedRoutes(null)).thenReturn(List.of("connected"));
+    void stationSenderUsesLatestEligibleConnectedReceivedRoute() {
+        var center = sender();
+        var message = new StationMessage(null, "N1ONE", "K4BO", center, null, "Hello", null, MessageType.MESSAGE);
+        when(communications.connectedRoutes(center.getId())).thenReturn(List.of("connected"));
         when(stationPacketAccessor.findAllByCallsign("N1ONE"))
                 .thenReturn(Flux.just(
                         new StationPacket(null, "offline", "N1ONE", LocalDateTime.now(), null, null),
@@ -88,25 +97,59 @@ class StationMessageProcessorTest {
                                 null, "connected", "N1ONE", LocalDateTime.now().minusMinutes(1), null, null)));
         processor.prepareStandalone(message);
         assertEquals("connected", message.getPacketProcessorId());
-        processor.processMessage(message);
-        verify(communications, never()).centerIdForSender(any());
-        verify(communications, never()).isEligible(any(), any());
+        assertSame(center, message.getWelcomeCenter());
+        assertEquals(false, message.isStandalone());
+        assertEquals(true, message.isRequiresOpenCenter());
     }
 
     @Test
-    void standaloneExplicitRouteDoesNotRequireHeardHistory() {
-        var message = new StationMessage(null, "N1ONE", "K4BO", null, null, "Hello", "connected", MessageType.MESSAGE);
-        when(communications.connectedRoutes(null)).thenReturn(List.of("connected"));
+    void stationSenderExplicitRouteDoesNotRequireHeardHistory() {
+        var center = sender();
+        var message =
+                new StationMessage(null, "N1ONE", "K4BO", center, null, "Hello", "connected", MessageType.MESSAGE);
+        when(communications.connectedRoutes(center.getId())).thenReturn(List.of("connected"));
         processor.prepareStandalone(message);
         assertEquals("connected", message.getPacketProcessorId());
         verifyNoInteractions(stationPacketAccessor);
     }
 
     @Test
-    void standaloneRejectsDisconnectedRoute() {
-        var message = new StationMessage(null, "N1ONE", "K4BO", null, null, "Hello", "offline", MessageType.MESSAGE);
-        when(communications.connectedRoutes(null)).thenReturn(List.of());
+    void stationSenderRejectsDisconnectedOrExcludedRoute() {
+        var center = sender();
+        var message = new StationMessage(null, "N1ONE", "K4BO", center, null, "Hello", "offline", MessageType.MESSAGE);
+        when(communications.connectedRoutes(center.getId())).thenReturn(List.of());
         assertThrows(ResponseStatusException.class, () -> processor.prepareStandalone(message));
+    }
+
+    @Test
+    void lastHeardRequiresAnEligibleReceivedPacket() {
+        var center = sender();
+        var message = new StationMessage(null, "N1ONE", "K4BO", center, null, "Hello", null, MessageType.MESSAGE);
+        when(communications.connectedRoutes(center.getId())).thenReturn(List.of("connected"));
+        when(stationPacketAccessor.findAllByCallsign("N1ONE"))
+                .thenReturn(Flux.just(
+                        new StationPacket(null, "connected", "N1ONE", LocalDateTime.now(), null, null, "TX"),
+                        new StationPacket(null, "excluded", "N1ONE", LocalDateTime.now(), null, null)));
+        assertThrows(ResponseStatusException.class, () -> processor.prepareStandalone(message));
+    }
+
+    @Test
+    void stationSenderRejectsRenamedCenter() {
+        var center = sender();
+        var message = new StationMessage(null, "N1ONE", "OLD", center, null, "Hello", "connected", MessageType.MESSAGE);
+        assertThrows(ResponseStatusException.class, () -> processor.prepareStandalone(message));
+        verifyNoInteractions(communications);
+    }
+
+    @Test
+    void stationSenderRejectsClosedOrDeletedCenter() {
+        var center = mock(WelcomeCenter.class);
+        when(center.getId()).thenReturn(UUID.randomUUID());
+        when(welcomeCenterAccessor.findOpenById(center.getId())).thenReturn(Mono.empty());
+        var message =
+                new StationMessage(null, "N1ONE", "K4BO", center, null, "Hello", "connected", MessageType.MESSAGE);
+        assertThrows(ResponseStatusException.class, () -> processor.prepareStandalone(message));
+        verifyNoInteractions(communications);
     }
 
     @Test

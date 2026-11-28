@@ -378,6 +378,26 @@ class MessageDeliveryServiceTest {
     }
 
     @Test
+    void renamedOrMissingSenderCancelsPendingRetryAndStillAcceptsLateAck() {
+        var renamed = message();
+        write(0);
+        var center = centers.save(new WelcomeCenter(
+                null, "Renamed sender", "", "NEW1", null, null, null, null, null, null, null, null, "c", "/", null));
+        jdbc.update("update message_deliveries set center_id=? where id=?", center.getId(), renamed.getId());
+        due(renamed);
+        service.tick(Instant.now());
+        assertThat(state(renamed)).isEqualTo("CANCELLED");
+        assertThat(wires).hasSize(1);
+        service.acknowledge("KC1VMZ-4", "WC1", "ack" + renamed.getMessageIdentifier());
+        assertThat(state(renamed)).isEqualTo("ACKNOWLEDGED");
+
+        var missing = message();
+        jdbc.update("update message_deliveries set center_id=? where id=?", UUID.randomUUID(), missing.getId());
+        service.tick(Instant.now());
+        assertThat(state(missing)).isEqualTo("CANCELLED");
+    }
+
+    @Test
     void centerClosurePolicyChangeAndActiveIdentifierCollision() {
         // Use the delivery snapshot's policy ID to verify deletion cancels even before first write.
         var m = message();
